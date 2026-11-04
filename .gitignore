@@ -1,0 +1,40 @@
+# ── Dados sensíveis: NUNCA versionar ─────────────────────────────
+# Documentos reais de assistidos (fichas, INPs, laudos, planilhas, transcrições)
+arquivos/
+# Credenciais
+SENHAS.txt
+*senha*
+*password*
+*.pem
+*.key
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/functions/.env
+# Arquivos de dados soltos (só entram fixtures anonimizadas, em pastas próprias)
+*.xlsx
+*.xls
+*.csv
+*.pdf
+!supabase/**/__fixtures__/**
+
+# ── Ferramentas locais ────────────────────────────────────────────
+.claude/settings.local.json
+supabase/.temp/
+supabase/.branches/
+
+# ── Build e dependências ──────────────────────────────────────────
+node_modules/
+dist/
+coverage/
+*.local
+*.log
+
+# ── Sistema e editores ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/

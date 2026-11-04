@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "prototipo-aba",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4174", "--bind", "127.0.0.1", "--directory", "prototipo"],
+      "port": 4174
+    }
+  ]
+}
