@@ -19,11 +19,18 @@ A Evolução ABA usa o design system da casa, o mesmo do sistema de contas médi
 
 Componentes que o protótipo criou e que o sistema de contas médicas não tem:
 
+- **Modo da nova evolução** (`.modo-imp`): dois cartões de escolha, "Com o PDF do Tita" e "Escrever à mão" (E26).
 - **Leitura do arquivo** (`.leitura`, `.kv`, `.checks`): os Dados do Favorecido lidos do PDF e a lista de conferências da importação, cada uma com ok, bloqueio, alerta ou informação.
+- **Calendário dos dias analisados** (`.cal`, `.cal-d`, `.cal-leg`): o mês do período em grade semanal; sessão em azul, falta e texto que cita outra data com marca própria. A legenda conta cada grupo (sessões, faltas, outra data no texto, fora do período) e, tocada, destaca os dias (E18–E20).
+- **Outros documentos** (`.doc-lista`, `.doc-li`, `.dz-sm`): área de soltar menor com "Escolher arquivo" e "Tirar foto"; cada documento mostra o ícone do tipo, o tipo editável, a data, as páginas, os trechos lidos sem o nome (`.doc-tr`) e a situação ok, alerta ou bloqueio (E25).
+- **Seções em branco** (`.man-sug`): campos de texto por seção da entrada manual e, nas metas, as metas em desenvolvimento do cadastro como chips de um toque; o chip usado fica apagado (E26).
 - **Parte do rascunho** (`.parte`): card numerado com a origem (IA ou edição), as tags de bloqueio e alerta e o rodapé com comparar, gerar de novo, editar e marcar como conferida. Conferida, o número vira um visto verde.
-- **Frase com fonte** (`.fr`): cada frase do texto é tocável e mostra quantas evoluções diárias cita; o grifo amarelo marca o que a coordenação escreveu. A evolução diária de origem aparece destacada em **Análise do Tita** (`.analise`).
-- **Lacuna** (`.lacuna`): o que a IA não achou nas análises, tracejado em laranja, com o botão que resolve.
+- **Frase com fonte** (`.fr`, `.fr.doc`): cada frase do texto é tocável e mostra quantas fontes cita (evoluções diárias e documentos); o grifo amarelo marca o que a coordenação escreveu. A aba **Fontes** destaca a origem: a evolução diária (`.analise`), o documento ou, na entrada manual, a seção escrita pelo coordenador.
+- **Lacuna** (`.lacuna`): o que a IA não achou nas análises, tracejado em laranja, com o botão que resolve e "Ignorar".
+- **Dica para a IA** (`.dica-btn`, `.dica`): o "i" ao lado do campo abre a sugestão de orientação; na curadoria da coordenação geral, a orientação aprovada (`.ori`) fica numerada, com quem aprovou, e pode ser retirada (E21, E22).
+- **Meta do cadastro** (`.meta-c`): meta do assistido com a situação (em desenvolvimento, em manutenção, alcançada, suspensa) e o histórico mês a mês (`.meta-hist`) (E23).
 - **Meta** (`.meta`): item com as datas de origem (`.data-chip`), a tag de manutenção e as ações de editar, manter e retirar.
 - **Cartão de pendência** (`.pend`): bloqueio ou alerta, com a parte a que pertence e as ações que resolvem ali mesmo, inclusive "Ciente".
 - **Comparação** (`.cmp`): dois textos lado a lado, com o grifo do que se repete (mês anterior) ou do que mudou (IA × atual).
-- **Folha no formato do Word** (`.folha`): Cambria 12, espaçamento 1,5, cabeçalho, um bloco por assistido e a assinatura no fim, pronta para imprimir.
+- **Folha no formato do Word** (`.folha`): Cambria 12, espaçamento 1,5, cabeçalho, um bloco por assistido e a assinatura no fim, pronta para imprimir. O bloco aberto pela lista "Por assistido" fica destacado (`.bloco.foco`).
+- **Envio do arquivo do mês** (`.arq-envio`): lista de conferência do envio (evoluções concluídas, assinatura, prazo), cada item com ok, bloqueio ou alerta, seguida das evoluções que ainda faltam (E24).
