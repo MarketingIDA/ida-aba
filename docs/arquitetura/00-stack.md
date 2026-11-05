@@ -22,12 +22,12 @@ Proposta para depois da aprovação do protótipo. A stack é a da casa, a mesma
 |---|---|
 | `cadastro` | Unidades, planos de saúde, assistidos, coordenadores (CRP e assinatura), carteiras por unidade e turno e o **cadastro de metas** de cada assistido, com o histórico de cada meta (E23). A decidir se é compartilhado com o sistema de contas médicas (P11). |
 | `tita` | Cada importação: o PDF original (Storage privado), os Dados do Favorecido, o período do PDF e as análises lidas, com data, falta, situação diante do período analisado e datas citadas no texto (E19). Nada se apaga; uma nova importação substitui a anterior sem apagá-la. |
-| `evolucao` | Evolução por assistido e mês da evolução, com o período analisado calculado (E18) e a origem (PDF do Tita ou entrada manual, E26); os **outros documentos** da análise (E25); os **dias analisados** (E20); as 4 partes com as versões (IA ou coordenador, com a instrução usada), as datas e os documentos de origem de cada frase e meta, lacunas resolvidas, conferências com ciência, situação e devolução; o **arquivo do mês** de cada coordenador, que é o que vai para contas médicas e leva as evoluções (E24). |
+| `evolucao` | Evolução por assistido e mês da evolução, com o período analisado calculado (E18) e a origem (PDF do Tita ou entrada manual, E26); os **outros documentos** da análise (E25); os **dias analisados** (E20); as 4 partes com as versões (IA ou coordenador, com a instrução usada), as datas e os documentos de origem de cada frase e meta, lacunas resolvidas, conferências com ciência, situação e devolução; o **arquivo do mês** de cada coordenador, que é o que vai para contas médicas e leva as evoluções (E24); o **nível de apoio** que a IA leu para cada programa em cada evolução diária, base da evolução das metas em gráfico (E27). |
 | `config` | Termos inadequados e substitutos (P12), limites (linhas mínimas, semelhança, frequência), a frase padrão das metas, o catálogo de programas, as **dicas para a IA** (`dica_ia`) e as **orientações da IA** aprovadas (`orientacao_ia`) (E21, E22). |
 | `acesso` | Usuários e papéis. O RLS limita o coordenador à carteira dele e contas médicas aos arquivos do mês enviados. |
 | `auditoria` | Trilha de quem fez o quê e quando (o "Histórico" do protótipo). |
 
-**Domínio puro** (`supabase/functions/_shared/dominio/`, TypeScript sem Deno nem Node, testado à parte): leitura do texto do Tita, com os blocos, as faltas e as quebras de página (E02–E04); período analisado a partir do mês da evolução e datas divergentes, inclusive as citadas no texto da análise (E18, E19), sem depender da IA; pseudonimização e volta do nome (E05); conferências das 4 partes (E09–E12); semelhança com o mês anterior (n-gramas); código da evolução (E16) e prazo (E15); o que falta para enviar o arquivo do mês (E24); atualização do cadastro de metas no envio (E23). O mesmo código roda no navegador e nas Edge Functions.
+**Domínio puro** (`supabase/functions/_shared/dominio/`, TypeScript sem Deno nem Node, testado à parte): leitura do texto do Tita, com os blocos, as faltas e as quebras de página (E02–E04); período analisado a partir do mês da evolução e datas divergentes, inclusive as citadas no texto da análise (E18, E19), sem depender da IA; pseudonimização e volta do nome (E05); conferências das 4 partes (E09–E12); semelhança com o mês anterior (n-gramas); código da evolução (E16) e prazo (E15); o que falta para enviar o arquivo do mês (E24); atualização do cadastro de metas no envio (E23); os indicadores da evolução das metas: primeira sessão independente, mesmo degrau há 3 semanas, meta sem registro no mês e a mediana da carteira (E27). O mesmo código roda no navegador e nas Edge Functions.
 
 **Edge Functions** (proposta):
 
@@ -35,7 +35,7 @@ Proposta para depois da aprovação do protótipo. A stack é a da casa, a mesma
 |---|---|
 | `importar-tita` | Recebe o PDF, extrai o texto no servidor, confere favorecido, período, terapia e filtro (E03), separa as análises fora do período e as que citam outra data (E19) e grava tudo. |
 | `importar-documento` | Recebe PDF, Word ou imagem (arquivo ou câmera), extrai o texto no servidor (OCR na imagem), tira o nome (E05), confere de quem é o documento e a data diante do período (E25) e grava. |
-| `gerar-rascunho` | Chama a API da OpenAI só pelo servidor (P10), com as orientações da IA ativas no início do prompt (E22), o texto pseudonimizado só das análises do período e dos outros documentos aceitos (E25), a evolução anterior e as metas em desenvolvimento do cadastro (E23). Registra na versão quais orientações estavam ativas. Na mesma transação grava os dias analisados (E20). Pede saída estruturada (JSON validado por zod) com as 4 partes, as datas e os documentos de origem e as lacunas. Também gera uma parte de novo com instrução. |
+| `gerar-rascunho` | Chama a API da OpenAI só pelo servidor (P10), com as orientações da IA ativas no início do prompt (E22), o texto pseudonimizado só das análises do período e dos outros documentos aceitos (E25), a evolução anterior e as metas em desenvolvimento do cadastro (E23). Registra na versão quais orientações estavam ativas. Na mesma transação grava os dias analisados (E20). Pede saída estruturada (JSON validado por zod) com as 4 partes, as datas e os documentos de origem e as lacunas, e o nível de apoio de cada programa em cada evolução diária, com a frase de onde saiu (E27; o de mais apoio quando a frase cita mais de um, nulo quando não diz). Também gera uma parte de novo com instrução. |
 | `concluir-evolucao`, `reabrir-evolucao`, `devolver-evolucao` | As transições de E13, validadas no servidor: só conclui sem bloqueio; reabrir e devolver só enquanto o arquivo do mês não foi enviado. |
 | `aprimorar-texto` | Entrada manual (E26): recebe as seções escritas pelo coordenador, sem o nome (E05), com as orientações ativas (E22), e pede à IA o texto aprimorado por seção, sem fato novo (o prompt proíbe acrescentar o que não está no texto e a saída é conferida contra ele). Calcula as lacunas pelo cadastro de metas e grava as duas versões de cada parte (E07). Não grava dia analisado. |
 | `enviar-arquivo` | Envia o arquivo do mês (E24) numa transação só: confere que a carteira toda está concluída e que há assinatura (E14), grava o arquivo, marca as evoluções como enviadas, emite o Word e atualiza o cadastro de metas de cada assistido (E23). Não existe envio de uma evolução sozinha. |
@@ -116,6 +116,17 @@ create table evolucao.dia_analisado (
 -- Importar de novo: a RPC evolucao.registrar_dias(evolucao_id, dias jsonb) apaga os dias da
 -- mesma evolução e grava os novos na mesma transação; dia de outra evolução vira erro de PK.
 
+-- E27: o nível de apoio que a IA leu para cada programa em cada evolução diária
+create table evolucao.nivel_apoio (
+  evolucao_diaria_id  uuid not null references tita.evolucao_diaria on delete cascade,
+  programa            text not null references config.programa,
+  nivel               smallint check (nivel between 1 and 5),                 -- 1 ajuda física total ... 5 independente; nulo: sem nível
+  trecho              text not null,                                            -- a frase de onde saiu, já sem o nome (E05)
+  primary key (evolucao_diaria_id, programa)
+);
+-- A tela de evolução das metas lê a view evolucao.v_escada_meta (assistido, meta, data, nível, trecho);
+-- os indicadores vêm do domínio puro, o mesmo código no navegador e nos testes.
+
 -- E21: a dica que o coordenador deixa no botão "i" de um bloco ("dica-ia")
 create table config.dica_ia (
   id              uuid primary key default gen_random_uuid(),
@@ -171,8 +182,8 @@ create table cadastro.meta_historico (
 );
 ```
 
-**RLS dessas tabelas:** o coordenador grava `dica_ia` só para evoluções da carteira dele e não lê as dicas dos outros; a coordenação geral lê e cura todas; `orientacao_ia` é lida pela coordenação geral e pela função `gerar-rascunho` (service role). `cadastro.meta` segue a carteira, como o assistido: o coordenador edita a dele, a coordenação geral lê todas. Contas médicas lê `arquivo_mes` e as evoluções com `arquivo_id` preenchido, e nada mais.
+**RLS dessas tabelas:** o coordenador grava `dica_ia` só para evoluções da carteira dele e não lê as dicas dos outros; a coordenação geral lê e cura todas; `orientacao_ia` é lida pela coordenação geral e pela função `gerar-rascunho` (service role). `cadastro.meta` segue a carteira, como o assistido: o coordenador edita a dele, a coordenação geral lê todas. Contas médicas lê `arquivo_mes` e as evoluções com `arquivo_id` preenchido, e nada mais. `nivel_apoio` segue a evolução diária: o coordenador lê o da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E27).
 
-**Testes de banco (pgTAP):** evolução de novembro calcula 01/10 a 31/10 e a de janeiro calcula o dezembro do ano anterior; `dia_analisado` aceita 01/10 e 31/10 e recusa 30/09 e 01/11 na evolução de novembro; o mesmo dia em duas evoluções falha pela PK; dia de outro assistido falha pela FK composta; `dica_ia` não aceita dica curta nem curadoria sem curador; uma orientação por dica; o coordenador não lê dica de outro coordenador; um programa ativo por vez no cadastro de metas; `enviar_arquivo` recusa carteira com evolução em conferência ou assistido sem evolução, e um segundo arquivo do mesmo coordenador e mês; contas médicas não lê evolução fora de arquivo enviado; documento de outro assistido não vai para `gerar-rascunho`; evolução manual não grava dia analisado.
+**Testes de banco (pgTAP):** evolução de novembro calcula 01/10 a 31/10 e a de janeiro calcula o dezembro do ano anterior; `dia_analisado` aceita 01/10 e 31/10 e recusa 30/09 e 01/11 na evolução de novembro; o mesmo dia em duas evoluções falha pela PK; dia de outro assistido falha pela FK composta; `dica_ia` não aceita dica curta nem curadoria sem curador; uma orientação por dica; o coordenador não lê dica de outro coordenador; um programa ativo por vez no cadastro de metas; `enviar_arquivo` recusa carteira com evolução em conferência ou assistido sem evolução, e um segundo arquivo do mesmo coordenador e mês; contas médicas não lê evolução fora de arquivo enviado; documento de outro assistido não vai para `gerar-rascunho`; evolução manual não grava dia analisado; `nivel_apoio` recusa nível fora de 1 a 5 e o mesmo programa duas vezes na mesma evolução diária; contas médicas não lê `nivel_apoio`.
 
 **Rotas do front** seguem as telas do protótipo, listadas em [`../escopo/01-dominio.md`](../escopo/01-dominio.md#6-telas-do-protótipo).

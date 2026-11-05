@@ -745,6 +745,123 @@ a.st-box{text-decoration:none}
 .trecho p .fr{padding:1px 0}
 @media (max-width:560px){.parte-h,.parte-b,.parte-f{padding-left:14px;padding-right:14px}.parte-f .btn{flex:1 1 auto}}
 
+/* ── E27: evolução das metas em gráfico ──────────────────────────── */
+.r-evo{position:relative}
+.row.r-evo{grid-template-columns:36px minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.3fr) auto 36px 20px}
+.row-link{display:block;min-width:0;color:inherit;text-decoration:none}
+.row-link::after{content:"";position:absolute;inset:0}
+.row-link:focus-visible{outline:none}
+.r-evo:has(.row-link:focus-visible){box-shadow:inset 0 0 0 2px var(--blue)}
+.row-graf{position:relative;z-index:1;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:var(--blue);background:var(--accent-soft);border:1px solid var(--accent-border);text-decoration:none;transition:background-color 150ms ease,color 150ms ease,transform 140ms var(--ease-out)}
+.row-graf:active{transform:scale(.94)}
+@media (hover:hover){.row-graf:hover{background:var(--blue);border-color:var(--blue);color:#fff}}
+@media (max-width:860px){.row.r-evo{grid-template-columns:36px minmax(0,1fr) auto 36px 20px}}
+.pg-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.25fr);gap:28px;align-items:center;padding:28px 30px;margin:4px 0 16px;border-radius:28px;color:#fff;overflow:hidden;background:radial-gradient(90% 120% at 100% 0%,rgba(0,108,255,.62) 0%,rgba(0,108,255,0) 58%),radial-gradient(70% 90% at 0% 110%,rgba(0,108,255,.34) 0%,rgba(0,108,255,0) 60%),linear-gradient(150deg,#173F6B 0%,var(--navy) 46%,#06162A 100%);box-shadow:0 26px 50px -26px rgba(14,42,71,.7)}
+.pg-hero::before{content:"";position:absolute;inset:0;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:28px 28px;-webkit-mask-image:radial-gradient(75% 85% at 72% 30%,#000,transparent);mask-image:radial-gradient(75% 85% at 72% 30%,#000,transparent)}
+.pg-hero .kicker{color:#9CC8FF}
+.pg-hero h1{color:#fff;font-size:24px}
+.pg-big{display:flex;align-items:flex-end;gap:14px;margin:16px 0 2px}
+.pg-num{font-family:var(--display);font-weight:800;font-size:104px;line-height:.8;letter-spacing:-.03em;background:linear-gradient(180deg,#fff 35%,#8EC2FF 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-top:6px}
+.pg-big-t{font-family:var(--display);font-size:21px;line-height:1.15;font-weight:700;color:#fff;padding-bottom:4px;max-width:15ch}
+.pg-cmp{display:inline-flex;align-items:center;gap:8px;margin:14px 0 0;padding:6px 14px 6px 10px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);font-size:13.5px;font-weight:800}
+.pg-hero-sub{color:#B9CCE4;font-size:13px;font-weight:600;margin:12px 0 0;max-width:50ch;line-height:1.5}
+.pg-dest{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.pg-chip{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:13px;font-weight:600;line-height:1.35;cursor:pointer;transition:background-color 150ms ease,transform 140ms var(--ease-out)}
+.pg-chip b{display:block;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9CC8FF}
+.pg-chip>.i{margin-left:auto;flex:none;opacity:.6}
+.pg-chip:active{transform:scale(.985)}
+.pg-chip:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media (hover:hover){.pg-chip:hover{background:rgba(255,255,255,.13)}}
+.pg-chip-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none;background:rgba(92,168,255,.28);color:#fff}
+.pg-chip-ic.y{background:var(--yellow);color:var(--navy)}
+.pg-viz{margin:0;min-width:0}
+.pg-viz-h{display:flex;justify-content:space-between;align-items:flex-end;gap:8px 14px;flex-wrap:wrap;margin-bottom:8px}
+.pg-viz-h h2{color:#fff;font-size:16px}
+.pg-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:700;color:#C9D8EA}
+.pg-leg span{display:inline-flex;align-items:center;gap:6px}
+.lk{display:inline-block;width:16px;height:3px;border-radius:2px;flex:none}
+.lk.a{background:#5CA8FF}.lk.c{background:#6A7891}
+.pg-hero-svg{display:block;width:100%;height:auto;overflow:visible;border-radius:10px;touch-action:pan-y}
+.pg-hero-svg:focus-visible{outline:2px solid #fff;outline-offset:6px}
+.pg-hero-svg .grade{stroke:rgba(255,255,255,.09);stroke-width:1}
+.pg-hero-svg .eixo{fill:#9FB3CC;font-size:11px;font-weight:700}
+.pg-hero-svg .area{fill:url(#pg-grad)}
+.pg-hero-svg .ln-a{fill:none;stroke:#5CA8FF;stroke-width:3;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 8px rgba(92,168,255,.55))}
+.pg-hero-svg .ln-c{fill:none;stroke:#6A7891;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.pg-hero-svg .fim{fill:#5CA8FF;stroke:#0B2440;stroke-width:2.5}
+.pg-hero-svg .rot{fill:#fff;font-family:var(--display);font-weight:800;font-size:17px}
+.pg-hero-svg .rot.c{fill:#B9C6D6;font-size:13px}
+.pg-hero-svg .pg-hit{fill:transparent;cursor:crosshair}
+.pg-cross{stroke:rgba(255,255,255,.55);stroke-width:1;visibility:hidden;pointer-events:none}
+.pg-sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:22px 0 12px}
+.pg-sec-h .sub{max-width:62ch}
+.pg-sec-a{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pg-sec-a .tabs{margin:0}
+.pg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.pg-meta{position:relative;display:flex;flex-direction:column;gap:8px;padding:16px 18px 14px;background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-sm);transition:box-shadow 200ms ease,transform 200ms var(--ease-out)}
+@media (hover:hover){.pg-meta:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}}
+.pg-meta.atencao{border-color:var(--alerta-border);box-shadow:inset 0 4px 0 var(--alerta),var(--shadow-sm)}
+.pg-meta-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pg-meta-h .pill{margin-left:auto;height:24px;font-size:12px}
+.pg-meta-al{display:flex;gap:6px;flex-wrap:wrap}
+.pg-meta-t{margin:0;font-size:14px;font-weight:800;color:var(--navy);line-height:1.4}
+.esc{display:block;width:100%;height:auto;overflow:visible}
+.esc .grade{stroke:var(--border);stroke-width:1}
+.esc .mes{stroke:var(--border-strong);stroke-width:1}
+.esc .eixo{fill:var(--muted);font-size:9.5px;font-weight:700}
+.esc .area{fill:var(--blue);opacity:.1}
+.esc .ln{fill:none;stroke:var(--blue);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.esc .pt{fill:var(--blue);stroke:#fff;stroke-width:2;transition:r 120ms ease}
+.esc .pt0{fill:#fff;stroke:var(--faint);stroke-width:1.5;transition:r 120ms ease}
+.esc .halo{fill:none;stroke:var(--blue);stroke-width:1.5;opacity:.45}
+.esc .rot5{fill:var(--navy);font-size:10px;font-weight:800}
+.esc .p{cursor:pointer}
+.esc .hit{fill:transparent}
+.esc .p:hover .pt{r:6}.esc .p:hover .pt0{r:5}
+.pg-vazio{display:flex;flex-direction:column;gap:4px;padding:18px 16px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);font-size:12.5px;font-weight:600;color:var(--muted)}
+.pg-vazio b{color:var(--navy);font-size:13.5px}
+.pg-meta-f{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:10px;font-size:12.5px;font-weight:700}
+.pg-meta-f .mut{margin-left:auto}
+.pg-agora{display:inline-flex;align-items:center;gap:8px;color:var(--navy)}
+.pg-agora b{font-size:13.5px}
+.degraus{display:inline-flex;align-items:flex-end;gap:2px;flex:none}
+.degraus i{display:block;width:5px;border-radius:2px;background:var(--accent-border)}
+.degraus i.on{background:var(--blue)}
+.pg-delta{display:inline-flex;align-items:center;gap:3px;font-weight:800;color:var(--muted)}
+.pg-delta.up{color:var(--ok-text)}.pg-delta.dn{color:var(--alerta-text)}
+.pg-nivel{display:flex;align-items:center;gap:10px;margin:6px 2px 4px;font-size:17px;color:var(--navy)}
+.pg-esc-leg{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--muted)}
+.pg-esc-leg .mc{display:inline-block;width:16px;height:14px;margin-left:6px}
+.pg-mapa-w{overflow-x:auto}
+.pg-mapa{display:grid;grid-template-columns:minmax(140px,230px) repeat(var(--sem),minmax(24px,1fr));gap:4px;align-items:center;min-width:560px}
+.pg-mapa .mh{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 2px 6px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.pg-mapa .ml{position:sticky;left:0;z-index:1;background:#fff;font-size:12.5px;font-weight:800;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:10px;line-height:26px}
+.mc{position:relative;height:26px;border-radius:6px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--border)}
+.mc.c1{background:#86B5FF;box-shadow:none}.mc.c2{background:#3D89FF;box-shadow:none}.mc.c3{background:#0060E6;box-shadow:none}.mc.c4{background:#003D99;box-shadow:none}
+.mc.i5::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--navy)}
+.pg-esc-leg .mc.i5::after{width:6px;height:6px;margin:-3px 0 0 -3px}
+@media (hover:hover){.pg-mapa .mc:hover{outline:2px solid var(--navy);outline-offset:1px}}
+#viz-tip{position:fixed;left:0;top:0;z-index:95;pointer-events:none;max-width:300px;padding:9px 12px;border-radius:12px;background:var(--navy);color:#fff;font-size:12.5px;font-weight:600;line-height:1.4;box-shadow:0 14px 30px -10px rgba(14,42,71,.6);opacity:0;transform:translateY(4px);transition:opacity 120ms ease,transform 120ms ease}
+#viz-tip.on{opacity:1;transform:none}
+#viz-tip>b{display:block;font-size:14px;font-weight:800}
+#viz-tip>span{display:block;color:#B9CCE4;font-weight:700}
+#viz-tip q{display:block;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.16);color:#E3ECF7;font-style:italic}
+#viz-tip .tl{display:flex;align-items:center;gap:8px;margin-top:4px}
+#viz-tip .tl b{font-size:14px;min-width:22px}
+#viz-tip .tl span{color:#B9CCE4;font-weight:700}
+@keyframes desenhar{to{stroke-dashoffset:0}}
+@keyframes surgir{from{opacity:0}}
+.anim .pg-hero-svg .ln-a,.anim .pg-hero-svg .ln-c,.anim .esc .ln{stroke-dasharray:1;stroke-dashoffset:1;animation:desenhar 1200ms var(--ease-out) 200ms forwards}
+.anim .pg-hero-svg .area,.anim .esc .area{animation:surgir 700ms ease 650ms both}
+.anim .pg-hero-svg .fim,.anim .pg-hero-svg .rot{animation:surgir 300ms ease 1150ms both}
+.anim .esc .pt,.anim .esc .pt0,.anim .esc .halo,.anim .esc .rot5{animation:surgir 260ms ease both;animation-delay:calc(450ms + var(--d,12) * 16ms)}
+.anim .pg-mapa .mc{animation:surgir 260ms ease both;animation-delay:calc(var(--d,0) * 10ms)}
+.anim .pg-meta{animation:cascata 420ms var(--ease-out) both;animation-delay:calc(var(--i,0) * 55ms)}
+.anim .pg-chip{animation:cascata 420ms var(--ease-out) both}
+.anim .pg-chip:nth-child(2){animation-delay:80ms}.anim .pg-chip:nth-child(3){animation-delay:160ms}
+@media (max-width:1100px){.pg-hero{grid-template-columns:1fr;gap:20px}.pg-big-t{max-width:none}}
+@media (max-width:560px){.pg-hero{padding:22px 18px;border-radius:22px}.pg-num{font-size:80px}.pg-big-t{font-size:18px}.pg-grid{grid-template-columns:1fr}.pg-meta-f .mut{margin-left:0;width:100%}}
+@media (prefers-reduced-motion:reduce){.anim .pg-hero-svg .ln-a,.anim .pg-hero-svg .ln-c,.anim .esc .ln{animation:none;stroke-dasharray:none;stroke-dashoffset:0}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:160ms!important;animation-delay:0ms!important;transition-duration:160ms!important}
   .pn-kpi,.view-enter,.st-ok{animation-name:fade!important}
@@ -861,6 +978,7 @@ const IC = {
   arrowDown: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
   go: '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
   chevRight: '<path d="m9 18 6-6-6-6"/>',
+  chart: '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/>',
   chevDown: '<path d="m6 9 6 6 6-6"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
@@ -1055,11 +1173,19 @@ function textoAnalise(a, s, r) {
   if (s.falta) return pick(r, [`Não foi possível realizar a sessão planejada, pois ${o} não veio à clínica.`, `${O} não compareceu à sessão. A família avisou pela manhã.`]);
   const ps = s.progs.map(k => PROG[k]);
   let t = pick(r, [`${O} chegou bem para a sessão ABA.`, `${O} chegou ${flex(a, 'tranquilo', 'tranquila')} e foi ${flex(a, 'conduzido', 'conduzida')} à sala.`, 'Iniciamos a sessão com acolhimento e atividades de interesse para aumentar a motivação.']);
-  t += ` Foram trabalhados os programas de ${listaNomes(ps.map(p => p.nome))}. ${s.nome ? primeiro(a.nome) : O} ${DESEMP[a.perfil.trend[s.progs[0]]]} no programa de ${ps[0].nome}.`;
+  t += ` Foram trabalhados os programas de ${listaNomes(ps.map(p => p.nome))}. ${s.nome ? primeiro(a.nome) : O} ${desempSessao(a, s)} no programa de ${ps[0].nome}.`;
   t += s.comp ? ` Apresentou ${COMPS[s.comp]}, com manejo por ${s.estrat}.` : ' Não foram observados comportamentos interferentes.';
   if (s.rec) t += ` O uso de ${s.rec} favoreceu o engajamento.`;
   t += ' ' + pick(r, ['Ao final, realizou a transição de forma tranquila.', 'Foram ofertados lanche, água e banheiro, e a sessão terminou bem.', 'Seguimos o planejamento até o fim da sessão.']);
   return t;
+}
+// E27: o nível de apoio escrito na análise acompanha a tendência do programa ao longo de outubro
+function desempSessao(a, s) {
+  const tr = a.perfil.trend[s.progs[0]], dia = s.data.getDate();
+  if (tr === 'alcancou') return dia < 10 ? FRASE_NIVEL[3] : dia < 18 ? FRASE_NIVEL[4] : DESEMP.alcancou;
+  if (tr === 'avanco') return dia < 15 ? 'respondeu com ajuda física parcial, com algumas respostas com dica gestual' : DESEMP.avanco;
+  if (tr === 'oscilou') return dia % 2 ? DESEMP.oscilou : FRASE_NIVEL[3];
+  return DESEMP.estavel;
 }
 // O bloco "Dados do Favorecido" do PDF (E02)
 function titaDe(a) {
@@ -1554,7 +1680,7 @@ function renderSidebar() {
     const L = carteiraDe(per.id), env = L.filter(a => sitDe(a, ABERTA) === 'enviada').length, feitas = L.filter(a => ['concluida', 'enviada'].includes(sitDe(a, ABERTA))).length;
     comp = arqDe(per.id) ? compCard(`#/arquivo/${per.id}`, env, L.length, 'no arquivo enviado') : compCard('#/evolucoes', feitas, L.length, 'concluídas');
     cta = `<button class="sb-cta" data-act="nova">${I('plus', 18)} Nova evolução mensal</button>`;
-    nav = `<nav class="sb-nav" aria-label="Menu">${item('#/evolucoes', I('doc', 18), 'Evoluções', L.length, (sec === '' || sec === 'evolucoes') && !r[1] || sec === 'evolucao' || sec === 'nova')}${subs(L, '#/evolucoes')}
+    nav = `<nav class="sb-nav" aria-label="Menu">${item('#/evolucoes', I('doc', 18), 'Evoluções', L.length, (sec === '' || sec === 'evolucoes') && !r[1] || sec === 'evolucao' || sec === 'nova' || sec === 'progresso')}${subs(L, '#/evolucoes')}
       ${item(`#/arquivo/${per.id}`, I('folder', 18), 'Arquivo do mês', null, sec === 'arquivo' || sec === 'documento')}
       <span class="sb-k">Cadastros</span>
       ${item('#/metas', I('target', 18), 'Metas dos assistidos', null, sec === 'metas')}
@@ -1564,7 +1690,7 @@ function renderSidebar() {
     const env = A.filter(a => sitDe(a, ABERTA) === 'enviada').length, nArq = COORDS.filter(c => arqDe(c.id)).length;
     comp = compCard('#/', env, A.length, 'enviadas');
     nav = `<nav class="sb-nav" aria-label="Menu">${item('#/', I('painel', 18), 'Painel das unidades', null, sec === '')}
-      ${item('#/evolucoes', I('doc', 18), 'Evoluções', A.length, sec === 'evolucoes' && !r[1] || sec === 'evolucao')}${subs(A, '#/evolucoes')}
+      ${item('#/evolucoes', I('doc', 18), 'Evoluções', A.length, sec === 'evolucoes' && !r[1] || sec === 'evolucao' || sec === 'progresso')}${subs(A, '#/evolucoes')}
       ${item('#/recebidas', I('inbox', 18), 'Arquivos enviados', nArq, sec === 'recebidas' || sec === 'documento' || sec === 'arquivo')}
       <span class="sb-k">Cadastros</span>
       ${item('#/metas', I('target', 18), 'Metas dos assistidos', null, sec === 'metas')}
@@ -1605,6 +1731,7 @@ function render() {
       case 'recebidas': html = S.persona === 'coord' ? naoPode() : telaRecebidas(); break;
       case 'termos': html = telaTermos(); break;
       case 'metas': html = r[1] ? telaMetas(porId(r[1]), SIT_META[r[2]] ? r[2] : '') : telaMetasLista(); break;
+      case 'progresso': html = telaProgresso(porId(r[1]), FILTROS_P[r[2]] ? r[2] : ''); break;
       case 'configuracoes': html = telaConfig(['pendente', 'aprovada', 'descartada', 'orientacoes'].includes(r[1]) ? r[1] : ''); break;
       case 'assinatura': html = S.persona === 'coord' ? telaAssinatura() : naoPode(); break;
       default: html = naoEncontrado();
@@ -1614,6 +1741,7 @@ function render() {
   $('#bb-root').innerHTML = S.bb;
   renderSidebar();
   if ($('#ed-linhas')) contarEd();
+  if (S.animar && $('#pg-hero')) contarHero();
   S.animar = false;
 }
 function atualizar() { const y = window.scrollY, lado = $('#evo-lado')?.scrollTop; render(); window.scrollTo(0, y); if (lado != null && $('#evo-lado')) $('#evo-lado').scrollTop = lado; }
@@ -1637,12 +1765,13 @@ function linhaEvo(a, mes = S.mes) {
   else if (st === 'enviada') meio = `<span class="mut" style="font-size:12.5px;font-weight:700">Enviada no arquivo em ${dm(E.env.quando)}</span>`;
   else if (ehMeu(a) && mes === ABERTA) meio = `<span class="btn btn-sm btn-secondary btn-iniciar">${I('fileUp', 15)} Importar do Tita</span>`;
   const href = E ? (mes === ABERTA ? `#/evolucao/${E.id}` : `#/documento/${E.id}`) : ehMeu(a) && mes === ABERTA ? `#/nova/${a.id}` : '';
-  const tag = href ? 'a' : 'div', attr = href ? `href="${href}"` : 'style="cursor:default"';
-  return `<${tag} class="row r-evo" ${attr}><span class="avatar">${iniciais(a.nome)}</span>
-    <span class="row-n"><b>${esc(a.nome)}</b><span>${sub}</span></span>
+  const nomeH = href ? `<a class="row-link" href="${href}"><b>${esc(a.nome)}</b></a>` : `<b>${esc(a.nome)}</b>`;
+  const graf = S.persona === 'contas' ? '<span></span>' : `<a class="row-graf" href="#/progresso/${a.id}" aria-label="Evolução das metas de ${esc(a.nome)}" title="Evolução das metas">${I('chart', 18)}</a>`;   // E27
+  return `<div class="row r-evo" ${href ? '' : 'style="cursor:default"'}><span class="avatar">${iniciais(a.nome)}</span>
+    <span class="row-n">${nomeH}<span>${sub}</span></span>
     <span class="hide-sm mut" style="font-size:13px;font-weight:700">${geral ? esc(a.plano || '—') : `${a.unid} · ${a.turno}`}</span>
     <span class="hide-sm">${meio}</span>
-    <span>${pillSit(st)}</span><span class="row-go">${href ? I('chevRight', 18) : ''}</span></${tag}>`;
+    <span>${pillSit(st)}</span>${graf}<span class="row-go">${href ? I('chevRight', 18) : ''}</span></div>`;
 }
 function listaEvoHtml(st) {
   const L = baseEvo(), q = norm(S.q.trim());
@@ -2211,6 +2340,221 @@ function metaCadHtml(a, m, ed) {
     <p class="meta-c-t">${esc(m.texto)}</p><p class="dica-meta">${esc(m.criterio)} · ${quando}</p>${acts ? `<div class="dica-f">${acts}</div>` : ''}
     <details class="meta-hist"><summary>${I('history', 13)} Histórico (${m.hist.length})</summary><ul>${m.hist.slice().reverse().map(h => `<li>${esc(h.t)} <small>${dm(h.quando)} · ${esc(h.quem)}</small></li>`).join('')}</ul></details></div>`;
 }
+// ═══ E27: evolução das metas em gráfico ═══════════════════════════
+// O Tita não traz número ("Alcance" vem 0%). A medida é o nível de apoio que a IA lê na Análise do Atendimento:
+// o da frase que cita o programa e, se a frase cita mais de um, o de mais apoio. Sem nível, a sessão fica fora da escada.
+const NIVEIS = ['Sem nível', 'Ajuda física total', 'Ajuda física parcial', 'Dica gestual ou modelo', 'Dica verbal', 'Independente'];
+const NIVEL_CURTO = ['sem nível', 'F. total', 'F. parcial', 'Gestual', 'Verbal', 'Indep.'];
+const RE_NIVEL = [[1, /ajuda fisica total/], [2, /ajuda fisica parcial/], [3, /dica gestual|\bmodelo\b/], [4, /dica verbal|mediacao verbal|mediacao minima/], [5, /independente|sem ajuda|sem mediacao/]];
+const FRASE_NIVEL = ['', 'realizou a atividade com ajuda física total', 'respondeu com ajuda física parcial na maior parte das tentativas', 'respondeu com dica gestual na maior parte das tentativas', 'precisou só de dica verbal em algumas tentativas', 'respondeu de forma independente em quase todas as tentativas'];
+const MESES_G = ['ago', 'set', 'out'];
+const SEM0 = new Date(2026, 7, 3, 12), FIM_G = fimMes(ABERTA);   // semanas de segunda a sexta, de 03/08 a 31/10
+const semDe = d => Math.floor((d - SEM0) / (7 * 864e5));
+const N_SEM = semDe(FIM_G) + 1;
+const iniSem = w => new Date(2026, 7, 3 + 7 * w, 12);
+const fmtN = n => (+n).toLocaleString('pt-BR');
+const FILTROS_P = { dev: ['Em desenvolvimento', 'd-w', 'subindo a escada'], alc: ['Alcançadas', 'd-g', 'saíram das metas do mês'], manut: ['Em manutenção', 'd-g', 'alcançadas, acompanhadas'], atencao: ['Pedem atenção', 'd-y', 'paradas ou sem registro'] };
+
+// Agosto e setembro: as evoluções diárias dos meses já enviados (fictícias, como o Tita as traria)
+function alvoHist(P, k, p) {   // [nível no início, no fim do mês], coerente com o cadastro de metas
+  if (k === 'ago') return P.alcAgo.includes(p) ? [3, 5] : P.alcSet.includes(p) ? [2, 3] : [1, 2];
+  if (P.alcAgo.includes(p) && P.alcSet.includes(p)) return [5, 5];
+  if (P.alcSet.includes(p)) return [3, 5];
+  return { alcancou: [2, 3], avanco: [1, 2], oscilou: [2, 3] }[P.trend[p]] || [2, 2];
+}
+function sessoesDe(a, k) {
+  if (k === ABERTA) return a.sessoes;
+  const C = a.sesHist || (a.sesHist = {});
+  if (C[k]) return C[k];
+  const P = a.perfil, progs = a.hist[k].progs, r = rng(+a.id.slice(1) * 7349 + MESES[k].m * 101), o = sujeito(a), O = Sujeito(a);
+  const dias = diasUteis(k).filter(d => P.dias.includes(d.getDay()));
+  let ci = 0;
+  return C[k] = dias.map((d, i) => {
+    const ps = [], f = dias.length > 1 ? i / (dias.length - 1) : 1;
+    for (let j = 0, n = progs.length > 1 && r() < .45 ? 2 : 1; j < n; j++) { ps.push(progs[ci % progs.length]); ci++; }
+    const prog = uniq(ps);
+    const fr = prog.map((p, j) => {
+      const [i0, i1] = alvoHist(P, k, p);
+      let n = Math.round(i0 + (i1 - i0) * f);
+      if (f < .9 && r() < .2) n -= 1;
+      n = Math.max(1, Math.min(5, n));
+      if (j && r() < .5) return `Também foi aplicado o programa de ${PROG[p].nome}.`;   // a frase não diz o nível
+      return `No programa de ${PROG[p].nome}, ${o} ${FRASE_NIVEL[n]}.`;
+    });
+    const texto = `${pick(r, [`${O} chegou bem para a sessão ABA.`, 'Iniciamos com acolhimento e atividades de interesse.', `${O} chegou ${flex(a, 'tranquilo', 'tranquila')} e foi ${flex(a, 'conduzido', 'conduzida')} à sala.`])} ${fr.join(' ')} ${pick(r, ['Seguimos o planejamento até o fim da sessão.', 'A sessão terminou de forma tranquila.'])}`;
+    return { data: d, falta: false, progs: prog, texto };
+  });
+}
+// A leitura da IA: o nível do programa k na análise da sessão s
+const niveisEm = t => RE_NIVEL.filter(([, re]) => re.test(t)).map(([n]) => n);
+// Como o texto cita o programa além do nome (verbos da análise)
+const RE_PROG_VERBO = { turno: /aguard\w* a (sua )?vez/, imitacao: /imit/, ouvinte: /instruc/, ouvinte2: /instruc/, tato: /nome(ou|ar)/, apontar: /apont/ };
+const citaProg = (t, k) => PROG[k].re.test(t) || t.includes(norm(PROG[k].nome)) || !!RE_PROG_VERBO[k]?.test(t);
+function nivelLido(s, k) {
+  const fr = s.texto.split(/(?<=[.!?])\s+/);
+  const ler = f => {
+    const t = norm(f);
+    if (s.progs.length === 1) return niveisEm(t);                                   // sessão de um programa só: a análise inteira é dele
+    if (!citaProg(t, k)) return [];
+    if (s.progs.filter(q => citaProg(t, q)).length === 1) return niveisEm(t);      // a frase fala só deste programa
+    return f.split(/,|;|\se\s/).map(norm).filter(c => citaProg(c, k)).flatMap(niveisEm);   // frase com dois programas: o nível da oração dele
+  };
+  for (const f of fr) { const ns = ler(f); if (ns.length) return { n: Math.min(...ns), trecho: f }; }
+  return { n: 0, trecho: fr.find(f => citaProg(norm(f), k)) || null };
+}
+function serieMeta(a, m) {   // cada sessão em que o programa da meta foi trabalhado
+  if (!m.prog) return [];
+  const out = [];
+  for (const k of MESES_G) for (const s of sessoesDe(a, k)) {
+    if (s.falta || !s.progs.includes(m.prog)) continue;
+    const L = nivelLido(s, m.prog);
+    out.push({ d: s.data, k, n: L.n, trecho: L.trecho, s });
+  }
+  return out;
+}
+function analiseMeta(a, m) {
+  const pts = serieMeta(a, m), com = pts.filter(p => p.n), pri = com[0] || null, ult = com[com.length - 1] || null;
+  const i5 = com.findIndex(p => p.n === 5), ini = periodoDe(ABERTA).ini;
+  const sumiu = m.sit === 'dev' && !!m.prog && !pts.some(p => iso(p.d) >= ini);
+  let parada = 0;
+  if (m.sit === 'dev' && !sumiu && ult && ult.n < 5) {
+    let j = com.length - 1; while (j > 0 && com[j - 1].n === ult.n) j--;
+    const dias = Math.round((FIM_G - com[j].d) / 864e5); if (dias >= 21) parada = Math.floor(dias / 7);
+  }
+  return { m, pts, com, pri, ult, indep: i5 >= 0 ? com[i5] : null, nAte5: i5 >= 0 ? i5 + 1 : null, parada, sumiu, atencao: !!(parada || sumiu), semNivel: pts.length - com.length };
+}
+const indepPorSemana = X => { const v = Array(N_SEM).fill(0); for (const x of X) if (x.indep && x.m.sit !== 'susp') for (let w = Math.max(0, semDe(x.indep.d)); w < N_SEM; w++) v[w]++; return v; };
+function medianaCarteira(a) {
+  const C = carteiraDe(a.coord).map(b => indepPorSemana(b.metas.map(m => analiseMeta(b, m))));
+  return Array.from({ length: N_SEM }, (_, w) => { const vs = C.map(v => v[w]).sort((p, q) => p - q), h = vs.length >> 1; return vs.length % 2 ? vs[h] : (vs[h - 1] + vs[h]) / 2; });
+}
+const degrausHtml = n => `<span class="degraus" aria-hidden="true">${[1, 2, 3, 4, 5].map(k => `<i class="${k <= n ? 'on' : ''}" style="height:${4 + k * 2}px"></i>`).join('')}</span>`;
+
+// Metas que chegaram à independência, semana a semana, diante da mediana da carteira (uma escala só)
+function heroSvg(a, v, med) {
+  const W = 560, H = 262, x0 = 30, x1 = 516, y0 = 24, y1 = 218, top = Math.max(4, Math.ceil(Math.max(...v, ...med))), passo = top > 8 ? 2 : 1;
+  const X = w => x0 + (w + .5) * (x1 - x0) / N_SEM, Y = n => y1 - n / top * (y1 - y0), Xd = d => x0 + (d - SEM0) / (7 * 864e5) / N_SEM * (x1 - x0);
+  const deg = s => s.map((n, w) => w ? `H${X(w).toFixed(1)}V${Y(n).toFixed(1)}` : `M${X(0).toFixed(1)} ${Y(n).toFixed(1)}`).join('');
+  const s1 = new Date(2026, 8, 1, 12), o1 = new Date(2026, 9, 1, 12), u = N_SEM - 1;
+  let g = `<defs><linearGradient id="pg-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5CA8FF" stop-opacity=".42"/><stop offset="1" stop-color="#5CA8FF" stop-opacity="0"/></linearGradient></defs>`;
+  for (let t = 0; t <= top; t += passo) g += `<line class="grade" x1="${x0}" x2="${x1}" y1="${Y(t)}" y2="${Y(t)}"/><text class="eixo num" x="${x0 - 10}" y="${Y(t) + 4}" text-anchor="end">${t}</text>`;
+  g += [s1, o1].map(d => `<line class="grade" x1="${Xd(d)}" x2="${Xd(d)}" y1="${y0 - 8}" y2="${y1}"/>`).join('');
+  g += [['ago', x0, Xd(s1)], ['set', Xd(s1), Xd(o1)], ['out', Xd(o1), x1]].map(([k, i, f]) => `<text class="eixo" x="${(i + f) / 2}" y="${H - 16}" text-anchor="middle">${perNome(k)}</text>`).join('');
+  g += `<path class="area" d="${deg(v)}V${Y(0)}H${X(0)}Z"/><path class="ln-c" pathLength="1" d="${deg(med)}"/><path class="ln-a" pathLength="1" d="${deg(v)}"/>`;
+  g += `<circle class="fim" cx="${X(u)}" cy="${Y(v[u])}" r="5.5"/><text class="rot num" x="${X(u) + 12}" y="${Y(v[u]) + 5}">${v[u]}</text>`;
+  if (Math.abs(Y(v[u]) - Y(med[u])) >= 16) g += `<text class="rot c num" x="${X(u) + 12}" y="${Y(med[u]) + 4}">${fmtN(med[u])}</text>`;
+  g += `<line class="pg-cross" x1="0" x2="0" y1="${y0 - 8}" y2="${y1}"/><rect class="pg-hit" x="${x0}" y="${y0 - 8}" width="${x1 - x0}" height="${y1 - y0 + 8}"/>`;
+  S.progHero = { W, x0, x1, v, med, nome: primeiro(a.nome), w: null };
+  return `<svg class="pg-hero-svg" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="Metas que chegaram à independência por semana, de 03/08 a ${dmy(FIM_G)}: ${esc(primeiro(a.nome))} foi de ${v[0]} a ${v[u]}; a mediana da carteira, de ${fmtN(med[0])} a ${fmtN(med[u])}. Setas mudam a semana.">${g}</svg>`;
+}
+
+// A escada de uma meta: um ponto por sessão, do degrau de mais apoio até independente
+function escadaSvg(a, x) {
+  const W = 320, H = 142, L = 54, R = 308, T = 24, B = 104, F = 122;
+  const Y = n => B - (n - 1) * (B - T) / 4, Xd = d => L + (d - SEM0) / (FIM_G - SEM0) * (R - L);
+  const s1 = new Date(2026, 8, 1, 12), o1 = new Date(2026, 9, 1, 12), C = x.com;
+  let g = '';
+  for (let n = 1; n <= 5; n++) g += `<line class="grade" x1="${L}" x2="${R}" y1="${Y(n)}" y2="${Y(n)}"/><text class="eixo" x="${L - 7}" y="${Y(n) + 3}" text-anchor="end">${NIVEL_CURTO[n]}</text>`;
+  g += `<text class="eixo" x="${L - 7}" y="${F + 3}" text-anchor="end">sem nível</text>`;
+  g += [s1, o1].map(d => `<line class="mes" x1="${Xd(d)}" x2="${Xd(d)}" y1="${T - 8}" y2="${F + 6}"/>`).join('');
+  g += [['ago', Xd(SEM0), Xd(s1)], ['set', Xd(s1), Xd(o1)], ['out', Xd(o1), Xd(FIM_G)]].map(([k, i, f]) => `<text class="eixo" x="${(i + f) / 2}" y="${H - 2}" text-anchor="middle">${perNome(k).slice(0, 3)}</text>`).join('');
+  if (C.length) {
+    let d = `M${Xd(C[0].d).toFixed(1)} ${Y(C[0].n)}`; for (const p of C.slice(1)) d += `H${Xd(p.d).toFixed(1)}V${Y(p.n)}`;
+    g += `<path class="area" d="${d}V${B}H${Xd(C[0].d).toFixed(1)}Z"/><path class="ln" pathLength="1" d="${d}"/>`;
+  }
+  if (x.indep) { const cx = Xd(x.indep.d); g += `<circle class="halo" cx="${cx}" cy="${Y(5)}" r="9"/><text class="rot5" x="${Math.min(cx, R - 4)}" y="${Y(5) - 14}" text-anchor="${cx > R - 70 ? 'end' : cx < L + 70 ? 'start' : 'middle'}">independente em ${dm(x.indep.d)}</text>`; }
+  x.pts.forEach((p, i) => {
+    const cx = Xd(p.d).toFixed(1), cy = p.n ? Y(p.n) : F;
+    g += `<g class="p" data-act="prog-ponto" data-aid="${a.id}" data-mid="${x.m.id}" data-i="${i}" data-tv="${NIVEIS[p.n]}" data-tl="${diaSem(iso(p.d))} · toque para ver a análise" data-tq="${esc(p.trecho || 'O programa aparece, mas a frase não diz o nível.')}"><circle class="${p.n ? 'pt' : 'pt0'}" cx="${cx}" cy="${cy}" r="${p.n ? 4 : 3}" style="--d:${i}"/><circle class="hit" cx="${cx}" cy="${cy}" r="11"/></g>`;
+  });
+  const P = PROG[x.m.prog];
+  return `<svg class="esc" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(cap(P.nome))}: ${plural(x.pts.length, 'sessão', 'sessões')}, de ${x.pri ? NIVEIS[x.pri.n].toLowerCase() : 'sem nível'} a ${x.ult ? NIVEIS[x.ult.n].toLowerCase() : 'sem nível'}${x.indep ? `, independente em ${dm(x.indep.d)}` : ''}.">${g}</svg>`;
+}
+const vazioMini = (t, s) => `<div class="pg-vazio"><b>${t}</b><span>${s}</span></div>`;
+function metaProgHtml(a, x, i) {
+  const m = x.m, P = m.prog ? PROG[m.prog] : null, [st, pc] = SIT_META[m.sit], dl = x.ult && x.pri ? x.ult.n - x.pri.n : 0;
+  const tags = `${x.parada ? `<span class="tag tag-alerta">${I('alert', 12)} mesmo degrau há ${x.parada} semanas</span>` : ''}${x.sumiu ? `<span class="tag tag-alerta">${I('alert', 12)} sem registro em ${perNome(ABERTA)}</span>` : ''}`;
+  const corpo = !P ? vazioMini('Meta sem programa do cadastro', 'Sem programa, a IA não tem onde ler o nível de apoio.') : !x.pts.length ? vazioMini('Nenhuma sessão com este programa', `De 03/08 a ${dmy(FIM_G)}, o programa não aparece nas análises.`) : escadaSvg(a, x);
+  const agora = x.ult ? `<span class="pg-agora">${degrausHtml(x.ult.n)}<b>${NIVEIS[x.ult.n]}</b></span>${dl ? `<span class="pg-delta ${dl > 0 ? 'up' : 'dn'}">${I(dl > 0 ? 'arrowUp' : 'arrowDown', 13)} ${plural(Math.abs(dl), 'degrau', 'degraus')}</span>` : '<span class="pg-delta">mesmo degrau</span>'}` : '<span class="pg-agora mut">Sem nível lido</span>';
+  return `<article class="pg-meta ${x.atencao ? 'atencao' : ''}" id="pm-${m.id}" style="--i:${i}">
+    <div class="pg-meta-h"><span class="tag tag-info">${P ? esc(cap(P.nome)) : 'sem programa'}</span><span class="pill ${pc}">${st.replace(/s$/, '')}</span></div>${tags ? `<div class="pg-meta-al">${tags}</div>` : ''}
+    <p class="pg-meta-t">${esc(m.texto)}</p>${corpo}
+    <div class="pg-meta-f">${agora}<span class="mut">${plural(x.pts.length, 'sessão', 'sessões')}${x.semNivel ? ` · ${x.semNivel} sem nível` : ''}</span></div></article>`;
+}
+// Mapa de sessões: quantas sessões por semana trabalharam cada meta (rampa do azul, validada)
+function mapaHtml(L) {
+  const mesW = Array.from({ length: N_SEM }, (_, w) => new Date(2026, 7, 5 + 7 * w, 12).getMonth());   // a semana fica no mês da quarta-feira
+  let head = '<span class="mh"></span>', i = 0;
+  while (i < N_SEM) { let j = i; while (j < N_SEM && mesW[j] === mesW[i]) j++; head += `<span class="mh" style="grid-column:span ${j - i}">${MES_NOMES[mesW[i]]}</span>`; i = j; }
+  let d = 0;
+  const rows = L.map(x => {
+    const P = PROG[x.m.prog], c = Array.from({ length: N_SEM }, () => []), w5 = x.indep ? semDe(x.indep.d) : -1;
+    for (const p of x.pts) { const w = semDe(p.d); if (w >= 0 && w < N_SEM) c[w].push(p); }
+    return `<span class="ml" title="${esc(cap(P.nome))}">${esc(cap(P.nome))}</span>` + c.map((ps, w) => {
+      const n = ps.length, niv = uniq(ps.filter(p => p.n).map(p => NIVEIS[p.n].toLowerCase()));
+      const tl = `${cap(P.nome)} · semana de ${dm(iniSem(w))}${n ? ` · ${niv.length ? 'níveis: ' + niv.join(', ') : 'sem nível'}` : ''}${w === w5 ? ' · chegou à independência' : ''}`;
+      return `<span class="mc ${n ? 'c' + Math.min(n, 4) : ''} ${w === w5 ? 'i5' : ''}" style="--d:${d++ % 40}" data-tv="${n ? plural(n, 'sessão', 'sessões') : 'Não trabalhado'}" data-tl="${esc(tl)}"></span>`;
+    }).join('');
+  }).join('');
+  return `<div class="pg-mapa" style="--sem:${N_SEM}" role="img" aria-label="Sessões por semana em que cada meta foi trabalhada; os números estão na versão em tabela.">${head}${rows}</div>`;
+}
+function tabelaProgHtml(a, L, v, med) {
+  const lin = L.map(x => `<tr><td><b>${x.m.prog ? esc(cap(PROG[x.m.prog].nome)) : 'sem programa'}</b><div class="mut" style="font-size:12px;font-weight:600">${esc(x.m.texto)}</div></td><td>${SIT_META[x.m.sit][0].replace(/s$/, '')}</td><td class="r num">${x.pts.length}</td><td class="r num">${x.semNivel}</td><td>${x.pri ? `${NIVEIS[x.pri.n]} <span class="mut">${dm(x.pri.d)}</span>` : '—'}</td><td>${x.ult ? `${NIVEIS[x.ult.n]} <span class="mut">${dm(x.ult.d)}</span>` : '—'}</td><td>${x.indep ? `${dm(x.indep.d)} · ${plural(x.nAte5, 'sessão', 'sessões')}` : '—'}</td><td>${x.parada ? `Mesmo degrau há ${x.parada} semanas` : x.sumiu ? `Sem registro em ${perNome(ABERTA)}` : '—'}</td></tr>`).join('');
+  const sem = v.map((n, w) => `<tr><td>${dm(iniSem(w))}</td><td class="r num">${n}</td><td class="r num">${fmtN(med[w])}</td></tr>`).join('');
+  return `<section class="card"><div class="card-head"><div><h2>Metas</h2><p class="sub">Os mesmos dados dos gráficos, em números.</p></div></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Meta</th><th>Situação</th><th class="r">Sessões</th><th class="r">Sem nível</th><th>Primeiro nível</th><th>Nível agora</th><th>Independente em</th><th>Atenção</th></tr></thead><tbody>${lin}</tbody></table></div></section>
+  <section class="card mt16"><div class="card-head"><div><h2>Metas que chegaram à independência, por semana</h2></div></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Semana de</th><th class="r">${esc(primeiro(a.nome))}</th><th class="r">Mediana da carteira</th></tr></thead><tbody>${sem}</tbody></table></div></section>`;
+}
+function telaProgresso(a, f) {
+  if (!a) return naoEncontrado();
+  if (S.persona === 'contas' || (S.persona === 'coord' && a.coord !== PERSONAS.coord.id)) return naoPode();
+  const X = a.metas.map(m => analiseMeta(a, m)), ativas = X.filter(x => x.m.prog && x.m.sit !== 'susp'), nInd = ativas.filter(x => x.indep).length;
+  const v = indepPorSemana(X), med = medianaCarteira(a), fim = med[N_SEM - 1], dif = nInd - fim, nCart = carteiraDe(a.coord).length;
+  const nSes = MESES_G.reduce((t, k) => t + sessoesDe(a, k).filter(s => !s.falta).length, 0), E = evoDe(a);
+  const ordem = x => x.m.sit === 'dev' ? (x.atencao ? 0 : 1) : { manut: 2, alc: 3, susp: 4 }[x.m.sit];
+  const subiu = x => (x.ult?.n || 0) - (x.pri?.n || 0);
+  const L = X.filter(x => !f || (f === 'atencao' ? x.atencao : x.m.sit === f)).sort((p, q) => ordem(p) - ordem(q) || subiu(q) - subiu(p));
+  const n = k => k === 'atencao' ? X.filter(x => x.atencao).length : X.filter(x => x.m.sit === k).length;
+  const cards = Object.entries(FILTROS_P).map(([k, [t, dot, sub]], i) => `<a class="rs com-dot ${n(k) === 0 ? 'vazio' : ''}" href="#/progresso/${a.id}${f !== k ? '/' + k : ''}" aria-pressed="${f === k}" style="--i:${i}"><span class="rs-dot ${dot}"></span><span class="rs-l">${t}</span><span class="rs-v num">${n(k)}</span><span class="rs-s">${sub}</span><span class="card-go">${I('go', 15)}</span></a>`).join('');
+  const nomeP = x => esc(cap(PROG[x.m.prog].nome));
+  const rap = X.filter(x => x.nAte5).sort((p, q) => p.nAte5 - q.nAte5)[0], par = X.filter(x => x.parada).sort((p, q) => q.parada - p.parada)[0], sum = X.find(x => x.sumiu);
+  const chips = [
+    rap && ['trendUp', '', 'Mais rápida', `${nomeP(rap)}: independente em ${plural(rap.nAte5, 'sessão', 'sessões')}`, rap],
+    par && ['alert', 'y', 'No mesmo degrau', `${nomeP(par)}: ${NIVEIS[par.ult.n].toLowerCase()} há ${par.parada} semanas`, par],
+    sum && ['alert', 'y', `Sem registro em ${perNome(ABERTA)}`, `${nomeP(sum)} não aparece nas análises`, sum],
+  ].filter(Boolean).map(([ic, c, t, d, x]) => `<button class="pg-chip" data-act="prog-foco" data-aid="${a.id}" data-id="${x.m.id}"><span class="pg-chip-ic ${c}">${I(ic, 16)}</span><span><b>${t}</b>${d}</span>${I('chevRight', 16)}</button>`).join('');
+  const cmp = `${dif > 0 ? 'Acima da' : dif < 0 ? 'Abaixo da' : 'Na'} mediana da carteira, que é de ${fmtN(fim)} ${fim === 1 ? 'meta' : 'metas'}`;
+  const verbo = nInd === 1 ? 'já chegou' : nInd ? 'já chegaram' : 'chegaram, até agora,';
+  const hero = `<section class="pg-hero" id="pg-hero">
+    <div class="pg-hero-txt"><div class="kicker">${I('chart', 14)} Evolução das metas</div><h1>${esc(a.nome)}</h1>
+      <div class="pg-big"><b class="pg-num" data-n="${nInd}">${nInd}</b><span class="pg-big-t">de ${plural(ativas.length, 'meta', 'metas')} ${verbo} à independência</span></div>
+      <p class="pg-cmp">${I(dif >= 0 ? 'trendUp' : 'trendDown', 15)} ${cmp}</p>
+      <p class="pg-hero-sub">Nível de apoio lido pela IA em ${plural(nSes, 'evolução diária', 'evoluções diárias')}, de 03/08 a ${dmy(FIM_G)}. O Tita não traz número: cada ponto vem de uma frase da análise.</p>
+      ${chips ? `<div class="pg-dest">${chips}</div>` : ''}</div>
+    <figure class="pg-viz"><div class="pg-viz-h"><h2>Metas independentes, semana a semana</h2><div class="pg-leg"><span><i class="lk a"></i>${esc(primeiro(a.nome))}</span><span><i class="lk c"></i>Mediana da carteira · ${plural(nCart, 'assistido', 'assistidos')}</span></div></div>${heroSvg(a, v, med)}</figure>
+  </section>`;
+  const tab = S.progTab || 'graf';
+  const secH = `<div class="pg-sec-h"><div><h2>${f ? FILTROS_P[f][0] : 'A escada de cada meta'}</h2><p class="sub">Do degrau de mais apoio (ajuda física total) até independente. Cada ponto é uma sessão: toque para ver a frase da análise.</p></div>
+    <div class="pg-sec-a">${f ? `<a class="btn btn-secondary btn-sm" href="#/progresso/${a.id}">${I('x', 14)} Tirar o filtro</a>` : ''}<nav class="tabs" aria-label="Ver como"><button class="tab" data-act="prog-tab" data-v="graf" ${tab === 'graf' ? 'aria-current="page"' : ''}>${I('chart', 15)} Gráficos</button><button class="tab" data-act="prog-tab" data-v="tab" ${tab === 'tab' ? 'aria-current="page"' : ''}>${I('list', 15)} Tabela</button></nav></div></div>`;
+  const vazioF = `<div class="card pad">${vazio(f ? `Nenhuma meta: ${FILTROS_P[f][0].toLowerCase()}` : 'Nenhuma meta cadastrada', f ? 'Quando houver, elas aparecem aqui.' : 'Inclua as metas no cadastro.', f ? `<a class="btn btn-secondary mt8" href="#/progresso/${a.id}">${I('x', 16)} Tirar o filtro</a>` : `<a class="btn btn-secondary mt8" href="#/metas/${a.id}">${I('target', 16)} Cadastro de metas</a>`)}</div>`;
+  const comSes = L.filter(x => x.pts.length);
+  const corpo = !L.length ? vazioF : tab === 'tab' ? tabelaProgHtml(a, L, v, med)
+    : `<div class="pg-grid">${L.map((x, i) => metaProgHtml(a, x, i)).join('')}</div>
+      <section class="card mt16" id="pg-mapa"><div class="card-head"><div><h2>Mapa de sessões</h2><p class="sub">Quantas sessões por semana trabalharam cada meta. Semana em branco: o programa não apareceu nas análises.</p></div>
+      <div class="pg-esc-leg" aria-hidden="true">Sessões na semana <span class="mc"></span>0 <span class="mc c1"></span>1 <span class="mc c2"></span>2 <span class="mc c3"></span>3 <span class="mc c4"></span>4+ <span class="mc c3 i5"></span>independente</div></div>
+      <div class="card-body pg-mapa-w">${comSes.length ? mapaHtml(comSes) : vazio('Nenhuma sessão', 'As metas deste filtro não aparecem nas análises do período.')}</div></section>`;
+  S.bb = barra(`${I('chart', 16)} Nível de apoio lido pela IA nas análises do Tita; cada ponto mostra a frase de onde saiu (E27).`, `<a class="btn btn-secondary btn-lg" href="#/metas/${a.id}">${I('target', 18)} Cadastro de metas</a>${E ? `<a class="btn btn-primary btn-lg" href="#/evolucao/${E.id}">${I('doc', 18)} Evolução de ${mesNome(ABERTA)}</a>` : ''}`);
+  const [vh, vr] = S.progVolta || ['#/evolucoes', 'Evoluções'];
+  return `<a class="voltar" href="${vh}">${I('arrowLeft', 16)} ${vr}</a>${hero}
+  <div class="resumo k4 ${f ? 'tem-sel' : ''}" role="group" aria-label="Situação das metas no gráfico">${cards}</div>${secH}${corpo}`;
+}
+function contarHero() {   // o número grande sobe de 0 até o valor na entrada da tela
+  const el = $('#pg-hero .pg-num'), n = +el?.dataset.n; if (!n || reduzMov()) return;
+  const t0 = performance.now(), dur = 900; el.textContent = '0';
+  const passo = t => { const k = Math.min(1, (t - t0) / dur); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(passo); };
+  requestAnimationFrame(passo);
+  setTimeout(() => { el.textContent = n; }, dur + 150);   // com a aba em segundo plano, o quadro não roda: o valor final fica garantido
+}
+
 function telaMetas(a, f) {
   if (!a) return naoEncontrado();
   if (S.persona === 'contas' || (S.persona === 'coord' && a.coord !== PERSONAS.coord.id)) return naoPode();
@@ -2220,7 +2564,8 @@ function telaMetas(a, f) {
   if (ed) S.bb = barra(`${I('target', 16)} As metas em desenvolvimento entram nas metas para o mês atual do rascunho.`, `${E ? `<a class="btn btn-secondary btn-lg" href="#/evolucao/${E.id}">${I('doc', 18)} Evolução de ${mesNome(ABERTA)}</a>` : ''}<button class="btn btn-primary btn-lg" data-act="mc-nova" data-id="${a.id}">${I('plus', 18)} Nova meta</button>`);
   return `<a class="voltar" href="#/metas">${I('arrowLeft', 16)} Metas dos assistidos</a>
   <div class="evo-head"><span class="avatar lg">${iniciais(a.nome)}</span><div class="evo-id"><div class="kicker">${I('target', 14)} Cadastro de metas</div><h1>${esc(a.nome)}</h1>
-    <div class="evo-meta"><span><b>Plano</b> ${esc(a.plano || 'em branco')}</span><span><b>Unidade</b> ${uni(a.unid).nome} · ${a.turno}</span><span><b>${cargoCoord(c)}</b> ${esc(c.nome)}</span></div></div></div>
+    <div class="evo-meta"><span><b>Plano</b> ${esc(a.plano || 'em branco')}</span><span><b>Unidade</b> ${uni(a.unid).nome} · ${a.turno}</span><span><b>${cargoCoord(c)}</b> ${esc(c.nome)}</span></div>
+    <a class="btn btn-secondary btn-sm mt8" href="#/progresso/${a.id}">${I('chart', 15)} Evolução em gráfico</a></div></div>
   <div class="resumo k4 ${f ? 'tem-sel' : ''}" role="group" aria-label="Situação das metas">${cards}</div>
   <section class="card" id="lista-metas"><div class="card-head"><div><h2>${f ? SIT_META[f][0] : 'Plano terapêutico'}</h2><p class="sub">As metas em desenvolvimento são o ponto de partida das metas para o mês atual. Ao enviar o arquivo do mês, as metas alcançadas e as novas atualizam este cadastro.</p></div>${f ? `<a class="chip-x" href="#/metas/${a.id}">${SIT_META[f][0]} ${I('x', 14)}</a>` : ''}</div>
     ${L.length ? L.map(m => metaCadHtml(a, m, ed)).join('') : `<div class="card-body">${vazio(f ? `Nenhuma meta: ${SIT_META[f][0].toLowerCase()}` : 'Nenhuma meta cadastrada', f ? 'Quando houver, elas aparecem aqui.' : 'Inclua a primeira meta do plano.', f ? `<a class="btn btn-secondary mt8" href="#/metas/${a.id}">${I('x', 16)} Tirar o filtro</a>` : '')}</div>`}</section>`;
@@ -2556,6 +2901,27 @@ Object.assign(ACOES, {
   'menu': () => abrirMenu(),
   'fechar-menu': () => fecharMenu(),
   'fechar-modal': () => fecharModal(),
+  // E27: evolução das metas em gráfico
+  'prog-tab': el => { S.progTab = el.dataset.v; atualizar(); },
+  'prog-foco': el => {
+    const ir = () => { const x = $('#pm-' + el.dataset.id); if (x) { rolarPara(x, 'center'); piscar(x); } };
+    if (S.progTab === 'tab') { S.progTab = 'graf'; atualizar(); }
+    if ($('#pm-' + el.dataset.id)) return ir();
+    location.hash = `#/progresso/${el.dataset.aid}`; setTimeout(ir, 80);
+  },
+  'prog-ponto': el => {
+    esconderTip();
+    const a = porId(el.dataset.aid), m = a?.metas.find(x => x.id === el.dataset.mid), p = m && serieMeta(a, m)[+el.dataset.i]; if (!p) return;
+    const E = evoDe(a, p.k), txt = esc(p.s.texto), tr = p.trecho ? esc(p.trecho) : null;
+    const corpo = tr && txt.includes(tr) ? txt.replace(tr, `<mark>${tr}</mark>`) : txt;
+    const ir = E ? `<button class="btn btn-secondary" data-act="prog-ir" data-href="${p.k === ABERTA ? '#/evolucao/' : '#/documento/'}${E.id}">${I('doc', 16)} Evolução de ${mesNome(p.k)}</button>` : '';
+    abrirModal(`${mHead(`${esc(cap(PROG[m.prog].nome))} · ${dmy(p.d)}`, `Evolução diária do Tita, sessões de ${perNome(p.k)}`)}
+      <div class="m-body"><p class="lado-k" style="margin-top:0">Nível lido pela IA</p><p class="pg-nivel">${degrausHtml(p.n)}<b>${NIVEIS[p.n]}</b></p>
+      <p class="lado-k">Análise do Atendimento</p><div class="analise on mt8"><div class="analise-h">${I('calendar', 13)} ${diaSem(iso(p.d))}</div><p style="margin:0">${corpo}</p></div>
+      <div class="nota mt16">${I('info', 18)}<span>${p.n ? 'A IA leu o nível na frase destacada.' : 'O programa aparece, mas a frase não diz o nível: a sessão conta como trabalhada e fica fora da escada.'} Se a frase cita mais de um nível, vale o de mais apoio (E27).</span></div></div>
+      <footer class="m-foot">${ir}<button class="btn btn-primary" data-act="fechar-modal">Fechar</button></footer>`, 'md');
+  },
+  'prog-ir': el => { const h = el.dataset.href; fecharModal(); location.hash = h; },
   'modal-ok': () => { const r = modalOk?.(); if (r === false) return; modalOk = null; fecharModal(); },
   'fechar-modal-ir': el => { const h = el.getAttribute('href'); fecharModal(); location.hash = h; },
   'imprimir': () => window.print(),
@@ -2932,13 +3298,64 @@ $('#pdf-input').addEventListener('change', e => { pdfEscolhido(e.target.files[0]
 $('#img-input').addEventListener('change', e => { lerImagem(e.target.files[0], 'imagem escolhida'); e.target.value = ''; });
 $('#cam-input').addEventListener('change', e => { if (S.camAlvo === 'doc') { if (e.target.files[0]) docDaCamera(); } else lerImagem(e.target.files[0], 'câmera'); e.target.value = ''; });
 $('#doc-input').addEventListener('change', e => { docsEscolhidos([...e.target.files]); e.target.value = ''; });
-window.addEventListener('hashchange', () => {
+window.addEventListener('hashchange', e => {
   const r = rotaAtual();
+  esconderTip();
+  if (r[0] === 'progresso') {   // E27: a volta leva para a tela de onde o gráfico foi aberto
+    const o = (e.oldURL.split('#')[1] || '/'), ro = o.split('/').filter(Boolean);
+    if (ro[0] !== 'progresso') S.progVolta = ['#' + o, ro[0] === 'metas' ? (ro[1] ? 'Cadastro de metas' : 'Metas dos assistidos') : ro[0] === 'arquivo' ? 'Arquivo do mês' : ro[0] === 'evolucao' ? 'Evolução' : !ro[0] && S.persona === 'geral' ? 'Painel das unidades' : 'Evoluções'];
+  }
   if (r[0] !== 'nova') S.imp = null;
   if (r[0] !== 'evolucao') S.edit = null;
   S.animar = true; fecharMenu(); render(); window.scrollTo(0, 0); $('#conteudo').focus({ preventScroll: true });
   $('.folha .bloco.foco')?.scrollIntoView({ block: 'center' });
 });
+
+// ═══ Dica dos gráficos (E27): valor primeiro, rótulo depois; o texto entra por textContent ═══
+const vizTip = document.createElement('div'); vizTip.id = 'viz-tip'; vizTip.setAttribute('role', 'tooltip'); document.body.appendChild(vizTip);
+function posTip(x, y) {
+  const r = vizTip.getBoundingClientRect(); let L = x + 14, T = y + 16;
+  if (L + r.width > innerWidth - 8) L = x - r.width - 14; if (T + r.height > innerHeight - 8) T = y - r.height - 14;
+  vizTip.style.left = Math.max(8, L) + 'px'; vizTip.style.top = Math.max(8, T) + 'px';
+}
+function mostrarTip(el, x, y) {
+  vizTip.replaceChildren();
+  const b = document.createElement('b'); b.textContent = el.dataset.tv; vizTip.append(b);
+  if (el.dataset.tl) { const l = document.createElement('span'); l.textContent = el.dataset.tl; vizTip.append(l); }
+  if (el.dataset.tq) { const q = document.createElement('q'); q.textContent = el.dataset.tq; vizTip.append(q); }
+  vizTip.classList.add('on'); posTip(x, y);
+}
+function esconderTip() { vizTip.classList.remove('on'); $$('.pg-cross').forEach(l => { l.style.visibility = 'hidden'; }); }
+function heroTip(svg, w, x, y) {
+  const H = S.progHero; if (!H) return;
+  H.w = w; const cx = H.x0 + (w + .5) * (H.x1 - H.x0) / N_SEM, cr = svg.querySelector('.pg-cross');
+  cr.setAttribute('x1', cx); cr.setAttribute('x2', cx); cr.style.visibility = 'visible';
+  vizTip.replaceChildren();
+  const t = document.createElement('span'); t.textContent = `Semana de ${dm(iniSem(w))}`; vizTip.append(t);
+  for (const [k, val, rot] of [['a', H.v[w], H.nome], ['c', H.med[w], 'Mediana da carteira']]) {
+    const row = document.createElement('div'), i = document.createElement('i'), b = document.createElement('b'), s = document.createElement('span');
+    row.className = 'tl'; i.className = 'lk ' + k; b.textContent = fmtN(val); s.textContent = rot; row.append(i, b, s); vizTip.append(row);
+  }
+  vizTip.classList.add('on'); posTip(x, y);
+}
+document.addEventListener('pointermove', e => {
+  const hit = e.target.closest?.('.pg-hit');
+  if (hit && S.progHero) {
+    const svg = hit.ownerSVGElement, R = svg.getBoundingClientRect(), H = S.progHero, px = (e.clientX - R.left) * H.W / R.width;
+    heroTip(svg, Math.max(0, Math.min(N_SEM - 1, Math.floor((px - H.x0) / (H.x1 - H.x0) * N_SEM))), e.clientX, e.clientY); return;
+  }
+  const el = e.target.closest?.('[data-tv]');
+  if (el) mostrarTip(el, e.clientX, e.clientY); else if (vizTip.classList.contains('on')) esconderTip();
+});
+window.addEventListener('scroll', () => { if (vizTip.classList.contains('on')) esconderTip(); }, { passive: true });
+const heroTecla = (svg, w) => { const H = S.progHero, R = svg.getBoundingClientRect(); heroTip(svg, w, R.left + R.width * (H.x0 + (w + .5) * (H.x1 - H.x0) / N_SEM) / H.W, R.top + R.height * .3); };
+document.addEventListener('keydown', e => {
+  if (!e.target.matches?.('.pg-hero-svg') || !S.progHero || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+  e.preventDefault(); const w0 = S.progHero.w ?? N_SEM - 1;
+  heroTecla(e.target, e.key === 'Home' ? 0 : e.key === 'End' ? N_SEM - 1 : Math.max(0, Math.min(N_SEM - 1, w0 + (e.key === 'ArrowRight' ? 1 : -1))));
+});
+document.addEventListener('focusin', e => { if (e.target.matches?.('.pg-hero-svg') && S.progHero) heroTecla(e.target, S.progHero.w ?? N_SEM - 1); });
+document.addEventListener('focusout', e => { if (e.target.matches?.('.pg-hero-svg')) esconderTip(); });
 
 iniciar();
 semearDicas();
