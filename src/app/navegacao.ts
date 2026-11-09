@@ -1,0 +1,27 @@
+import { FileText, Inbox, type LucideIcon } from 'lucide-react';
+
+import type { Papel } from '@/hooks/useUsuario';
+
+export interface ItemDoMenu {
+  rota: string;
+  rotulo: string;
+  icone: LucideIcon;
+}
+
+const EVOLUCOES: ItemDoMenu = { rota: '/evolucoes', rotulo: 'Evoluções', icone: FileText };
+const ARQUIVOS: ItemDoMenu = { rota: '/arquivos', rotulo: 'Arquivos recebidos', icone: Inbox };
+
+/**
+ * O menu de cada papel mostra só as telas que já existem. Esconder um item é só UX: quem decide o
+ * que cada papel lê é o RLS do banco.
+ */
+export const MENU_DO_PAPEL: Record<Papel, readonly ItemDoMenu[]> = {
+  coordenador: [EVOLUCOES],
+  coordenacao_geral: [EVOLUCOES],
+  contas_medicas: [ARQUIVOS],
+};
+
+/** Primeira tela de cada papel, para onde vai quem abre a raiz do sistema. */
+export function rotaInicial(papel: Papel): string {
+  return MENU_DO_PAPEL[papel][0]?.rota ?? '/evolucoes';
+}

@@ -4,6 +4,8 @@ arquivos/
 # Credenciais
 SENHAS.txt
 *senha*
+# A tela de recuperar a senha é código, não credencial (o git do Windows ignora maiúsculas).
+!src/features/auth/routes/RecuperarSenhaPage.tsx
 *password*
 *.pem
 *.key
@@ -38,3 +40,8 @@ desktop.ini
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# ── Saída dos testes ──────────────────────────────────────────────
+test-results/
+playwright-report/
+blob-report/
