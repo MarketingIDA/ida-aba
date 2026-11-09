@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useSearchParams } from 'react-router';
 
 import { ehSituacao, type Situacao } from '@/features/evolucoes/logica';
@@ -20,6 +21,7 @@ export interface FiltrosDaUrl {
  */
 export function useFiltrosDaUrl(mesAberto: string, meses: readonly string[]): FiltrosDaUrl {
   const [params, setParams] = useSearchParams();
+  const pendente = useRef<{ de: URLSearchParams; para: URLSearchParams } | null>(null);
   const mesDaUrl = params.get('mes') ?? '';
   const situacaoDaUrl = params.get('situacao');
   const coordenadorDaUrl = params.get('coordenador') ?? '';
@@ -32,17 +34,17 @@ export function useFiltrosDaUrl(mesAberto: string, meses: readonly string[]): Fi
     unidade: unidade === '' ? null : unidade,
     coordenadorId: /^\d+$/.test(coordenadorDaUrl) ? Number(coordenadorDaUrl) : null,
     mudar: (mudancas, substituir = false) => {
-      setParams(
-        (atuais) => {
-          const novos = new URLSearchParams(atuais);
-          for (const [chave, valor] of Object.entries(mudancas)) {
-            if (valor === '') novos.delete(chave);
-            else novos.set(chave, valor);
-          }
-          return novos;
-        },
-        { replace: substituir },
-      );
+      // O `setParams` não enfileira como o `useState`: duas mudanças antes da URL atualizar
+      // partiriam da mesma URL velha, e a segunda desfaria a primeira. Enquanto a URL vista ainda
+      // é a de antes, a próxima mudança parte da que ficou pendente.
+      const base = pendente.current?.de === params ? pendente.current.para : params;
+      const novos = new URLSearchParams(base);
+      for (const [chave, valor] of Object.entries(mudancas)) {
+        if (valor === '') novos.delete(chave);
+        else novos.set(chave, valor);
+      }
+      pendente.current = { de: params, para: novos };
+      setParams(novos, { replace: substituir });
     },
   };
 }
