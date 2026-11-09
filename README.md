@@ -52,8 +52,3 @@ ida-aba/
 
 O protótipo é descartável: serve de referência de telas e regras, e o código dele não é reaproveitado. Depois da aprovação:
 
-1. Respostas do cliente às perguntas P1 a P12 de [`docs/escopo/01-dominio.md`](docs/escopo/01-dominio.md), e ajuste do protótipo se mudarem regra ou tela.
-2. **F0, fundação:** repositório na stack da casa ([`docs/arquitetura/00-stack.md`](docs/arquitetura/00-stack.md)), CI com os gates do [`ENGINEERING_STANDARDS.md`](ENGINEERING_STANDARDS.md), Supabase local com seed fictício e os ADRs de exceção.
-3. Domínio puro primeiro (cálculo da independência, aquisição, alertas e pendências, com testes), depois registro de sessão, evolução, revisão e relatório.
-
-Nenhum dado real entra em projeto Supabase remoto antes da fase de login.
