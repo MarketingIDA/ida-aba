@@ -1,0 +1,19 @@
+# Gerados e dependências
+dist
+coverage
+node_modules
+pnpm-lock.yaml
+playwright-report
+test-results
+
+# Documentos reais e material que não é código do app
+arquivos
+prototipo
+docs
+*.md
+
+# Migrações SQL ficam como foram escritas (o Prettier não formata SQL)
+supabase/migrations
+
+# Cópia literal de docs/design-system/tokens.css (os dois ficam idênticos)
+src/index.css

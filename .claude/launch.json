@@ -4,8 +4,22 @@
     {
       "name": "prototipo-aba",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "4174", "--bind", "127.0.0.1", "--directory", "prototipo"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4174",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "prototipo"
+      ],
       "port": 4174
+    },
+    {
+      "name": "app",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 5173
     }
   ]
 }

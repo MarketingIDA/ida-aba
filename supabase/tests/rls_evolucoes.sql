@@ -1,0 +1,234 @@
+-- Testes de RLS e regras do banco. Rodam numa transação que termina com erro de propósito:
+-- o `raise exception` final devolve o resultado e desfaz tudo, então nada fica gravado, nem os
+-- usuários e assistidos fictícios criados aqui. Rode pelo SQL Editor ou pelo MCP do Supabase.
+-- Saída esperada: "RESULTADO: 0 falhas de N".
+
+create temp table resultado (n serial, teste text, ok boolean);
+grant all on resultado to public;
+grant all on sequence resultado_n_seq to public;
+
+-- Contas fictícias no Auth (só existem dentro desta transação).
+insert into auth.users (id, email, email_confirmed_at, aud, role) values
+  ('a0000000-0000-4000-8000-000000000001', 'coord.a@exemplo.test', now(), 'authenticated', 'authenticated'),
+  ('a0000000-0000-4000-8000-000000000002', 'coord.b@exemplo.test', now(), 'authenticated', 'authenticated'),
+  ('a0000000-0000-4000-8000-000000000003', 'geral@exemplo.test', now(), 'authenticated', 'authenticated'),
+  ('a0000000-0000-4000-8000-000000000004', 'contas@exemplo.test', now(), 'authenticated', 'authenticated'),
+  ('a0000000-0000-4000-8000-000000000005', 'inativo@exemplo.test', now(), 'authenticated', 'authenticated'),
+  ('a0000000-0000-4000-8000-000000000006', 'sem.cadastro@exemplo.test', now(), 'authenticated', 'authenticated'),
+  ('a0000000-0000-4000-8000-000000000007', 'nao.confirmado@exemplo.test', null, 'authenticated', 'authenticated');
+
+-- O cadastro nasce depois da conta: o trigger liga pelo e-mail confirmado.
+insert into acesso.usuarios (nome, email, papel, crp, ativo) values
+  ('Coordenadora A', 'coord.a@exemplo.test', 'coordenador', '02/00001', true),
+  ('Coordenador B', 'coord.b@exemplo.test', 'coordenador', '02/00002', true),
+  ('Coordenação Geral', 'geral@exemplo.test', 'coordenacao_geral', null, true),
+  ('Contas Médicas', 'contas@exemplo.test', 'contas_medicas', null, true),
+  ('Coordenador Inativo', 'inativo@exemplo.test', 'coordenador', null, false),
+  ('Não Confirmado', 'nao.confirmado@exemplo.test', 'coordenador', null, true);
+
+insert into resultado (teste, ok) select 'vincula conta de e-mail confirmado',
+  (select auth_user_id from acesso.usuarios where email = 'coord.a@exemplo.test')
+    = 'a0000000-0000-4000-8000-000000000001';
+insert into resultado (teste, ok) select 'não vincula e-mail não confirmado',
+  (select auth_user_id is null from acesso.usuarios where email = 'nao.confirmado@exemplo.test');
+
+insert into cadastro.unidades (sigla, nome) values ('TST', 'Unidade Teste'), ('TSX', 'Unidade X');
+insert into cadastro.planos (nome) values ('Plano Teste');
+insert into cadastro.carteiras (unidade_id, turno, coordenador_id)
+  select u.id, 'tarde', (select id from acesso.usuarios where email = 'coord.a@exemplo.test')
+    from cadastro.unidades u where u.sigla = 'TST';
+insert into cadastro.carteiras (unidade_id, turno, coordenador_id)
+  select u.id, 'manha', (select id from acesso.usuarios where email = 'coord.b@exemplo.test')
+    from cadastro.unidades u where u.sigla = 'TST';
+
+insert into cadastro.assistidos (nome, genero, plano_id, unidade_id, carteira_id)
+  select n, g::cadastro.genero, (select id from cadastro.planos where nome = 'Plano Teste'),
+         c.unidade_id, c.id
+    from (values ('Assistida Um Teste', 'feminino', 'tarde'),
+                 ('Assistido Dois Teste', 'masculino', 'tarde'),
+                 ('Assistido Tres Teste', 'masculino', 'manha')) v(n, g, t)
+    join cadastro.carteiras c on c.turno = v.t::cadastro.turno
+    join cadastro.unidades u on u.id = c.unidade_id and u.sigla = 'TST';
+
+insert into resultado (teste, ok) select 'numera os assistidos na unidade (E16)',
+  (select array_agg(sequencia order by sequencia) from cadastro.assistidos where nome like '%Teste')
+    = array[1, 2, 3]::smallint[];
+
+insert into evolucao.evolucoes (assistido_id, mes_ref, origem)
+  select id, '2026-11-01', 'tita' from cadastro.assistidos where nome = 'Assistida Um Teste';
+insert into evolucao.evolucoes (assistido_id, mes_ref, origem)
+  select id, '2026-11-01', 'manual' from cadastro.assistidos where nome = 'Assistido Tres Teste';
+insert into evolucao.partes (evolucao_id, numero, conferida, conferida_em)
+  select e.id, n, n <= 2, case when n <= 2 then now() end
+    from evolucao.evolucoes e
+    join cadastro.assistidos a on a.id = e.assistido_id and a.nome = 'Assistida Um Teste',
+         generate_series(1, 4) n;
+
+insert into resultado (teste, ok) select 'código da evolução UNI-AAMM-NNN-EV (E16)',
+  (select e.codigo = 'TST-2611-' || lpad(a.sequencia::text, 3, '0') || '-EV'
+     from evolucao.evolucoes e join cadastro.assistidos a on a.id = e.assistido_id
+    where a.nome = 'Assistida Um Teste');
+insert into resultado (teste, ok) select 'período analisado 01/10 a 31/10 (E18)',
+  (select (e.periodo_inicio, e.periodo_fim) = (date '2026-10-01', date '2026-10-31')
+     from evolucao.evolucoes e join cadastro.assistidos a on a.id = e.assistido_id
+    where a.nome = 'Assistida Um Teste');
+
+-- Regras do banco
+do $$
+begin
+  begin
+    insert into evolucao.evolucoes (assistido_id, mes_ref, origem)
+      select id, '2026-11-01', 'tita' from cadastro.assistidos where nome = 'Assistida Um Teste';
+    insert into resultado (teste, ok) values ('uma evolução por assistido e mês (E01)', false);
+  exception when unique_violation then
+    insert into resultado (teste, ok) values ('uma evolução por assistido e mês (E01)', true);
+  end;
+  begin
+    insert into evolucao.evolucoes (assistido_id, mes_ref, origem)
+      select id, '2026-11-15', 'tita' from cadastro.assistidos where nome = 'Assistido Dois Teste';
+    insert into resultado (teste, ok) values ('mês da evolução só no dia 1º', false);
+  exception when check_violation then
+    insert into resultado (teste, ok) values ('mês da evolução só no dia 1º', true);
+  end;
+  begin
+    insert into cadastro.carteiras (unidade_id, turno, coordenador_id)
+      select u.id, 'integral', (select id from acesso.usuarios where email = 'contas@exemplo.test')
+        from cadastro.unidades u where u.sigla = 'TSX';
+    insert into resultado (teste, ok) values ('carteira só com coordenador', false);
+  exception when check_violation then
+    insert into resultado (teste, ok) values ('carteira só com coordenador', true);
+  end;
+  begin
+    insert into cadastro.assistidos (nome, genero, unidade_id, carteira_id)
+      select 'Sobrenome', 'feminino', c.unidade_id, c.id from cadastro.carteiras c limit 1;
+    insert into resultado (teste, ok) values ('nome do assistido com sobrenome (E09)', false);
+  exception when check_violation then
+    insert into resultado (teste, ok) values ('nome do assistido com sobrenome (E09)', true);
+  end;
+end;
+$$;
+
+-- Coordenadora A: vê só a carteira dela.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
+insert into resultado (teste, ok) select 'coordenador lê só a própria linha de usuário',
+  (select count(*) from acesso.usuarios) = 1;
+insert into resultado (teste, ok) select 'coordenador lê só os assistidos da carteira',
+  (select count(*) from cadastro.assistidos where nome like '%Teste') = 2;
+insert into resultado (teste, ok) select 'coordenador lê só as evoluções da carteira',
+  (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1;
+insert into resultado (teste, ok) select 'coordenador lê as partes da evolução dele',
+  (select count(*) from evolucao.partes) = 4;
+insert into resultado (teste, ok) select 'lista do mês: 2 assistidos, 2 de 4 partes conferidas',
+  (select count(*) = 2 and sum(coalesce(partes_conferidas, 0)) = 2
+     from evolucao.evolucoes_do_mes('2026-11-01') where unidade_sigla = 'TST');
+insert into resultado (teste, ok) select 'coordenador não lê a auditoria',
+  (select count(*) from auditoria.eventos) = 0;
+do $$
+begin
+  begin
+    insert into cadastro.unidades (sigla, nome) values ('HACK', 'Invasora');
+    insert into resultado (teste, ok) values ('coordenador não cria unidade', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('coordenador não cria unidade', true);
+  end;
+  begin
+    update acesso.usuarios set papel = 'coordenacao_geral' where email = 'coord.a@exemplo.test';
+    insert into resultado (teste, ok) values ('coordenador não muda o próprio papel',
+      (select papel = 'coordenador' from acesso.usuarios where email = 'coord.a@exemplo.test'));
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('coordenador não muda o próprio papel', true);
+  end;
+  begin
+    insert into evolucao.evolucoes (assistido_id, mes_ref, origem)
+      select id, '2026-12-01', 'tita' from cadastro.assistidos where nome = 'Assistida Um Teste';
+    insert into resultado (teste, ok) values ('coordenador ainda não escreve evolução direto', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('coordenador ainda não escreve evolução direto', true);
+  end;
+  begin
+    update acesso.usuarios set auth_user_id = null where email = 'coord.a@exemplo.test';
+    insert into resultado (teste, ok) values ('ninguém altera auth_user_id pela API', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('ninguém altera auth_user_id pela API', true);
+  end;
+end;
+$$;
+reset role;
+
+-- Coordenador B: não vê a carteira da A.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}';
+insert into resultado (teste, ok) select 'outro coordenador não vê a carteira alheia',
+  (select count(*) from cadastro.assistidos where nome like '%Teste') = 1
+  and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1
+  and (select count(*) from evolucao.partes) = 0;
+reset role;
+
+-- Coordenação geral: vê tudo e mantém o cadastro.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
+insert into resultado (teste, ok) select 'coordenação geral lê todos os assistidos e evoluções',
+  (select count(*) from cadastro.assistidos where nome like '%Teste') = 3
+  and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 2;
+insert into resultado (teste, ok) select 'coordenação geral filtra a lista por coordenador',
+  (select count(*) from evolucao.evolucoes_do_mes('2026-11-01',
+     (select id from acesso.usuarios where email = 'coord.b@exemplo.test'))
+    where unidade_sigla = 'TST') = 1;
+insert into resultado (teste, ok) select 'coordenação geral lê a auditoria',
+  (select count(*) from auditoria.eventos where tabela = 'assistidos') >= 3;
+update cadastro.planos set nome = 'Plano Teste Renomeado' where nome = 'Plano Teste';
+insert into resultado (teste, ok) select 'coordenação geral altera o cadastro',
+  exists (select 1 from cadastro.planos where nome = 'Plano Teste Renomeado');
+reset role;
+
+-- Contas médicas: nesta etapa não lê assistido nem evolução (recebe só o arquivo do mês, E24).
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000004","role":"authenticated"}';
+insert into resultado (teste, ok) select 'contas médicas não lê assistido nem evolução',
+  (select count(*) from cadastro.assistidos) = 0
+  and (select count(*) from evolucao.evolucoes) = 0
+  and (select count(*) from evolucao.evolucoes_do_mes('2026-11-01')) = 0;
+reset role;
+
+-- Inativo e conta sem cadastro: nada.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000005","role":"authenticated"}';
+insert into resultado (teste, ok) select 'usuário inativo não lê nada',
+  (select count(*) from cadastro.unidades) = 0 and (select count(*) from cadastro.assistidos) = 0;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000006","role":"authenticated"}';
+insert into resultado (teste, ok) select 'conta do Auth sem cadastro não lê nada',
+  (select count(*) from acesso.usuarios) = 0 and (select count(*) from cadastro.carteiras) = 0;
+reset role;
+
+-- Anônimo: sem acesso a nenhum schema do sistema.
+insert into resultado (teste, ok) select 'anon sem uso dos schemas',
+  not has_schema_privilege('anon', 'acesso', 'usage')
+  and not has_schema_privilege('anon', 'cadastro', 'usage')
+  and not has_schema_privilege('anon', 'evolucao', 'usage');
+insert into resultado (teste, ok) select 'RLS ligado e forçado em todas as tabelas',
+  not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+     where n.nspname in ('acesso', 'cadastro', 'evolucao', 'auditoria') and c.relkind = 'r'
+       and not (c.relrowsecurity and c.relforcerowsecurity));
+insert into resultado (teste, ok) select 'authenticated sem DELETE em nenhuma tabela',
+  not exists (
+    select 1 from information_schema.role_table_grants
+     where grantee = 'authenticated' and privilege_type = 'DELETE'
+       and table_schema in ('acesso', 'cadastro', 'evolucao', 'auditoria'));
+
+do $$
+declare
+  falhas text;
+  total int;
+  nfalhas int;
+begin
+  select count(*), count(*) filter (where not coalesce(ok, false)),
+         string_agg(teste, '; ' order by n) filter (where not coalesce(ok, false))
+    into total, nfalhas, falhas
+    from resultado;
+  raise exception 'RESULTADO: % falhas de %. %', nfalhas, total, coalesce('Falharam: ' || falhas, '');
+end;
+$$;

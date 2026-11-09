@@ -38,3 +38,8 @@ desktop.ini
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# ── Saída dos testes ──────────────────────────────────────────────
+test-results/
+playwright-report/
+blob-report/

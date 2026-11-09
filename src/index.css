@@ -1,0 +1,368 @@
+/*
+ * Design system · Contas Médicas IDA
+ * Tokens para Tailwind CSS 4 + shadcn/ui (Base UI), prontos para virar o src/index.css de outro projeto.
+ *
+ * Origem: o :root de prototipo/simulacao-faturamento.html (conferido em 03/11/2026). Os nomes em
+ * português são os deste pacote; o comentário de cada bloco diz o nome usado no protótipo.
+ * Fontes: pnpm add @fontsource-variable/nunito @fontsource-variable/baloo-2 e importe as duas no main.tsx
+ * (WOFF2 auto-hospedado, como pede o padrão; o protótipo usa o Google Fonts só por ser um HTML solto).
+ * Não há paleta escura validada: o bloco .dark fica de fora até o cliente aprovar uma (ver README §3.1).
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+
+  /* Marca (protótipo: --blue, --blue-d, --navy, --green, --yellow, --orange, --pink) */
+  --ida-azul: #006cff;
+  --ida-azul-escuro: #0050c8;
+  --ida-marinho: #0e2a47;
+  --ida-verde: #00ce8b;
+  --ida-amarelo: #ffcf00;
+  --ida-laranja: #ff4c00;
+  --ida-rosa: #ffa5ca; /* só nos ornamentos (flor, quadrados) */
+  --ida-amarelo-3d: #e0b400; /* borda 3D das pílulas amarelas */
+  --ida-azul-3d: #cfe0ff; /* borda 3D do botão branco do menu */
+
+  /* Superfícies e texto (protótipo: --bg, --surface, --surface-2, --border, --border-strong,
+     --text, --text-2, --muted, --faint, --neutral-soft) */
+  --fundo: #eef4ff;
+  --superficie: #ffffff;
+  --superficie-2: #f7faff;
+  --borda: #e3eaf5;
+  --borda-forte: #cbd6e8;
+  --texto: #1b2b3f;
+  --texto-2: #2f4058;
+  --apagado: #5b6b80;
+  --tenue: #94a3b8; /* 2,56:1 no branco: só ícone decorativo e estado desabilitado, nunca texto */
+  --neutro-suave: #f1f5fc;
+
+  /* Semântica. A cor tem significado fixo: laranja bloqueia, amarelo alerta, verde ok, azul é ação.
+     Cada família tem a base (indicador, borda lateral, ponto), -ic (ícone), -soft (fundo),
+     -text (texto sobre o -soft) e -border. */
+  --ok: #00ce8b;
+  --ok-ic: #00a870;
+  --ok-soft: #e6faf3;
+  --ok-text: #00744a;
+  --ok-border: #a6ebd2;
+
+  --bloq: #ff4c00;
+  --bloq-ic: #f04800;
+  --bloq-soft: #fff1ea;
+  --bloq-text: #c23a00;
+  --bloq-border: #ffc7ad;
+
+  --alerta: #ffcf00;
+  --alerta-ic: #d9a100;
+  --alerta-soft: #fff8d9;
+  --alerta-text: #7a5a00;
+  --alerta-border: #ffe37a;
+
+  /* Ação e informação (protótipo: --accent-* e --info-*, com os mesmos valores) */
+  --info: #006cff;
+  --info-soft: #eaf2ff;
+  --info-text: #0050c8;
+  --info-border: #b8d3ff;
+
+  /* Degradês da identidade */
+  --gradiente-marca: linear-gradient(90deg, var(--ida-azul), var(--ida-verde), var(--ida-amarelo), var(--ida-laranja));
+  --gradiente-fundo: radial-gradient(1200px 700px at 15% 0, #ffffff 0, #eef4ff 55%, #e6efff 100%);
+  --gradiente-kpi-azul: linear-gradient(135deg, #1f80ff 0%, var(--ida-azul) 50%, #005bdb 100%);
+  --gradiente-kpi-marinho: linear-gradient(135deg, #1c3d61 0%, var(--ida-marinho) 55%, #091c31 100%);
+  --gradiente-kpi-amarelo: linear-gradient(135deg, #ffdc45 0%, var(--ida-amarelo) 55%, #f2c300 100%);
+  --gradiente-kpi-verde: linear-gradient(135deg, #2be0a6 0%, var(--ida-verde) 55%, #00b97c 100%);
+  --gradiente-total: linear-gradient(135deg, var(--ida-azul) 0%, var(--ida-azul-escuro) 100%);
+  --gradiente-termometro: linear-gradient(90deg, #0062e8, #2b86ff);
+
+  /* Medidas do shell */
+  --menu-largura: 248px;
+  --conteudo-max: 1240px;
+
+  /* Variáveis do shadcn/ui. --destructive usa o texto de bloqueio: o laranja puro com texto branco
+     fica em 3,34:1 e só passa em texto grande. */
+  --radius: 1.25rem;
+  --background: var(--fundo);
+  --foreground: var(--texto);
+  --card: var(--superficie);
+  --card-foreground: var(--texto);
+  --popover: var(--superficie);
+  --popover-foreground: var(--texto);
+  --primary: var(--ida-azul);
+  --primary-foreground: #ffffff;
+  --secondary: var(--neutro-suave);
+  --secondary-foreground: var(--ida-marinho);
+  --muted: var(--neutro-suave);
+  --muted-foreground: var(--apagado);
+  --accent: var(--info-soft);
+  --accent-foreground: var(--info-text);
+  --destructive: var(--bloq-text);
+  --border: var(--borda);
+  --input: var(--borda-forte);
+  --ring: var(--ida-azul);
+  /* Gráficos: uma cor por série de dado. Verde, amarelo e laranja ficam reservados ao status. */
+  --chart-1: var(--ida-azul);
+  --chart-2: var(--info-border);
+  --chart-3: var(--ida-marinho);
+  --chart-4: var(--apagado);
+  --chart-5: var(--tenue);
+  --sidebar: var(--ida-azul);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: var(--ida-azul);
+  --sidebar-accent: rgb(255 255 255 / 0.2);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.22);
+  --sidebar-ring: #ffffff;
+}
+
+@theme inline {
+  /* shadcn */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Marca: bg-azul, text-marinho, border-laranja… */
+  --color-azul: var(--ida-azul);
+  --color-azul-escuro: var(--ida-azul-escuro);
+  --color-marinho: var(--ida-marinho);
+  --color-verde: var(--ida-verde);
+  --color-amarelo: var(--ida-amarelo);
+  --color-laranja: var(--ida-laranja);
+  --color-rosa: var(--ida-rosa);
+
+  /* Neutros: bg-superficie-2, text-texto-2, text-apagado, border-borda-forte… */
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-borda: var(--borda);
+  --color-borda-forte: var(--borda-forte);
+  --color-texto: var(--texto);
+  --color-texto-2: var(--texto-2);
+  --color-apagado: var(--apagado);
+  --color-tenue: var(--tenue);
+  --color-neutro-suave: var(--neutro-suave);
+
+  /* Semântica: bg-ok-soft text-ok-text border-ok-border, border-l-bloq, text-alerta-ic… */
+  --color-ok: var(--ok);
+  --color-ok-ic: var(--ok-ic);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-text: var(--ok-text);
+  --color-ok-border: var(--ok-border);
+  --color-bloq: var(--bloq);
+  --color-bloq-ic: var(--bloq-ic);
+  --color-bloq-soft: var(--bloq-soft);
+  --color-bloq-text: var(--bloq-text);
+  --color-bloq-border: var(--bloq-border);
+  --color-alerta: var(--alerta);
+  --color-alerta-ic: var(--alerta-ic);
+  --color-alerta-soft: var(--alerta-soft);
+  --color-alerta-text: var(--alerta-text);
+  --color-alerta-border: var(--alerta-border);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-text: var(--info-text);
+  --color-info-border: var(--info-border);
+
+  /* Tipografia: font-sans no corpo, font-display em títulos e números */
+  --font-sans: "Nunito Variable", "Nunito", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Baloo 2 Variable", "Baloo 2", "Nunito Variable", "Nunito", system-ui, sans-serif;
+
+  /* Escala consolidada (revisão D10). Os nomes do Tailwind que não aparecem aqui ficam com o padrão. */
+  --text-2xs: 0.6875rem; /* 11 · rótulo em caixa alta */
+  --text-2xs--line-height: 1.2;
+  --text-xs: 0.75rem; /* 12 · legenda, metadado */
+  --text-xs--line-height: 1.35;
+  --text-caption: 0.8125rem; /* 13 · secundário, botão pequeno */
+  --text-caption--line-height: 1.4;
+  --text-sm: 0.875rem; /* 14 · corpo denso de desktop, botão */
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem; /* 16 · corpo, inputs no toque */
+  --text-base--line-height: 1.5;
+  --text-xl: 1.25rem; /* 20 · h2 */
+  --text-xl--line-height: 1.2;
+  --text-2xl: 1.5rem; /* 24 · título de modal grande, total */
+  --text-2xl--line-height: 1.15;
+  --text-3xl: 2rem; /* 32 · h1 */
+  --text-3xl--line-height: 1.1;
+  --text-kpi: 2.75rem; /* 44 · número de card */
+  --text-kpi--line-height: 1;
+
+  /* Raios (revisão D10): 8 · 12 · 16 · 20 · 24 · 28; pílula = rounded-full */
+  --radius-sm: 0.5rem; /* miniatura, chip de dia, chip de terapia */
+  --radius-md: 0.75rem; /* botão, input, botão de ícone, dica */
+  --radius-lg: 1rem; /* toast, item de lista selecionável, caixa de status */
+  --radius-xl: 1.25rem; /* card, dropzone */
+  --radius-2xl: 1.5rem; /* modal, card de indicador */
+  --radius-3xl: 1.75rem; /* capa (hero) */
+
+  /* Sombras em marinho translúcido; shadow-3d é a borda inferior do botão primário */
+  --shadow-sm: 0 1px 2px rgb(14 42 71 / 0.05), 0 1px 1px rgb(14 42 71 / 0.03);
+  --shadow-md: 0 8px 24px -6px rgb(14 42 71 / 0.14), 0 2px 6px -2px rgb(14 42 71 / 0.06);
+  --shadow-lg: 0 30px 80px -16px rgb(14 42 71 / 0.3), 0 4px 14px rgb(14 42 71 / 0.08);
+  --shadow-3d: 0 3px 0 var(--ida-azul-escuro);
+  --shadow-3d-sm: 0 2px 0 var(--ida-azul-escuro);
+  --shadow-3d-amarelo: 0 4px 0 var(--ida-amarelo-3d);
+
+  /* Curvas (as mesmas do protótipo) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-gaveta: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Pivô do menu lateral: fixo a partir de 1200 px, gaveta abaixo (menu:…) */
+  --breakpoint-menu: 75rem;
+}
+
+@theme {
+  --animate-entrar-tela: entrar-tela 260ms var(--ease-out) both;
+  --animate-entrar-cascata: entrar-cascata 360ms var(--ease-out) backwards;
+  --animate-pop: pop 380ms var(--ease-out) both;
+  --animate-piscar: piscar 1s var(--ease-out);
+  --animate-destaque: destaque 1.6s var(--ease-out);
+  --animate-varrer: varrer 1.1s var(--ease-in-out) infinite alternate;
+  --animate-girar: girar 650ms linear infinite;
+
+  @keyframes entrar-tela {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  /* Cascata dos cards do Painel: style="--i: n" atrasa 45 ms por card */
+  @keyframes entrar-cascata {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+  /* Célula ou card que mudou por causa de um ajuste */
+  @keyframes piscar {
+    0% { box-shadow: 0 0 0 5px rgb(0 108 255 / 0.5); }
+    100% { box-shadow: 0 0 0 0 rgb(0 108 255 / 0); }
+  }
+  /* Linha da tabela que o card clicado soma */
+  @keyframes destaque {
+    0%, 30% { background: rgb(0 108 255 / 0.12); }
+    100% { background: transparent; }
+  }
+  /* Faixa de leitura passando pela miniatura da folha */
+  @keyframes varrer {
+    from { transform: translateY(-40%); }
+    to { transform: translateY(220%); }
+  }
+  @keyframes girar {
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* Anel de foco em duas camadas: lê-se sobre branco, azul e verde e preserva a borda 3D */
+@utility foco-anel {
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--ida-azul);
+  }
+}
+@utility foco-anel-primario {
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-3d), 0 0 0 2px #ffffff, 0 0 0 4px var(--ida-marinho);
+  }
+}
+/* Sobre superfície azul (menu, barra do topo) */
+@utility foco-anel-invertido {
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ida-azul), 0 0 0 4px #ffffff;
+  }
+}
+/* Card que filtra a lista: selecionado (aria-pressed) */
+@utility card-selecionado {
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--ida-marinho), var(--shadow-lg);
+}
+
+@utility bg-gradiente-marca { background-image: var(--gradiente-marca); }
+@utility bg-gradiente-kpi-azul { background-image: var(--gradiente-kpi-azul); }
+@utility bg-gradiente-kpi-marinho { background-image: var(--gradiente-kpi-marinho); }
+@utility bg-gradiente-kpi-amarelo { background-image: var(--gradiente-kpi-amarelo); }
+@utility bg-gradiente-kpi-verde { background-image: var(--gradiente-kpi-verde); }
+@utility bg-gradiente-total { background-image: var(--gradiente-total); }
+@utility bg-gradiente-termometro { background-image: var(--gradiente-termometro); }
+
+/* Número sempre com algarismos de largura fixa (valores, contagens, códigos) */
+@utility num { font-variant-numeric: tabular-nums; }
+
+/* Rótulo em caixa alta dos cards, filtros e cabeçalhos de tabela */
+@utility rotulo {
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply min-h-dvh bg-background font-sans text-base font-medium text-foreground antialiased;
+    background-image: var(--gradiente-fundo);
+    background-attachment: fixed;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply m-0 font-display text-marinho;
+  }
+  h1 {
+    @apply text-3xl font-extrabold tracking-[-0.01em];
+  }
+  h2 {
+    @apply text-xl font-bold;
+  }
+  h3 {
+    @apply text-base font-bold;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ida-azul);
+    outline-offset: 2px;
+  }
+  /* Toque: alvo de 40 px e input de 16 px (sem o zoom do iOS) */
+  @media (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+}

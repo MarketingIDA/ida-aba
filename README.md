@@ -2,9 +2,123 @@
 
 Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada coordenador de unidade faz a evolução de cada assistido da sua carteira e, até o dia 10, envia a contas médicas o **arquivo do mês**, com as evoluções da carteira toda. A evolução nasce das evoluções diárias registradas no Tita: o coordenador importa o PDF do assistido e, se quiser, outros documentos (escola, outras terapias, família); uma IA escreve o rascunho no formato do modelo da clínica e o coordenador confere parte por parte e conclui. Sem o PDF, ele escreve o mês à mão e a IA aprimora o texto. Cada assistido tem ainda a evolução das metas em gráfico, a partir do nível de apoio que a IA lê nas análises.
 
-**Fase atual: protótipo para aprovação.** O repositório tem só o protótipo navegável, com dados fictícios, e a documentação do domínio. Depois da aprovação, ele vira o sistema na stack da casa (ver [Do protótipo ao sistema](#do-protótipo-ao-sistema)). A evolução de supervisão é outro relatório e fica para uma fase posterior.
+**Fase atual: fundação do sistema.** O sistema roda na stack da casa com o login dos três perfis e a tela Evoluções do mês lendo o banco de produção. A importação do Tita, o rascunho com a IA, a conferência e o arquivo do mês chegam nas próximas etapas; o [protótipo](#protótipo) continua como referência de telas e regras. A evolução de supervisão é outro relatório e fica para uma fase posterior.
 
-## Abrir o protótipo
+## O que já funciona
+
+- **Acesso:** login por e-mail e senha, primeiro acesso (a pessoa cria a senha pelo link do convite) e recuperação de senha. O papel vem do cadastro em `acesso.usuarios`, nunca do token, e conta sem cadastro ativo não entra.
+- **Coordenação de unidade e coordenação geral:** Evoluções do mês, com cards por situação que filtram a lista, busca por nome ou código, escolha do mês (o aberto e os 5 anteriores), período analisado e prazo do arquivo do mês. A coordenação geral vê todas as unidades e recorta por unidade e coordenador.
+- **Contas médicas:** a tela de arquivos recebidos existe, mas fica vazia até a etapa do envio do arquivo do mês.
+- **Banco:** RLS em todas as tabelas. O coordenador lê só a própria carteira; a coordenação geral lê tudo e é a única que cadastra; contas médicas não lê evolução solta. Toda alteração fica na auditoria.
+
+## Rodar localmente
+
+Requisitos: Node 24 e pnpm 12.16.1.
+
+```bash
+pnpm install
+```
+
+```bash
+cp .env.example .env.local
+```
+
+Preencha `.env.local` com a URL do projeto e a chave publicável (Supabase → Project Settings → API Keys). Depois:
+
+```bash
+pnpm dev
+```
+
+O app abre em <http://localhost:5173>. No Claude Code, a configuração `app` em `.claude/launch.json` faz o mesmo.
+
+| Comando | O que faz |
+| --- | --- |
+| `pnpm dev` | servidor local na porta 5173 |
+| `pnpm build` | confere os tipos e gera o build de produção em `dist/` |
+| `pnpm lint` | ESLint sem nenhum aviso e Prettier |
+| `pnpm typecheck` | TypeScript estrito |
+| `pnpm test` | Vitest, com a rede respondida pelo MSW |
+| `pnpm test:coverage` | o mesmo, com cobertura mínima de 80% (100% no domínio puro) |
+| `pnpm test:e2e` | Playwright no build de produção, em celular e desktop, com axe |
+
+Nenhum teste fala com o banco real: o Vitest usa o MSW e o Playwright responde o Supabase dentro do próprio teste, com dados fictícios. Para rodar o E2E sem baixar navegadores, use o Edge instalado: `PLAYWRIGHT_CHANNEL=msedge pnpm test:e2e`.
+
+O CI (`.github/workflows/ci.yml`) roda lint, tipos, testes com cobertura, build, E2E, gitleaks, Semgrep e auditoria de dependências em todo PR. O job `Resultado` reúne todos.
+
+## Variáveis de ambiente
+
+| Variável | Onde fica | O que é |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | `.env.local` e Vercel | URL do projeto Supabase |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | `.env.local` e Vercel | chave publicável (`sb_publishable_…`). É pública por desenho: quem protege os dados é o RLS |
+| `OPENAI_API_KEY` | segredos das Edge Functions do Supabase | chave da IA; nunca vai para o navegador nem para a Vercel (usada a partir da etapa do rascunho) |
+
+A service role e a senha do banco não entram no repositório, no `.env.local` nem na Vercel.
+
+## Banco (Supabase)
+
+- **Schemas:** `acesso` (usuários e papéis), `cadastro` (unidades, planos, carteiras e assistidos), `evolucao` (evoluções e as 4 partes), `auditoria` (histórico de alterações) e `interno` (funções auxiliares, fora da API).
+- **Migrações** em `supabase/migrations/`, aplicadas em ordem. Elas só acrescentam: nenhuma apaga coluna ou tabela com dado.
+- **Testes do RLS:** `supabase/tests/rls_evolucoes.sql` faz 30 verificações de acesso e de regra. Ele roda numa transação que sempre se desfaz, então pode rodar no SQL Editor de produção sem gravar nada. A saída esperada é `RESULTADO: 0 falhas de 30`.
+
+## Configuração do Supabase (uma vez, no painel)
+
+Estes passos ficam com o dono do projeto e não estão no código:
+
+1. **Data API:** em Project Settings → Data API → Exposed schemas, acrescente `acesso`, `cadastro` e `evolucao`. Sem isso, o app recebe "Invalid schema" e ninguém entra.
+2. **Cadastro aberto desligado:** em Authentication → Sign In / Providers, desligue "Allow new users to sign up". Só entra quem for convidado.
+3. **URLs:** em Authentication → URL Configuration, use `https://ida-aba.vercel.app/primeiro-acesso` como Site URL, para que o convite caia direto na criação da senha. Em Redirect URLs, ponha `https://ida-aba.vercel.app/primeiro-acesso` e `http://localhost:5173/primeiro-acesso`.
+4. **Senhas:** em Authentication → Attack Protection (ou Passwords), exija no mínimo 15 caracteres, a mesma regra da tela, e ligue a proteção contra senha vazada se o plano permitir.
+5. **E-mail:** o SMTP padrão do Supabase só entrega para os membros do time do projeto. Antes de convidar os coordenadores, configure um SMTP próprio em Authentication → Emails → SMTP Settings.
+6. **Segredos das Edge Functions:** renomeie `SUBAPASE-OPENAI_API` para `OPENAI_API_KEY` e apague `SUPABASE-ULR` e `SUPABASE-ANON-PUBLIC`. O Supabase já injeta `SUPABASE_URL` e `SUPABASE_ANON_KEY` em toda função.
+
+## Primeiro acesso da coordenação geral
+
+As telas de cadastro de usuários, unidades e assistidos chegam na próxima etapa. Até lá, a primeira pessoa da coordenação geral entra assim:
+
+1. No SQL Editor, cadastre a pessoa (o e-mail vai em minúsculas):
+
+   ```sql
+   insert into acesso.usuarios (nome, email, papel)
+   values ('Nome Sobrenome', lower('email@dominio.com.br'), 'coordenacao_geral');
+   ```
+
+2. Em Authentication → Users → Invite user, convide o mesmo e-mail.
+3. A pessoa abre o convite, cai em `/primeiro-acesso` e cria a senha. Quando o e-mail é confirmado, um trigger liga a conta ao cadastro sozinho.
+
+Coordenadores e contas médicas entram do mesmo jeito, com o papel `coordenador` ou `contas_medicas`.
+
+## Estrutura
+
+```
+ida-aba/
+├── src/
+│   ├── app/                     # rotas, layout (menu lateral) e providers
+│   ├── features/
+│   │   ├── auth/                # login, primeiro acesso, recuperação de senha
+│   │   └── evolucoes/           # Evoluções do mês (api, queries, componentes, tela)
+│   ├── components/  hooks/  lib/  utils/  config/   # código compartilhado
+│   └── testing/                 # MSW, factories fictícias e helpers de teste
+├── supabase/
+│   ├── migrations/              # schema, RLS, auditoria e RPC
+│   ├── tests/                   # testes de RLS em transação que se desfaz
+│   └── functions/_shared/dominio/   # domínio puro (mês, período, prazo), do app e das Edge Functions
+├── tests/e2e/                   # Playwright com Supabase fictício
+├── prototipo/                   # protótipo navegável, referência de telas e regras
+├── docs/                        # domínio (regras E01–E28), stack e design system
+├── vercel.json                  # build, SPA e cabeçalhos de segurança (CSP, HSTS)
+└── .github/workflows/ci.yml     # CI
+```
+
+O import segue uma direção só: o código compartilhado não conhece as features, e uma feature não importa outra nem o `app/`. O ESLint barra o que fugir disso.
+
+Os documentos reais do cliente (PDF do Tita, modelo e manual) têm dados de crianças e ficam em `arquivos/`, fora do git. Nenhum dado real entra em código, teste, log ou commit, e nenhum texto de assistido vai para a IA sem a pseudonimização (E05).
+
+## Protótipo
+
+O protótipo é descartável: serve de referência de telas e regras, e o código dele não é reaproveitado no sistema.
+
+### Abrir
 
 O protótipo é um único arquivo HTML, sem build e sem dependências. Duas formas:
 
@@ -19,7 +133,7 @@ No Claude Code, a configuração `prototipo-aba` em `.claude/launch.json` faz o 
 
 Os dados vivem só na memória da aba. Recarregar a página, ou o botão de reiniciar no rodapé do menu, volta tudo ao estado inicial. A IA é simulada e nenhum arquivo escolhido é lido: o PDF do Tita e os outros documentos usam exemplos fictícios.
 
-## Roteiro de demonstração (18 minutos)
+### Roteiro de demonstração (18 minutos)
 
 Hoje na simulação é 04/11/2026: está aberta a evolução de novembro, que analisa as sessões de 01/10 a 31/10 (E18), e o arquivo do mês vai a contas médicas até 10/11.
 
@@ -38,32 +152,3 @@ Hoje na simulação é 04/11/2026: está aberta a evolução de novembro, que an
 9. **Trocar para Coordenação geral** (botão ao lado do nome, no rodapé do menu). O painel tem 4 cards que filtram a lista, entre eles "Parecidas com a anterior", e cada coordenador mostra se o arquivo do mês já foi enviado (Camila Nunes e Júlia Prado já enviaram). Toque num coordenador para ver as evoluções dele; abra uma concluída e devolva com um motivo (só antes do envio do arquivo). Em Metas dos assistidos fica o cadastro de metas de cada um (E23); em Configurações, as orientações da IA sugeridas pelos coordenadores, para aprovar ou recusar (E21, E22).
 10. **Trocar para Contas médicas.** Chegam arquivos, não evoluções soltas: os cards "Arquivos recebidos" (2 de 6) e "Arquivos a chegar" filtram a lista, com filtro por plano e unidade. "Por arquivo" abre o arquivo do mês de Camila Nunes, com os 14 assistidos em ordem alfabética e a assinatura no fim; "Por assistido" leva ao bloco do assistido dentro do arquivo. O documento baixa em Word.
 11. **Assinatura e termos.** Sem assinatura cadastrada, o envio do arquivo bloqueia; a assinatura entra por arquivo ou foto pela câmera. A lista de termos inadequados é mantida pela coordenação geral.
-
-## Estrutura
-
-```
-ida-aba/
-├── prototipo/
-│   ├── evolucao-aba.html        # protótipo navegável (HTML, CSS e JS num arquivo só)
-│   └── assets/                  # logo e elementos da marca usados pelo protótipo
-├── docs/
-│   ├── escopo/01-dominio.md     # glossário, perfis, fluxo, regras E01–E28, perguntas P1–P23, telas
-│   ├── arquitetura/00-stack.md  # stack-alvo e como o domínio se encaixa nela
-│   ├── design-system/           # tokens e assets da casa (o mesmo do sistema de contas médicas)
-│   └── adr/                     # decisões e exceções ao padrão (vazio até a F0)
-├── ENGINEERING_STANDARDS.md     # padrão obrigatório de engenharia da casa
-├── AGENTS.md  CLAUDE.md         # instruções para agentes
-└── .claude/launch.json          # servidor local do protótipo
-```
-
-Os documentos reais do cliente (PDF do Tita, modelo e manual) têm dados de crianças e ficam em `arquivos/`, fora do git.
-
-## Do protótipo ao sistema
-
-O protótipo é descartável: serve de referência de telas e regras, e o código dele não é reaproveitado. Depois da aprovação:
-
-1. Respostas do cliente às perguntas P1 a P23 de [`docs/escopo/01-dominio.md`](docs/escopo/01-dominio.md), e ajuste do protótipo se mudarem regra ou tela.
-2. **F0, fundação:** repositório na stack da casa ([`docs/arquitetura/00-stack.md`](docs/arquitetura/00-stack.md)), CI com os gates do [`ENGINEERING_STANDARDS.md`](ENGINEERING_STANDARDS.md), Supabase local com seed fictício e os ADRs de exceção.
-3. Domínio puro primeiro (leitura do texto do Tita, período analisado, pseudonimização, conferências, semelhança de textos, com testes), depois importação do PDF do Tita e dos outros documentos, entrada manual, rascunho e aprimoramento com a IA, conferência, emissão do Word e envio do arquivo do mês.
-
-Nenhum dado real entra em projeto Supabase remoto antes da fase de login, e nenhum texto de assistido vai para a IA sem a pseudonimização (E05).
