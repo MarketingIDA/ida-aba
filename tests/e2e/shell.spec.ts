@@ -1,7 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, type Page, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { entrar } from './apoio/supabaseFicticio';
+import { expect, test } from './apoio/teste';
 
 const MENU_FIXO = 1200;
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag22aa'];

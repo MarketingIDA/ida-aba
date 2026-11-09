@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './apoio/teste';
 
 import { entrar } from './apoio/supabaseFicticio';
 

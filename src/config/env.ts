@@ -1,3 +1,6 @@
+// Antes do zod validar qualquer coisa (aqui é a primeira, já no import).
+import '@/config/zod';
+
 import { z } from 'zod';
 
 /**
