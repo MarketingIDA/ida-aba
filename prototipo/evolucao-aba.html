@@ -793,6 +793,19 @@ a.st-box{text-decoration:none}
 .pg-hero-svg .rot.c{fill:#B9C6D6;font-size:13px}
 .pg-hero-svg .pg-hit{fill:transparent;cursor:crosshair}
 .pg-cross{stroke:rgba(255,255,255,.55);stroke-width:1;visibility:hidden;pointer-events:none}
+.pg-topo{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin-bottom:8px}
+.pg-topo .voltar{margin-bottom:0}
+.pg-acoes{display:flex;align-items:center;gap:8px}
+.pg-share{width:34px;height:34px;border:1.5px solid var(--border);background:#fff;color:var(--navy)}
+@media (hover:hover){.pg-share:hover{background:var(--accent-soft);border-color:var(--blue);color:var(--blue-d)}}
+.pg-saidas{display:grid;gap:8px;margin:14px 0 6px}
+.pg-saidas .pick+.pick{margin-top:0}
+.pg-saidas .pick>.i:last-child{color:var(--muted)}
+.pg-reg{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.pg-reg li{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--navy)}
+.pg-reg li>.i{color:var(--muted);flex:none}
+.pg-reg li small{margin-left:auto;color:var(--muted);font-weight:700;white-space:nowrap}
+.pg-reg-v{margin:8px 2px 0;font-size:13px;font-weight:600;color:var(--muted)}
 .pg-sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:22px 0 12px}
 .pg-sec-h .sub{max-width:62ch}
 .pg-sec-a{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -979,6 +992,7 @@ const IC = {
   go: '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
   chevRight: '<path d="m9 18 6-6-6-6"/>',
   chart: '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
   chevDown: '<path d="m6 9 6 6 6-6"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
@@ -2504,26 +2518,33 @@ function tabelaProgHtml(a, L, v, med) {
   return `<section class="card"><div class="card-head"><div><h2>Metas</h2><p class="sub">Os mesmos dados dos gráficos, em números.</p></div></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Meta</th><th>Situação</th><th class="r">Sessões</th><th class="r">Sem nível</th><th>Primeiro nível</th><th>Nível agora</th><th>Independente em</th><th>Atenção</th></tr></thead><tbody>${lin}</tbody></table></div></section>
   <section class="card mt16"><div class="card-head"><div><h2>Metas que chegaram à independência, por semana</h2></div></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Semana de</th><th class="r">${esc(primeiro(a.nome))}</th><th class="r">Mediana da carteira</th></tr></thead><tbody>${sem}</tbody></table></div></section>`;
 }
+// Os números da evolução das metas: os mesmos na tela e no PDF (E27, E28)
+function dadosProg(a) {
+  const X = a.metas.map(m => analiseMeta(a, m)), ativas = X.filter(x => x.m.prog && x.m.sit !== 'susp'), nInd = ativas.filter(x => x.indep).length;
+  const v = indepPorSemana(X), med = medianaCarteira(a), fim = med[N_SEM - 1], dif = nInd - fim;
+  const pos = x => x.m.sit === 'dev' ? (x.atencao ? 0 : 1) : { manut: 2, alc: 3, susp: 4 }[x.m.sit], subiu = x => (x.ult?.n || 0) - (x.pri?.n || 0);
+  return {
+    X, ativas, nInd, v, med, fim, dif, nCart: carteiraDe(a.coord).length,
+    nSes: MESES_G.reduce((t, k) => t + sessoesDe(a, k).filter(s => !s.falta).length, 0),
+    n: k => k === 'atencao' ? X.filter(x => x.atencao).length : X.filter(x => x.m.sit === k).length,
+    ordem: (p, q) => pos(p) - pos(q) || subiu(q) - subiu(p),
+    rap: X.filter(x => x.nAte5).sort((p, q) => p.nAte5 - q.nAte5)[0], par: X.filter(x => x.parada).sort((p, q) => q.parada - p.parada)[0], sum: X.find(x => x.sumiu),
+    cmp: `${dif > 0 ? 'Acima da' : dif < 0 ? 'Abaixo da' : 'Na'} mediana da carteira, que é de ${fmtN(fim)} ${fim === 1 ? 'meta' : 'metas'}`,
+    verbo: nInd === 1 ? 'já chegou' : nInd ? 'já chegaram' : 'chegaram, até agora,',
+  };
+}
+const destaquesProg = D => [
+  D.rap && { ic: 'trendUp', al: false, t: 'Mais rápida', d: `${cap(PROG[D.rap.m.prog].nome)}: independente em ${plural(D.rap.nAte5, 'sessão', 'sessões')}`, x: D.rap },
+  D.par && { ic: 'alert', al: true, t: 'No mesmo degrau', d: `${cap(PROG[D.par.m.prog].nome)}: ${NIVEIS[D.par.ult.n].toLowerCase()} há ${D.par.parada} semanas`, x: D.par },
+  D.sum && { ic: 'alert', al: true, t: `Sem registro em ${perNome(ABERTA)}`, d: `${cap(PROG[D.sum.m.prog].nome)} não aparece nas análises`, x: D.sum },
+].filter(Boolean);
 function telaProgresso(a, f) {
   if (!a) return naoEncontrado();
   if (S.persona === 'contas' || (S.persona === 'coord' && a.coord !== PERSONAS.coord.id)) return naoPode();
-  const X = a.metas.map(m => analiseMeta(a, m)), ativas = X.filter(x => x.m.prog && x.m.sit !== 'susp'), nInd = ativas.filter(x => x.indep).length;
-  const v = indepPorSemana(X), med = medianaCarteira(a), fim = med[N_SEM - 1], dif = nInd - fim, nCart = carteiraDe(a.coord).length;
-  const nSes = MESES_G.reduce((t, k) => t + sessoesDe(a, k).filter(s => !s.falta).length, 0), E = evoDe(a);
-  const ordem = x => x.m.sit === 'dev' ? (x.atencao ? 0 : 1) : { manut: 2, alc: 3, susp: 4 }[x.m.sit];
-  const subiu = x => (x.ult?.n || 0) - (x.pri?.n || 0);
-  const L = X.filter(x => !f || (f === 'atencao' ? x.atencao : x.m.sit === f)).sort((p, q) => ordem(p) - ordem(q) || subiu(q) - subiu(p));
-  const n = k => k === 'atencao' ? X.filter(x => x.atencao).length : X.filter(x => x.m.sit === k).length;
+  const D = dadosProg(a), { X, ativas, nInd, v, med, dif, nCart, nSes, n, cmp, verbo } = D, E = evoDe(a);
+  const L = X.filter(x => !f || (f === 'atencao' ? x.atencao : x.m.sit === f)).sort(D.ordem);
   const cards = Object.entries(FILTROS_P).map(([k, [t, dot, sub]], i) => `<a class="rs com-dot ${n(k) === 0 ? 'vazio' : ''}" href="#/progresso/${a.id}${f !== k ? '/' + k : ''}" aria-pressed="${f === k}" style="--i:${i}"><span class="rs-dot ${dot}"></span><span class="rs-l">${t}</span><span class="rs-v num">${n(k)}</span><span class="rs-s">${sub}</span><span class="card-go">${I('go', 15)}</span></a>`).join('');
-  const nomeP = x => esc(cap(PROG[x.m.prog].nome));
-  const rap = X.filter(x => x.nAte5).sort((p, q) => p.nAte5 - q.nAte5)[0], par = X.filter(x => x.parada).sort((p, q) => q.parada - p.parada)[0], sum = X.find(x => x.sumiu);
-  const chips = [
-    rap && ['trendUp', '', 'Mais rápida', `${nomeP(rap)}: independente em ${plural(rap.nAte5, 'sessão', 'sessões')}`, rap],
-    par && ['alert', 'y', 'No mesmo degrau', `${nomeP(par)}: ${NIVEIS[par.ult.n].toLowerCase()} há ${par.parada} semanas`, par],
-    sum && ['alert', 'y', `Sem registro em ${perNome(ABERTA)}`, `${nomeP(sum)} não aparece nas análises`, sum],
-  ].filter(Boolean).map(([ic, c, t, d, x]) => `<button class="pg-chip" data-act="prog-foco" data-aid="${a.id}" data-id="${x.m.id}"><span class="pg-chip-ic ${c}">${I(ic, 16)}</span><span><b>${t}</b>${d}</span>${I('chevRight', 16)}</button>`).join('');
-  const cmp = `${dif > 0 ? 'Acima da' : dif < 0 ? 'Abaixo da' : 'Na'} mediana da carteira, que é de ${fmtN(fim)} ${fim === 1 ? 'meta' : 'metas'}`;
-  const verbo = nInd === 1 ? 'já chegou' : nInd ? 'já chegaram' : 'chegaram, até agora,';
+  const chips = destaquesProg(D).map(h => `<button class="pg-chip" data-act="prog-foco" data-aid="${a.id}" data-id="${h.x.m.id}"><span class="pg-chip-ic ${h.al ? 'y' : ''}">${I(h.ic, 16)}</span><span><b>${h.t}</b>${esc(h.d)}</span>${I('chevRight', 16)}</button>`).join('');
   const hero = `<section class="pg-hero" id="pg-hero">
     <div class="pg-hero-txt"><div class="kicker">${I('chart', 14)} Evolução das metas</div><h1>${esc(a.nome)}</h1>
       <div class="pg-big"><b class="pg-num" data-n="${nInd}">${nInd}</b><span class="pg-big-t">de ${plural(ativas.length, 'meta', 'metas')} ${verbo} à independência</span></div>
@@ -2544,7 +2565,8 @@ function telaProgresso(a, f) {
       <div class="card-body pg-mapa-w">${comSes.length ? mapaHtml(comSes) : vazio('Nenhuma sessão', 'As metas deste filtro não aparecem nas análises do período.')}</div></section>`;
   S.bb = barra(`${I('chart', 16)} Nível de apoio lido pela IA nas análises do Tita; cada ponto mostra a frase de onde saiu (E27).`, `<a class="btn btn-secondary btn-lg" href="#/metas/${a.id}">${I('target', 18)} Cadastro de metas</a>${E ? `<a class="btn btn-primary btn-lg" href="#/evolucao/${E.id}">${I('doc', 18)} Evolução de ${mesNome(ABERTA)}</a>` : ''}`);
   const [vh, vr] = S.progVolta || ['#/evolucoes', 'Evoluções'];
-  return `<a class="voltar" href="${vh}">${I('arrowLeft', 16)} ${vr}</a>${hero}
+  const acoes = `<div class="pg-acoes"><button class="btn btn-secondary btn-sm" data-act="prog-pdf" data-aid="${a.id}">${I('download', 15)} Baixar PDF</button><button class="icon-btn pg-share" data-act="prog-share" data-aid="${a.id}" aria-label="Compartilhar" title="Compartilhar">${I('share', 17)}</button></div>`;
+  return `<div class="pg-topo"><a class="voltar" href="${vh}">${I('arrowLeft', 16)} ${vr}</a>${acoes}</div>${hero}
   <div class="resumo k4 ${f ? 'tem-sel' : ''}" role="group" aria-label="Situação das metas no gráfico">${cards}</div>${secH}${corpo}`;
 }
 function contarHero() {   // o número grande sobe de 0 até o valor na entrada da tela
@@ -2553,6 +2575,325 @@ function contarHero() {   // o número grande sobe de 0 até o valor na entrada 
   const passo = t => { const k = Math.min(1, (t - t0) / dur); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(passo); };
   requestAnimationFrame(passo);
   setTimeout(() => { el.textContent = n; }, dur + 150);   // com a aba em segundo plano, o quadro não roda: o valor final fica garantido
+}
+
+// ═══ E28: relatório de metas em PDF e compartilhar ══════════════════
+// PDF 1.4 escrito à mão, sem biblioteca: Helvetica com WinAnsi (acentos do português), texto selecionável e gráficos vetoriais.
+const PDF_W = 595.28, PDF_H = 841.89, PDF_M = 40, PDF_CW = PDF_W - 2 * PDF_M;
+const WIN_EXTRA = { '€': 128, '‚': 130, 'ƒ': 131, '„': 132, '…': 133, '†': 134, '‡': 135, 'ˆ': 136, '‰': 137, 'Š': 138, '‹': 139, 'Œ': 140, 'Ž': 142, '‘': 145, '’': 146, '“': 147, '”': 148, '•': 149, '–': 150, '—': 151, '˜': 152, '™': 153, 'š': 154, '›': 155, 'œ': 156, 'ž': 158, 'Ÿ': 159 };
+const winAnsi = s => Array.from(String(s), c => { const k = c.codePointAt(0); return (k >= 32 && k < 127) || (k >= 160 && k < 256) ? c : WIN_EXTRA[c] ? String.fromCharCode(WIN_EXTRA[c]) : '?'; }).join('');
+const pdfStr = s => `(${winAnsi(s).replace(/[\\()]/g, '\\$&')})`;
+const pdfCor = h => { if (h.length === 4) h = '#' + [...h.slice(1)].map(c => c + c).join(''); const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255].map(v => +(v / 255).toFixed(3)).join(' '); };
+let pdfCtx = null;
+function larg(s, tam, neg) {   // Arial tem as mesmas larguras da Helvetica
+  pdfCtx ||= document.createElement('canvas').getContext('2d');
+  pdfCtx.font = `${neg ? 'bold ' : ''}100px Arial, Helvetica, "Liberation Sans", sans-serif`;
+  return pdfCtx.measureText(String(s)).width * tam / 100;
+}
+const reticencias = (s, tam, neg, max) => { while (s.length > 1 && larg(s + '…', tam, neg) > max) s = s.slice(0, -1); return s.trimEnd() + '…'; };
+const caber = (s, tam, neg, max) => larg(s, tam, neg) <= max ? s : reticencias(s, tam, neg, max);
+const tamCabe = (s, neg, max, tam, min) => { while (tam > min && larg(s, tam, neg) > max) tam = +(tam - .2).toFixed(1); return tam; };   // diminui a letra antes de cortar
+function quebrar(s, tam, neg, max, nLin = 99) {
+  const out = []; let lin = '';
+  for (const p of String(s).split(/\s+/).filter(Boolean)) {
+    const t = lin ? `${lin} ${p}` : p;
+    if (lin && larg(t, tam, neg) > max) { out.push(lin); lin = p; } else lin = t;
+  }
+  if (lin) out.push(lin);
+  if (out.length > nLin) { const u = out[nLin - 1]; out.length = nLin; out[nLin - 1] = reticencias(u, tam, neg, max); }
+  return out;
+}
+function pdfDoc() {   // coordenadas de cima para baixo, como na tela; o PDF conta de baixo para cima
+  const pags = [], f = v => +(+v).toFixed(2), Yb = y => f(PDF_H - y);
+  let o = null;
+  const forma = (fill, stroke, lw) => [`${fill ? `${pdfCor(fill)} rg ` : ''}${stroke ? `${pdfCor(stroke)} RG ${f(lw)} w ` : ''}`, fill && stroke ? 'B' : fill ? 'f' : 'S'];
+  const rr = (x, y, w, h, r) => {
+    const b = PDF_H - y - h, k = r * .5523, X1 = x + w, Y1 = b + h;
+    if (!r) return `${f(x)} ${f(b)} ${f(w)} ${f(h)} re`;
+    return `${f(x + r)} ${f(b)} m ${f(X1 - r)} ${f(b)} l ${f(X1 - r + k)} ${f(b)} ${f(X1)} ${f(b + r - k)} ${f(X1)} ${f(b + r)} c ${f(X1)} ${f(Y1 - r)} l ${f(X1)} ${f(Y1 - r + k)} ${f(X1 - r + k)} ${f(Y1)} ${f(X1 - r)} ${f(Y1)} c ${f(x + r)} ${f(Y1)} l ${f(x + r - k)} ${f(Y1)} ${f(x)} ${f(Y1 - r + k)} ${f(x)} ${f(Y1 - r)} c ${f(x)} ${f(b + r)} l ${f(x)} ${f(b + r - k)} ${f(x + r - k)} ${f(b)} ${f(x + r)} ${f(b)} c h`;
+  };
+  const P = {
+    pags,
+    pag() { o = []; pags.push(o); },
+    ir(i) { o = pags[i]; },
+    rect(x, y, w, h, { fill, stroke, lw = 1, r = 0 } = {}) { const [c, op] = forma(fill, stroke, lw); o.push(`${c}${rr(x, y, w, h, r)} ${op}`); },
+    circ(cx, cy, r, { fill, stroke, lw = 1 } = {}) {
+      const [c, op] = forma(fill, stroke, lw), k = r * .5523, X = cx, Y = PDF_H - cy;
+      o.push(`${c}${f(X + r)} ${f(Y)} m ${f(X + r)} ${f(Y + k)} ${f(X + k)} ${f(Y + r)} ${f(X)} ${f(Y + r)} c ${f(X - k)} ${f(Y + r)} ${f(X - r)} ${f(Y + k)} ${f(X - r)} ${f(Y)} c ${f(X - r)} ${f(Y - k)} ${f(X - k)} ${f(Y - r)} ${f(X)} ${f(Y - r)} c ${f(X + k)} ${f(Y - r)} ${f(X + r)} ${f(Y - k)} ${f(X + r)} ${f(Y)} c h ${op}`);
+    },
+    linha(pts, { stroke, lw = 1, fill, dash } = {}) {
+      const [c, op] = forma(fill, stroke, lw);
+      o.push(`${dash ? `[${dash.join(' ')}] 0 d ` : ''}1 j 1 J ${c}${pts.map(([x, y], i) => `${f(x)} ${Yb(y)} ${i ? 'l' : 'm'}`).join(' ')}${fill ? ' h' : ''} ${op}${dash ? ' [] 0 d' : ''}`);
+    },
+    txt(s, x, y, { tam = 10, neg = false, cor = '#0E2A47', al = 'l', esp = 0 } = {}) {
+      s = String(s); const w = larg(s, tam, neg) + esp * s.length, x0 = al === 'r' ? x - w : al === 'c' ? x - w / 2 : x;
+      o.push(`BT /${neg ? 'F2' : 'F1'} ${f(tam)} Tf ${pdfCor(cor)} rg ${f(esp)} Tc 1 0 0 1 ${f(x0)} ${Yb(y)} Tm ${pdfStr(s)} Tj ET`);
+      return w;
+    },
+    para(s, x, y, max, { tam = 10, ent = 1.4, nLin, ...op } = {}) { const L = quebrar(s, tam, op.neg, max, nLin); L.forEach((l, i) => P.txt(l, x, y + i * tam * ent, { tam, ...op })); return y + L.length * tam * ent; },
+    img(nome, x, y, w, h) { o.push(`q ${f(w)} 0 0 ${f(h)} ${f(x)} ${f(PDF_H - y - h)} cm /${nome} Do Q`); },
+  };
+  return P;
+}
+function pdfBytes(pags, imgs, info) {
+  const objs = [null, null], add = ob => objs.push(ob);   // devolve o número do objeto
+  const fR = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  const fB = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  const xo = Object.entries(imgs).filter(([, im]) => im).map(([k, im]) => `/${k} ${add(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bin.length} >>\nstream\n${im.bin}\nendstream`)} 0 R`).join(' ');
+  const res = `<< /Font << /F1 ${fR} 0 R /F2 ${fB} 0 R >>${xo ? ` /XObject << ${xo} >>` : ''} >>`;
+  const kids = pags.map(ops => { const c = ops.join('\n'), cid = add(`<< /Length ${c.length} >>\nstream\n${c}\nendstream`); return add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_W} ${PDF_H}] /Resources ${res} /Contents ${cid} 0 R >>`); });
+  objs[0] = '<< /Type /Catalog /Pages 2 0 R /ViewerPreferences << /DisplayDocTitle true >> >>';
+  objs[1] = `<< /Type /Pages /Kids [${kids.map(k => `${k} 0 R`).join(' ')}] /Count ${kids.length} >>`;
+  const u16 = s => `<FEFF${s.split('').map(c => c.charCodeAt(0).toString(16).padStart(4, '0')).join('')}>`;
+  const info_ = add(`<< /Title ${u16(info.titulo)} /Author ${u16(info.autor)} /Subject ${u16(info.assunto)} /Creator (Evolucao ABA) /Producer (Evolucao ABA - prototipo) /CreationDate (D:${info.data}) >>`);
+  let out = '%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n'; const offs = [];
+  objs.forEach((ob, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${ob}\nendobj\n`; });
+  const xref = out.length;
+  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offs.map(n => `${String(n).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info ${info_} 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  const b = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) b[i] = out.charCodeAt(i);
+  return b;
+}
+let logoPdf = null;   // o logo local (prototipo/assets), em JPEG sobre branco
+const logoJpeg = () => logoPdf ||= new Promise(res => {
+  const img = new Image();
+  img.onload = () => { try { const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight; const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, cv.width, cv.height); c.drawImage(img, 0, 0); res({ bin: atob(cv.toDataURL('image/jpeg', .92).split(',')[1]), w: cv.width, h: cv.height }); } catch { res(null); } };
+  img.onerror = () => res(null);
+  img.src = 'assets/logo-instituto-autismo.png';
+});
+const codigoMetas = a => `${a.unid}-${aamm(ABERTA)}-${String(a.seq).padStart(3, '0')}-METAS`;   // o nome do arquivo não leva o nome da criança
+const NIVEL_PDF = ['Sem nível', 'Física total', 'Física parcial', 'Gestual/modelo', 'Dica verbal', 'Independente'];
+async function relatorioMetasPdf(a) {
+  const D = dadosProg(a), logo = await logoJpeg(), c = coordDe(a.coord), u = uni(a.unid), quem = PERSONAS[S.persona].nome, t = agora(), cod = codigoMetas(a);
+  const NAVY = '#0E2A47', MUT = '#5B6B82', LIN = '#DCE5F0', AZUL = '#006CFF', AZUL_T = '#0050C8', CINZA = '#7D8799', CLARO = '#B9CCE4';
+  const P = pdfDoc(), M = PDF_M, CW = PDF_CW, R = PDF_W - PDF_M, emit = `Emitido em ${dmy(t)} às ${hm(t)} por ${quem}`;
+  let y;
+  // ── Página 1: o resumo ──
+  P.pag();
+  P.rect(0, 0, PDF_W, 236, { fill: NAVY });
+  P.circ(PDF_W - 20, 4, 160, { fill: '#113560' }); P.circ(PDF_W - 20, 4, 100, { fill: '#144070' });   // o brilho azul do painel da tela
+  P.rect(0, 236, PDF_W, 4, { fill: AZUL });
+  if (logo) { const lh = 20, lw = lh * logo.w / logo.h; P.rect(M, 26, lw + 16, lh + 10, { fill: '#fff', r: 8 }); P.img('Logo', M + 8, 31, lw, lh); }
+  else P.txt('Instituto do Autismo', M, 44, { tam: 11, neg: true, cor: '#fff' });
+  P.txt('Relatório de evolução das metas', R, 38, { tam: 8.5, neg: true, cor: '#9CC8FF', al: 'r' });
+  P.txt(emit, R, 50, { tam: 7.5, cor: CLARO, al: 'r' });
+  P.txt('EVOLUÇÃO DAS METAS', M, 90, { tam: 7.5, neg: true, cor: '#9CC8FF', esp: 1.2 });
+  P.txt(caber(a.nome, 19, true, 280), M, 113, { tam: 19, neg: true, cor: '#fff' });
+  P.txt(caber(`Plano ${a.plano || 'em branco'} · Unidade ${u.nome} · ${a.turno}`, 8.5, false, 280), M, 130, { tam: 8.5, cor: CLARO });
+  P.txt(caber(`${cargoCoord(c)}: ${c.nome} · Código ${cod}`, 8.5, false, 280), M, 142, { tam: 8.5, cor: CLARO });
+  const nw = P.txt(String(D.nInd), M - 3, 214, { tam: 66, neg: true, cor: '#fff' });
+  P.para(`de ${plural(D.ativas.length, 'meta', 'metas')} ${D.verbo} à independência`, M + nw + 8, 184, 300 - nw - 8, { tam: 14, neg: true, cor: '#fff', ent: 1.2, nLin: 3 });
+  const xr = 330, wr = R - xr, Lc = quebrar(D.cmp, 9, true, wr - 34), hp = Lc.length * 12 + 12;
+  P.rect(xr, 92, wr, hp, { fill: '#1A436F', r: 10 });
+  const ya = 92 + hp / 2;
+  P.linha(D.dif >= 0 ? [[xr + 12, ya + 3], [xr + 16, ya - 1], [xr + 19, ya + 1], [xr + 24, ya - 4]] : [[xr + 12, ya - 4], [xr + 16, ya], [xr + 19, ya - 2], [xr + 24, ya + 3]], { stroke: '#9CC8FF', lw: 1.6 });
+  Lc.forEach((l, i) => P.txt(l, xr + 32, 92 + 16 + i * 12, { tam: 9, neg: true, cor: '#fff' }));
+  P.para(`Nível de apoio lido pela IA em ${plural(D.nSes, 'evolução diária', 'evoluções diárias')}, de 03/08 a ${dmy(FIM_G)}. O Tita não traz número: cada ponto vem de uma frase da análise.`, xr, 92 + hp + 18, wr, { tam: 8.5, cor: CLARO, ent: 1.45 });
+  // os cards da situação das metas
+  const cw = (CW - 30) / 4, DOT = { dev: AZUL, alc: '#00CE8B', manut: '#00CE8B', atencao: '#FFCF00' };
+  Object.entries(FILTROS_P).forEach(([k, [tt, , sub]], i) => {
+    const x = M + i * (cw + 10);
+    P.rect(x, 258, cw, 66, { fill: '#F6F9FD', stroke: LIN, lw: .8, r: 10 });
+    P.circ(x + 15, 273, 3.6, { fill: DOT[k] });
+    P.txt(caber(tt, 8, true, cw - 32), x + 24, 276, { tam: 8, neg: true, cor: MUT });
+    P.txt(String(D.n(k)), x + 12, 302, { tam: 22, neg: true, cor: NAVY });
+    P.txt(caber(sub, 7, false, cw - 24), x + 12, 315, { tam: 7, cor: MUT });
+  });
+  // gráfico: metas independentes, semana a semana, diante da mediana da carteira
+  P.txt('Metas independentes, semana a semana', M, 350, { tam: 12, neg: true, cor: NAVY });
+  P.txt('Quantas metas já chegaram à independência em cada semana, diante da mediana dos assistidos da mesma carteira.', M, 364, { tam: 8, cor: MUT });
+  const legC = `Mediana da carteira · ${plural(D.nCart, 'assistido', 'assistidos')}`, legA = primeiro(a.nome);
+  let lx = R - larg(legC, 8, false);
+  P.txt(legC, lx, 350, { tam: 8, cor: MUT }); P.linha([[lx - 20, 347], [lx - 6, 347]], { stroke: CINZA, lw: 1.6 });
+  lx -= 34 + larg(legA, 8, true);
+  P.txt(legA, lx, 350, { tam: 8, neg: true, cor: NAVY }); P.linha([[lx - 20, 347], [lx - 6, 347]], { stroke: AZUL, lw: 2.4 });
+  {
+    const x0 = M + 22, x1 = R - 30, yT = 384, yB = 528, v = D.v, med = D.med, u_ = N_SEM - 1;
+    const top = Math.max(4, Math.ceil(Math.max(...v, ...med))), passo = top > 8 ? 2 : 1;
+    const X = w => x0 + (w + .5) * (x1 - x0) / N_SEM, Y = n => yB - n / top * (yB - yT), Xd = d => x0 + (d - SEM0) / (7 * 864e5) / N_SEM * (x1 - x0);
+    for (let k = 0; k <= top; k += passo) { P.linha([[x0, Y(k)], [x1, Y(k)]], { stroke: k ? '#E8EDF4' : '#C9D3E0', lw: k ? .6 : .9 }); P.txt(String(k), x0 - 7, Y(k) + 2.6, { tam: 7, cor: MUT, al: 'r' }); }
+    const s1 = new Date(2026, 8, 1, 12), o1 = new Date(2026, 9, 1, 12);
+    for (const d of [s1, o1]) P.linha([[Xd(d), yT - 8], [Xd(d), yB]], { stroke: '#E8EDF4', lw: .6 });
+    [['ago', x0, Xd(s1)], ['set', Xd(s1), Xd(o1)], ['out', Xd(o1), x1]].forEach(([k, i, e]) => P.txt(perNome(k), (i + e) / 2, yB + 14, { tam: 7.5, cor: MUT, al: 'c' }));
+    const deg = sv => sv.flatMap((n, w) => w ? [[X(w), Y(sv[w - 1])], [X(w), Y(n)]] : [[X(0), Y(n)]]);
+    P.linha([...deg(v), [X(u_), Y(0)], [X(0), Y(0)]], { fill: '#E6F0FF' });
+    P.linha(deg(med), { stroke: CINZA, lw: 1.6 });
+    P.linha(deg(v), { stroke: AZUL, lw: 2.4 });
+    P.circ(X(u_), Y(v[u_]), 3.6, { fill: AZUL, stroke: '#fff', lw: 1.4 });
+    P.txt(String(v[u_]), X(u_) + 8, Y(v[u_]) + 3.5, { tam: 10, neg: true, cor: NAVY });
+    if (Math.abs(Y(v[u_]) - Y(med[u_])) >= 12) P.txt(fmtN(med[u_]), X(u_) + 8, Y(med[u_]) + 3, { tam: 8, cor: MUT });
+  }
+  // destaques
+  y = 572;
+  P.txt('Destaques', M, y, { tam: 12, neg: true, cor: NAVY }); y += 12;
+  const H = destaquesProg(D);
+  if (!H.length) { P.txt('Nenhuma meta parada ou sem registro no período.', M, y + 12, { tam: 9, cor: MUT }); y += 24; }
+  for (const h of H) {
+    P.rect(M, y, 24, 24, { fill: h.al ? '#FFCF00' : '#E3EEFF', r: 7 });
+    if (h.al) P.txt('!', M + 12, y + 17, { tam: 13, neg: true, cor: NAVY, al: 'c' });
+    else P.linha([[M + 6, y + 16], [M + 10.5, y + 11.5], [M + 13.5, y + 14], [M + 18, y + 8.5]], { stroke: AZUL_T, lw: 1.6 });
+    P.txt(h.t.toUpperCase(), M + 34, y + 9, { tam: 6.8, neg: true, cor: MUT, esp: .6 });
+    P.txt(caber(h.d, 9.5, false, CW - 34), M + 34, y + 21, { tam: 9.5, cor: NAVY });
+    y += 32;
+  }
+  // como ler
+  y += 10;
+  const nota = 'Como ler: o Tita não traz número. A IA lê o nível de apoio na Análise do Atendimento de cada sessão, em 5 degraus: ajuda física total, ajuda física parcial, dica gestual ou modelo, dica verbal e independente. Se a frase cita mais de um nível, vale o de mais apoio. A sessão sem nível conta como trabalhada e fica fora da escada: nenhum ponto é inventado. A mediana da carteira entra só como contexto.';
+  const Ln = quebrar(nota, 8, false, CW - 30);
+  P.rect(M, y, CW, Ln.length * 11.2 + 16, { fill: '#EEF4FF', r: 8 }); P.rect(M, y, 4, Ln.length * 11.2 + 16, { fill: AZUL });
+  Ln.forEach((l, i) => P.txt(l, M + 16, y + 15 + i * 11.2, { tam: 8, cor: '#1B3B66' }));
+  // ── Páginas seguintes: a escada de cada meta e os números ──
+  const cab = () => {
+    P.pag();
+    P.txt('EVOLUÇÃO DAS METAS', M, 40, { tam: 7, neg: true, cor: AZUL_T, esp: 1 });
+    P.txt(caber(a.nome, 11, true, 330), M, 54, { tam: 11, neg: true, cor: NAVY });
+    P.txt(`${cod} · ${dmy(t)}`, R, 54, { tam: 8, cor: MUT, al: 'r' });
+    P.linha([[M, 64], [R, 64]], { stroke: LIN, lw: .8 });
+    y = 90;
+  };
+  cab();
+  P.txt('A escada de cada meta', M, y, { tam: 13, neg: true, cor: NAVY });
+  y = P.para('Do degrau de mais apoio (ajuda física total) até independente. Cada ponto é uma sessão; o ponto vazado na faixa de baixo é uma sessão sem nível. Todas as escadas usam o mesmo eixo de datas.', M, y + 15, CW, { tam: 8, cor: MUT, ent: 1.35 }) + 8;
+  const L = D.X.slice().sort(D.ordem), gw = (CW - 12) / 2, gh = 170;
+  const SIT_PDF = { dev: ['#E6F0FF', AZUL_T], alc: ['#DDF7EE', '#00704A'], manut: ['#DDF7EE', '#00704A'], susp: ['#EEF1F5', MUT] };
+  const s1 = new Date(2026, 8, 1, 12), o1 = new Date(2026, 9, 1, 12);
+  const card = (x, cx, cy) => {
+    const m = x.m, Pg = m.prog ? PROG[m.prog] : null, w = gw;
+    P.rect(cx, cy, w, gh, { fill: '#fff', stroke: LIN, lw: .8, r: 10 });
+    if (x.atencao) P.rect(cx + 12, cy, w - 24, 3, { fill: '#FFCF00' });
+    const nome = Pg ? cap(Pg.nome) : 'sem programa', st = SIT_META1[m.sit], [sf, sc] = SIT_PDF[m.sit];
+    const tt = tamCabe(nome, true, w - 36, 7.5, 6.6), tw = Math.min(larg(nome, tt, true) + 12, w - 24), sw = larg(st, 7, true) + 12;
+    P.rect(cx + 12, cy + 12, tw, 15, { fill: '#E6F0FF', r: 7.5 }); P.txt(caber(nome, tt, true, tw - 12), cx + 18, cy + 22.5, { tam: tt, neg: true, cor: AZUL_T });
+    P.rect(cx + 12, cy + 31, sw, 14, { fill: sf, r: 7 }); P.txt(st, cx + 12 + sw / 2, cy + 40.6, { tam: 7, neg: true, cor: sc, al: 'c' });
+    if (x.atencao) {
+      const ax = cx + 12 + sw + 12;
+      P.circ(ax, cy + 38, 5, { fill: '#FFCF00' }); P.txt('!', ax, cy + 40.8, { tam: 7.5, neg: true, cor: NAVY, al: 'c' });
+      P.txt(caber(x.parada ? `Mesmo degrau há ${x.parada} semanas` : `Sem registro em ${perNome(ABERTA)}`, 7.5, true, cx + w - 12 - ax - 9), ax + 9, cy + 40.8, { tam: 7.5, neg: true, cor: '#7A5A00' });
+    }
+    P.para(m.texto, cx + 12, cy + 58, w - 24, { tam: 8, cor: NAVY, ent: 1.3, nLin: 2 });
+    const L0 = cx + 52, R0 = cx + w - 14, T = cy + 88, B = cy + 128, F = cy + 138;
+    const Yn = n => B - (n - 1) * (B - T) / 4, Xd = d => L0 + (d - SEM0) / (FIM_G - SEM0) * (R0 - L0);
+    if (!Pg || !x.pts.length) {
+      const [t1, t2] = !Pg ? ['Meta sem programa do cadastro', 'Sem programa, a IA não tem onde ler o nível de apoio.'] : ['Nenhuma sessão com este programa', `De 03/08 a ${dmy(FIM_G)}, o programa não aparece nas análises.`];
+      P.rect(cx + 12, T - 10, w - 24, F - T + 18, { fill: '#F6F9FD', r: 8 });
+      P.txt(t1, cx + w / 2, (T + F) / 2 - 2, { tam: 8.5, neg: true, cor: NAVY, al: 'c' });
+      P.txt(caber(t2, 7.5, false, w - 40), cx + w / 2, (T + F) / 2 + 11, { tam: 7.5, cor: MUT, al: 'c' });
+    } else {
+      for (let n = 1; n <= 5; n++) { P.linha([[L0, Yn(n)], [R0, Yn(n)]], { stroke: '#EDF1F6', lw: .5 }); P.txt(NIVEL_CURTO[n], L0 - 5, Yn(n) + 2.2, { tam: 6, cor: MUT, al: 'r' }); }
+      P.txt('sem nível', L0 - 5, F + 2.2, { tam: 6, cor: MUT, al: 'r' });
+      for (const d of [s1, o1]) P.linha([[Xd(d), T - 6], [Xd(d), F + 4]], { stroke: '#DCE3EC', lw: .5, dash: [2, 2] });
+      [['ago', Xd(SEM0), Xd(s1)], ['set', Xd(s1), Xd(o1)], ['out', Xd(o1), Xd(FIM_G)]].forEach(([k, i, e]) => P.txt(perNome(k).slice(0, 3), (i + e) / 2, F + 12, { tam: 6.5, cor: MUT, al: 'c' }));
+      const C = x.com;
+      if (C.length) {
+        const pts = [[Xd(C[0].d), Yn(C[0].n)]]; for (const p of C.slice(1)) pts.push([Xd(p.d), pts[pts.length - 1][1]], [Xd(p.d), Yn(p.n)]);
+        P.linha([...pts, [pts[pts.length - 1][0], B], [pts[0][0], B]], { fill: '#EAF2FF' });
+        P.linha(pts, { stroke: AZUL, lw: 1.4 });
+      }
+      if (x.indep) {
+        const ix = Xd(x.indep.d), rot = `independente em ${dm(x.indep.d)}`, al = ix > R0 - 60 ? 'r' : ix < L0 + 60 ? 'l' : 'c';
+        P.circ(ix, Yn(5), 5.5, { fill: '#CFE2FF' });
+        P.txt(rot, al === 'r' ? Math.min(ix + 4, R0) : al === 'l' ? ix - 4 : ix, Yn(5) - 8, { tam: 6.5, neg: true, cor: AZUL_T, al });
+      }
+      for (const p of x.pts) { const px = Xd(p.d); if (p.n) P.circ(px, Yn(p.n), 1.9, { fill: AZUL, stroke: '#fff', lw: .7 }); else P.circ(px, F, 1.5, { fill: '#fff', stroke: CINZA, lw: .7 }); }
+    }
+    const fy = cy + gh - 10, dir = `${plural(x.pts.length, 'sessão', 'sessões')}${x.semNivel ? ` · ${x.semNivel} sem nível` : ''}`, xd = cx + w - 12 - larg(dir, 7.5, false) - 8;
+    if (x.ult) {
+      for (let k = 1; k <= 5; k++) { const bh = 2.6 + k * 1.5; P.rect(cx + 12 + (k - 1) * 4, fy - bh, 2.6, bh, { fill: k <= x.ult.n ? AZUL : '#D5DEEA' }); }
+      const nw2 = P.txt(NIVEL_PDF[x.ult.n], cx + 36, fy, { tam: 8, neg: true, cor: NAVY }), dl = x.ult.n - (x.pri?.n || x.ult.n);
+      const dt = dl ? `${dl > 0 ? '+' : '-'}${plural(Math.abs(dl), 'degrau', 'degraus')}` : 'mesmo degrau';
+      if (cx + 42 + nw2 + larg(dt, 7.5, false) <= xd) P.txt(dt, cx + 42 + nw2, fy, { tam: 7.5, cor: MUT });
+    } else P.txt('Sem nível lido', cx + 12, fy, { tam: 8, cor: MUT });
+    P.txt(dir, cx + w - 12, fy, { tam: 7.5, cor: MUT, al: 'r' });
+  };
+  for (let i = 0; i < L.length; i += 2) {
+    if (y + gh > 792) cab();
+    L.slice(i, i + 2).forEach((x, j) => card(x, M + j * (gw + 12), y));
+    y += gh + 12;
+  }
+  // tabela das metas
+  const COLS = [['Meta', 172], ['Sessões', 40, 'r'], ['Sem nível', 42, 'r'], ['Primeiro nível', 66], ['Nível agora', 66], ['Independência', 62], ['Atenção', 67]];
+  const linhaTab = (cels, ty, cab_) => {
+    let x = M;
+    COLS.forEach(([, w, al], i) => {
+      const [a1, a2] = cels[i], xx = al === 'r' ? x + w - 6 : x + 6, ng = !!(cab_ || i === 0), tm = cab_ ? 6.8 : tamCabe(a1, ng, w - 10, 7.5, 6.6);
+      P.txt(caber(a1, tm, ng, w - 10), xx, ty + 10, { tam: tm, neg: ng, cor: cab_ ? MUT : NAVY, al: al || 'l' });
+      if (a2) P.txt(caber(a2, 6.8, false, w - 10), xx, ty + 18.5, { tam: 6.8, cor: MUT, al: al || 'l' });
+      x += w;
+    });
+  };
+  if (y + 30 + 18 + Math.min(L.length, 3) * 24 > 792) cab(); else y += 10;
+  P.txt('Metas em números', M, y, { tam: 13, neg: true, cor: NAVY }); y += 10;
+  const cabTab = () => { P.rect(M, y, CW, 16, { fill: '#F1F5FA', r: 4 }); linhaTab(COLS.map(([t_]) => [t_]), y - 1.5, true); y += 18; };
+  cabTab();
+  for (const x of L) {
+    if (y + 24 > 792) { cab(); cabTab(); }
+    linhaTab([
+      [x.m.prog ? cap(PROG[x.m.prog].nome) : 'sem programa', SIT_META1[x.m.sit]], [String(x.pts.length)], [String(x.semNivel)],
+      x.pri ? [NIVEL_PDF[x.pri.n], dm(x.pri.d)] : ['—'], x.ult ? [NIVEL_PDF[x.ult.n], dm(x.ult.d)] : ['—'],
+      x.indep ? [dm(x.indep.d), plural(x.nAte5, 'sessão', 'sessões')] : ['—'], x.parada ? ['Mesmo degrau', `há ${x.parada} semanas`] : x.sumiu ? ['Sem registro', `em ${perNome(ABERTA)}`] : ['—'],
+    ], y);
+    y += 24; P.linha([[M, y - 2], [R, y - 2]], { stroke: '#E8EDF4', lw: .5 });
+  }
+  // metas independentes por semana, lado a lado
+  if (y + 18 + 62 > 792) cab(); else y += 18;
+  P.txt('Metas independentes por semana', M, y, { tam: 13, neg: true, cor: NAVY }); y += 10;
+  const lw0 = 96, cwS = (CW - lw0) / N_SEM;
+  const linhaS = (rot, vals, ty, op) => { P.txt(caber(rot, 7.2, true, lw0 - 8), M + 6, ty + 11, { tam: 7.2, neg: true, cor: op.cor || NAVY }); vals.forEach((t_, w) => P.txt(t_, M + lw0 + (w + 1) * cwS - 4, ty + 11, { tam: 7.2, cor: op.cor || NAVY, neg: !!op.neg, al: 'r' })); };
+  P.rect(M, y, CW, 16, { fill: '#F1F5FA', r: 4 });
+  linhaS('Semana de', Array.from({ length: N_SEM }, (_, w) => dm(iniSem(w))), y, { cor: MUT }); y += 18;
+  linhaS(primeiro(a.nome), D.v.map(String), y, { neg: true }); y += 17; P.linha([[M, y - 1], [R, y - 1]], { stroke: '#E8EDF4', lw: .5 });
+  linhaS('Mediana da carteira', D.med.map(fmtN), y, {}); y += 17;
+  // rodapé de todas as páginas
+  const tot = P.pags.length;
+  P.pags.forEach((_, i) => {
+    P.ir(i);
+    P.linha([[M, 808], [R, 808]], { stroke: LIN, lw: .6 });
+    P.txt(`Instituto do Autismo · Evolução das metas · ${cod}`, M, 820, { tam: 7, cor: MUT });
+    P.txt('Dados de saúde de uma criança: uso restrito a quem acompanha o caso (LGPD).', M, 830, { tam: 7, cor: MUT });
+    P.txt(`Página ${i + 1} de ${tot}`, R, 820, { tam: 7, neg: true, cor: MUT, al: 'r' });
+    P.txt(emit, R, 830, { tam: 7, cor: MUT, al: 'r' });
+  });
+  const tz = -t.getTimezoneOffset(), dt = `${t.getFullYear()}${pad(t.getMonth() + 1)}${pad(t.getDate())}${pad(t.getHours())}${pad(t.getMinutes())}00${tz >= 0 ? '+' : '-'}${pad(Math.floor(Math.abs(tz) / 60))}'${pad(Math.abs(tz) % 60)}'`;
+  return pdfBytes(P.pags, { Logo: logo }, { titulo: `Evolução das metas · ${a.nome}`, autor: quem, assunto: `Relatório de evolução das metas ${cod}`, data: dt });
+}
+const arquivoMetas = async a => new File([await relatorioMetasPdf(a)], `${codigoMetas(a)}.pdf`, { type: 'application/pdf' });
+function baixarBlob(nome, blob) {
+  const url = URL.createObjectURL(blob), ln = document.createElement('a');
+  ln.href = url; ln.download = nome; document.body.append(ln); ln.click(); ln.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+function registrarProg(a, t, ic) { const R = S.progReg ||= {}; (R[a.id] ||= []).push({ t, ic, quem: PERSONAS[S.persona].nome, quando: agora() }); }
+let pdfPronto = null;   // o PDF já gerado ao abrir a janela: o envio sai no mesmo toque (o navegador exige)
+function abrirCompartilhar(a) {
+  const reg = (S.progReg?.[a.id] || []).slice().reverse();
+  abrirModal(`${mHead('Compartilhar a evolução das metas', esc(a.nome))}
+    <div class="m-body"><div class="nota alerta">${I('alert', 18)}<span>O relatório tem o nome e dados de saúde de uma criança. Envie só para quem acompanha o caso: cada envio fica registrado.</span></div>
+    <div class="pg-saidas">
+      <button class="pick" data-act="prog-enviar" data-aid="${a.id}"><span class="avatar">${I('share', 16)}</span><span><b>Enviar o PDF</b><small>WhatsApp, e-mail ou outro aplicativo do aparelho.</small></span>${I('chevRight', 16)}</button>
+      <button class="pick" data-act="prog-link" data-aid="${a.id}"><span class="avatar">${I('link', 16)}</span><span><b>Copiar o link</b><small>Abre esta tela só para quem já tem acesso: o coordenador da carteira e a coordenação geral.</small></span>${I('chevRight', 16)}</button>
+    </div>
+    <p class="lado-k">Registro</p>${reg.length ? `<ul class="pg-reg">${reg.map(r => `<li>${I(r.ic, 14)}<span><b>${r.t}</b> · ${esc(r.quem)}</span><small>${dm(r.quando)} · ${hm(r.quando)}</small></li>`).join('')}</ul>` : '<p class="pg-reg-v">Nenhum download ou envio ainda.</p>'}</div>
+    <footer class="m-foot"><button class="btn btn-secondary" data-act="prog-pdf" data-aid="${a.id}">${I('download', 17)} Baixar PDF</button><button class="btn btn-primary" data-act="fechar-modal">Fechar</button></footer>`, 'md');
+  pdfPronto = null;
+  arquivoMetas(a).then(f => { pdfPronto = { aid: a.id, f }; }).catch(() => {});
+}
+async function enviarPdf(a) {
+  const f = pdfPronto?.aid === a.id ? pdfPronto.f : await arquivoMetas(a);
+  const dados = { files: [f], title: 'Evolução das metas', text: `Evolução das metas ${codigoMetas(a)}` };
+  if (navigator.canShare?.(dados)) {
+    try { await navigator.share(dados); registrarProg(a, 'Enviou o PDF', 'share'); fecharModal(); toast('PDF enviado. O envio ficou registrado.'); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  baixarBlob(f.name, f); registrarProg(a, 'Baixou o PDF para enviar', 'download'); fecharModal();
+  toast('Este navegador não envia arquivo direto: o PDF foi baixado para você anexar no WhatsApp ou no e-mail.', { longo: true });
+}
+async function copiarLink(a) {
+  const url = `${location.href.split('#')[0]}#/progresso/${a.id}`;
+  let ok = true;
+  try { await navigator.clipboard.writeText(url); }
+  catch { const t = document.createElement('textarea'); t.value = url; $('#modal-root').append(t); t.select(); ok = document.execCommand('copy'); t.remove(); }
+  if (!ok) { toast(`Não deu para copiar. O link é ${esc(url)}`, { aviso: true, longo: true }); return; }
+  registrarProg(a, 'Copiou o link', 'link'); fecharModal();
+  toast('Link copiado. Ele abre só para quem tem acesso a este assistido.');
 }
 
 function telaMetas(a, f) {
@@ -2922,6 +3263,20 @@ Object.assign(ACOES, {
       <footer class="m-foot">${ir}<button class="btn btn-primary" data-act="fechar-modal">Fechar</button></footer>`, 'md');
   },
   'prog-ir': el => { const h = el.dataset.href; fecharModal(); location.hash = h; },
+  // E28: relatório de metas em PDF e compartilhar
+  'prog-pdf': async el => {
+    const a = porId(el.dataset.aid); if (!a || el.disabled) return;
+    const antes = el.innerHTML; el.disabled = true; el.innerHTML = '<span class="gira"></span> Gerando…';
+    try {
+      const f = await arquivoMetas(a); baixarBlob(f.name, f); registrarProg(a, 'Baixou o PDF', 'download');
+      if ($('#modal-root .modal-layer')) fecharModal();
+      toast(`Baixado: ${f.name}`);
+    } catch (e) { console.error(e); toast('Não foi possível gerar o PDF.', { aviso: true }); }
+    finally { if (el.isConnected) { el.disabled = false; el.innerHTML = antes; } }
+  },
+  'prog-share': el => { const a = porId(el.dataset.aid); if (a) abrirCompartilhar(a); },
+  'prog-enviar': el => { const a = porId(el.dataset.aid); if (a) enviarPdf(a); },
+  'prog-link': el => { const a = porId(el.dataset.aid); if (a) copiarLink(a); },
   'modal-ok': () => { const r = modalOk?.(); if (r === false) return; modalOk = null; fecharModal(); },
   'fechar-modal-ir': el => { const h = el.getAttribute('href'); fecharModal(); location.hash = h; },
   'imprimir': () => window.print(),

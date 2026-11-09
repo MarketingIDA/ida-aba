@@ -28,7 +28,7 @@ Hoje na simulação é 04/11/2026: está aberta a evolução de novembro, que an
 3. **Outros documentos.** No mesmo passo, junte os exemplos: o relatório da escola entra com alerta (data fora do período), o da fonoaudiologia e a foto do registro da família entram; "De outro assistido" bloqueia a geração até sair da lista. "Tirar foto" abre a câmera.
 4. **Gerar rascunho com a IA.** O rascunho vem em 4 partes e lê o Tita e os documentos. Toque numa frase: a aba Fontes destaca as evoluções diárias ou o documento de onde ela saiu. As conferências mostram uma lacuna (tato de objetos não aparece em outubro), 3 metas alcançadas e uma meta sem programa citado. A lacuna se resolve como "não trabalhado" (a frase entra no texto e o alerta da meta some) ou "Ignorar" (nada entra no texto). O botão "i" sugere uma orientação para a IA, que a coordenação geral aprova. Marque as 4 partes como conferidas, conclua e veja o documento no formato do Word. A evolução concluída não vai sozinha a contas médicas: ela entra no arquivo do mês.
 5. **Escrever à mão.** Em Nova evolução, escolha outro assistido e "Escrever à mão": as seções da evolução abrem em branco. "Preencher com um exemplo" escreve um mês em linguagem do dia a dia, e as metas do cadastro entram com um toque. "Aprimorar com a IA" melhora a linguagem sem acrescentar fato, abre lacuna para o programa do cadastro que o texto não cita e guarda as duas versões (Comparar). A aba Fontes mostra o que foi escrito.
-6. **Evolução das metas em gráfico.** Na lista de evoluções, o ícone de gráfico ao lado de cada assistido abre a evolução das metas. No Theo: 6 de 9 metas chegaram à independência, acima da mediana da carteira. Os destaques levam à meta mais rápida, à que está no mesmo degrau (imitação motora grossa) e à que não aparece em outubro (tato de objetos, a mesma lacuna do rascunho). Cada meta tem a sua escada, de ajuda física total até independente: toque num ponto para ver a frase da análise de onde a IA leu o nível. Os cards filtram as metas, o mapa mostra as sessões por semana e "Tabela" traz os mesmos números (E27).
+6. **Evolução das metas em gráfico.** Na lista de evoluções, o ícone de gráfico ao lado de cada assistido abre a evolução das metas. No Theo: 6 de 9 metas chegaram à independência, acima da mediana da carteira. Os destaques levam à meta mais rápida, à que está no mesmo degrau (imitação motora grossa) e à que não aparece em outubro (tato de objetos, a mesma lacuna do rascunho). Cada meta tem a sua escada, de ajuda física total até independente: toque num ponto para ver a frase da análise de onde a IA leu o nível. Os cards filtram as metas, o mapa mostra as sessões por semana e "Tabela" traz os mesmos números (E27). "Baixar PDF" gera o relatório com tudo isso. O ícone de compartilhar envia o PDF pelo aparelho ou copia o link, avisa que são dados de saúde e mostra o registro de quem baixou e enviou (E28).
 7. **Os outros casos da carteira**, em Em conferência:
    - **Helena:** texto com 6 linhas (bloqueia) e "comportamento agressivo" (troca pelo termo técnico em um toque). Edite o texto até 7 linhas.
    - **Isis:** plano em branco (corrija no cadastro), meta em manutenção há 2 meses e a frequência baixa citada na abertura.
@@ -47,7 +47,7 @@ ida-aba/
 │   ├── evolucao-aba.html        # protótipo navegável (HTML, CSS e JS num arquivo só)
 │   └── assets/                  # logo e elementos da marca usados pelo protótipo
 ├── docs/
-│   ├── escopo/01-dominio.md     # glossário, perfis, fluxo, regras E01–E27, perguntas P1–P22, telas
+│   ├── escopo/01-dominio.md     # glossário, perfis, fluxo, regras E01–E28, perguntas P1–P23, telas
 │   ├── arquitetura/00-stack.md  # stack-alvo e como o domínio se encaixa nela
 │   ├── design-system/           # tokens e assets da casa (o mesmo do sistema de contas médicas)
 │   └── adr/                     # decisões e exceções ao padrão (vazio até a F0)
@@ -62,7 +62,7 @@ Os documentos reais do cliente (PDF do Tita, modelo e manual) têm dados de cria
 
 O protótipo é descartável: serve de referência de telas e regras, e o código dele não é reaproveitado. Depois da aprovação:
 
-1. Respostas do cliente às perguntas P1 a P22 de [`docs/escopo/01-dominio.md`](docs/escopo/01-dominio.md), e ajuste do protótipo se mudarem regra ou tela.
+1. Respostas do cliente às perguntas P1 a P23 de [`docs/escopo/01-dominio.md`](docs/escopo/01-dominio.md), e ajuste do protótipo se mudarem regra ou tela.
 2. **F0, fundação:** repositório na stack da casa ([`docs/arquitetura/00-stack.md`](docs/arquitetura/00-stack.md)), CI com os gates do [`ENGINEERING_STANDARDS.md`](ENGINEERING_STANDARDS.md), Supabase local com seed fictício e os ADRs de exceção.
 3. Domínio puro primeiro (leitura do texto do Tita, período analisado, pseudonimização, conferências, semelhança de textos, com testes), depois importação do PDF do Tita e dos outros documentos, entrada manual, rascunho e aprimoramento com a IA, conferência, emissão do Word e envio do arquivo do mês.
 
