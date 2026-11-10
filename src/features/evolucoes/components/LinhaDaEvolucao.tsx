@@ -1,6 +1,7 @@
 import { Situacao } from '@/components/Situacao';
 import type { LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
-import { ROTULO_DO_TURNO, SITUACAO, situacaoDe } from '@/features/evolucoes/logica';
+import { SITUACAO, situacaoDe } from '@/features/evolucoes/logica';
+import { ROTULO_DO_TURNO } from '@/utils/turno';
 import { cn } from '@/lib/utils';
 import { iniciais } from '@/utils/iniciais';
 

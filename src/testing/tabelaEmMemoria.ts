@@ -12,14 +12,26 @@ export interface Escrita {
 }
 
 /**
- * Uma tabela da Data API em memória: lista, cadastra (o campo `unico` não se repete, como a
- * constraint do banco) e altera pelo `id`. O que o banco preenche sozinho no cadastro vem em
- * `padrao` (ex.: a pessoa nasce sem conta). Devolve as escritas, para conferir o que foi mandado.
+ * O que não se repete na tabela: um campo (a `unique` do banco) ou uma regra entre a linha que já
+ * existe e a que vai ficar (ex.: um índice único parcial, só entre as ativas).
+ */
+export type Unicidade<T> = keyof T | ((existente: T, nova: T) => boolean);
+
+const repete = <T>(unico: Unicidade<T>, existente: T, nova: T) =>
+  typeof unico === 'function' ? unico(existente, nova) : existente[unico] === nova[unico];
+
+const DUPLICADO = { code: '23505', message: 'duplicate key' };
+
+/**
+ * Uma tabela da Data API em memória: lista, cadastra e altera pelo `id`, recusando o que repete
+ * (`unico`) como a constraint do banco, no cadastro e na alteração. O que o banco preenche sozinho
+ * no cadastro vem em `padrao` (ex.: a pessoa nasce sem conta). Devolve as escritas, para conferir
+ * o que foi mandado.
  */
 export function tabelaEmMemoria<T extends { id: number }>(
   nome: string,
   inicial: readonly T[],
-  unico: keyof T,
+  unico: Unicidade<T>,
   padrao: Partial<T> = {},
 ): Escrita[] {
   const url = `${env.SUPABASE_URL}/rest/v1/${nome}`;
@@ -34,10 +46,10 @@ export function tabelaEmMemoria<T extends { id: number }>(
     http.get(url, () => HttpResponse.json(linhas)),
     http.post(url, async ({ request }) => {
       const corpo = await registrar('POST', request);
-      if (linhas.some((l) => l[unico] === corpo[unico])) {
-        return HttpResponse.json({ code: '23505', message: 'duplicate key' }, { status: 409 });
-      }
       const nova = { ...padrao, ...corpo, id: linhas.length + 1 } as T;
+      if (linhas.some((l) => repete(unico, l, nova))) {
+        return HttpResponse.json(DUPLICADO, { status: 409 });
+      }
       linhas.push(nova);
       return HttpResponse.json(nova, { status: 201 });
     }),
@@ -46,6 +58,9 @@ export function tabelaEmMemoria<T extends { id: number }>(
       const id = Number(new URL(request.url).searchParams.get('id')?.replace('eq.', ''));
       const indice = linhas.findIndex((l) => l.id === id);
       const alterada = { ...linhas[indice], ...corpo, id } as T;
+      if (linhas.some((l) => l.id !== id && repete(unico, l, alterada))) {
+        return HttpResponse.json(DUPLICADO, { status: 409 });
+      }
       linhas[indice] = alterada;
       return HttpResponse.json(alterada);
     }),

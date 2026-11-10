@@ -2,12 +2,12 @@ import { z } from 'zod';
 
 import { erroDoBanco } from '@/lib/erroDoBanco';
 import { supabase } from '@/lib/supabase';
+import { type Turno, TURNOS } from '@/utils/turno';
 
 /**
  * Única camada da feature que fala com o Supabase. Quem decide o que cada um vê é o RLS: o
  * coordenador recebe só a própria carteira; a coordenação geral, todas as unidades.
  */
-export type Turno = 'manha' | 'tarde' | 'integral';
 export type SituacaoDaEvolucao = 'em_conferencia' | 'concluida' | 'enviada';
 
 export interface EvolucaoDoMes {
@@ -42,7 +42,7 @@ const esquemaLinha = z
     plano: z.string().nullable(),
     unidade_sigla: z.string(),
     unidade_nome: z.string(),
-    turno: z.enum(['manha', 'tarde', 'integral']),
+    turno: z.enum(TURNOS),
     coordenador_id: z.number().int(),
     evolucao_id: z.string().nullable(),
     codigo: z.string().nullable(),

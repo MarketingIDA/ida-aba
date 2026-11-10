@@ -1,4 +1,3 @@
-import type { UseQueryResult } from '@tanstack/react-query';
 import { ClipboardList, type LucideIcon, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -11,6 +10,15 @@ import { ehErroApp } from '@/lib/erroApp';
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise o suporte.';
 
+/** O que a seção lê da consulta: a de uma tabela (`useQuery`) ou a soma de várias. */
+export interface ConsultaDaSecao {
+  isPending: boolean;
+  isError: boolean;
+  error: unknown;
+  data: readonly unknown[] | undefined;
+  refetch: () => unknown;
+}
+
 interface Props {
   titulo: string;
   descricao: string;
@@ -19,7 +27,7 @@ interface Props {
   aoCriar: () => void;
   /** O que acabou de ser salvo, lido pelo leitor de tela. */
   aviso: string;
-  consulta: UseQueryResult<readonly unknown[]>;
+  consulta: ConsultaDaSecao;
   vazio: { icone: LucideIcon; titulo: string; descricao: string };
   lista: ReactNode;
   gaveta: ReactNode;
@@ -46,7 +54,7 @@ function Conteudo({ consulta, titulo, vazio, lista, botao, aoCriar }: Readonly<P
       />
     );
   }
-  if (consulta.data.length > 0) return <>{lista}</>;
+  if (consulta.data !== undefined && consulta.data.length > 0) return <>{lista}</>;
   return (
     <EmptyState
       {...vazio}

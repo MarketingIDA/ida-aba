@@ -66,3 +66,33 @@ export function pessoasDemo(): LinhaDePessoa[] {
     },
   ];
 }
+
+/** Linha de `cadastro.carteiras` como a Data API devolve (em snake_case). */
+export interface LinhaDeCarteira {
+  id: number;
+  unidade_id: number;
+  turno: 'manha' | 'tarde' | 'integral';
+  coordenador_id: number;
+  ativa: boolean;
+}
+
+/**
+ * Carteiras fictícias, na ordem da Data API (por `id`), sobre `unidadesDoCadastroDemo` e
+ * `pessoasDemo`. A UNA tem manhã (Carla) e tarde (Bruno) ativas e uma manhã antiga desativada;
+ * a UNB, desativada, ainda tem uma carteira ativa. A UNC não tem nenhuma.
+ */
+export function carteirasDemo(): LinhaDeCarteira[] {
+  return [
+    { id: 1, unidade_id: 1, turno: 'tarde', coordenador_id: 4, ativa: true },
+    { id: 2, unidade_id: 2, turno: 'integral', coordenador_id: 2, ativa: true },
+    { id: 3, unidade_id: 1, turno: 'manha', coordenador_id: 4, ativa: false },
+    { id: 4, unidade_id: 1, turno: 'manha', coordenador_id: 2, ativa: true },
+  ];
+}
+
+/** O índice único do banco: uma carteira ativa por unidade e turno. */
+export const mesmaVagaAtiva = (existente: LinhaDeCarteira, nova: LinhaDeCarteira) =>
+  existente.ativa &&
+  nova.ativa &&
+  existente.unidade_id === nova.unidade_id &&
+  existente.turno === nova.turno;

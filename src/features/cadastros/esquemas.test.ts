@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { esquemaPessoa, esquemaPlano, esquemaUnidade } from '@/features/cadastros/esquemas';
+import {
+  esquemaNovaCarteira,
+  esquemaPessoa,
+  esquemaPlano,
+  esquemaUnidade,
+} from '@/features/cadastros/esquemas';
 
 const unidade = (sigla: string, nome = 'Unidade Fictícia') =>
   esquemaUnidade.safeParse({ sigla, nome, ativa: true });
@@ -88,5 +93,16 @@ describe('esquema da pessoa', () => {
     expect(pessoa({ nome: 'D' }).error?.issues[0]?.message).toBe(
       'Escreva o nome da pessoa, com 2 letras ou mais.',
     );
+  });
+});
+
+describe('esquemas da carteira', () => {
+  it('a opção vazia ("Escolha...") pede a escolha, em vez de virar o id 0', () => {
+    const recusa = esquemaNovaCarteira.safeParse({ unidadeId: '', coordenadorId: '' });
+    expect(recusa.error?.issues.map(({ path, message }) => ({ path, message }))).toEqual([
+      { path: ['unidadeId'], message: 'Escolha a unidade da carteira.' },
+      { path: ['turno'], message: 'Escolha o turno da carteira.' },
+      { path: ['coordenadorId'], message: 'Escolha quem coordena a carteira.' },
+    ]);
   });
 });
