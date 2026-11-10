@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { env } from '@/config/env';
+import { planosDemo, unidadesDoCadastroDemo } from '@/testing/factories/cadastros';
 import {
   carteiraDemo,
   coordenadoresDemo,
@@ -26,6 +27,18 @@ export const handlersDeRest = [
     const doUsuario = url.searchParams.get('auth_user_id') === `eq.${AUTH_USER_ID_DEMO}`;
     return HttpResponse.json(doUsuario ? [usuarioDemo()] : []);
   }),
+
+  http.get(`${env.SUPABASE_URL}/rest/v1/unidades`, ({ request }) =>
+    request.headers.get('accept-profile') === 'cadastro'
+      ? HttpResponse.json(unidadesDoCadastroDemo())
+      : schemaErrado(),
+  ),
+
+  http.get(`${env.SUPABASE_URL}/rest/v1/planos`, ({ request }) =>
+    request.headers.get('accept-profile') === 'cadastro'
+      ? HttpResponse.json(planosDemo())
+      : schemaErrado(),
+  ),
 
   // A carteira do coordenador demo tem evoluções só no mês dos testes.
   http.post(`${env.SUPABASE_URL}/rest/v1/rpc/evolucoes_do_mes`, async ({ request }) => {

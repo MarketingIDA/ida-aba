@@ -67,8 +67,8 @@ function SheetContent({
             render={<Button variant="ghost" className="absolute top-3 right-3" size="icon-sm" />}
           >
             <XIcon />
-            {/* MODIFIED: rótulo em português. */}
-            <span className="sr-only">Fechar menu</span>
+            {/* MODIFIED: rótulo em português (o menu usa o próprio botão de fechar). */}
+            <span className="sr-only">Fechar</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>

@@ -8,6 +8,7 @@ Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada 
 
 - **Acesso:** login por e-mail e senha, primeiro acesso (a pessoa cria a senha pelo link do convite) e recuperação de senha. O papel vem do cadastro em `acesso.usuarios`, nunca do token, e conta sem cadastro ativo não entra.
 - **Coordenação de unidade e coordenação geral:** Evoluções do mês, com cards por situação que filtram a lista, busca por nome ou código, escolha do mês (o aberto e os 5 anteriores), período analisado e prazo do arquivo do mês. A coordenação geral vê todas as unidades e recorta por unidade e coordenador.
+- **Cadastros (coordenação geral):** unidades e planos de saúde, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. As pessoas, as carteiras e os assistidos chegam nas próximas etapas, nessa ordem.
 - **Contas médicas:** a tela de arquivos recebidos existe, mas fica vazia até a etapa do envio do arquivo do mês.
 - **Banco:** RLS em todas as tabelas. O coordenador lê só a própria carteira; a coordenação geral lê tudo e é a única que cadastra; contas médicas não lê evolução solta. Toda alteração fica na auditoria.
 
@@ -74,7 +75,7 @@ Estes passos ficam com o dono do projeto e não estão no código:
 
 ## Primeiro acesso da coordenação geral
 
-As telas de cadastro de usuários, unidades e assistidos chegam na próxima etapa. Até lá, a primeira pessoa da coordenação geral entra assim:
+Unidades e planos já se cadastram pela tela Cadastros; as pessoas, as carteiras e os assistidos chegam nas próximas etapas. Até lá, a primeira pessoa da coordenação geral entra assim:
 
 1. No SQL Editor, cadastre a pessoa (o e-mail vai em minúsculas):
 
