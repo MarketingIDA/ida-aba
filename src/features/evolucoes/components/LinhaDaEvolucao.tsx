@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+
 import { Situacao } from '@/components/Situacao';
 import type { LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { SITUACAO, situacaoDe } from '@/features/evolucoes/logica';
@@ -77,7 +79,7 @@ export function LinhaDaEvolucao(props: Readonly<Props>) {
   const { rotulo, tom } = SITUACAO[situacaoDe(linha)];
   return (
     // A coluna da situação tem largura fixa no desktop: as do meio ficam alinhadas entre as linhas.
-    <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:grid-cols-[auto_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)_8rem] sm:px-5 [&>:last-child]:justify-self-end">
+    <li className="relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:grid-cols-[auto_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)_8rem] sm:px-5 [&>:last-child]:justify-self-end">
       <span
         aria-hidden="true"
         className="grid size-8 place-items-center rounded-full bg-info-soft text-caption font-extrabold text-azul-escuro"
@@ -85,7 +87,19 @@ export function LinhaDaEvolucao(props: Readonly<Props>) {
         {iniciais(linha.nome)}
       </span>
       <span className="flex min-w-0 flex-col">
-        <b className="truncate text-[0.90625rem] leading-tight text-marinho">{linha.nome}</b>
+        <b className="truncate text-[0.90625rem] leading-tight text-marinho">
+          {linha.evolucao === null ? (
+            linha.nome
+          ) : (
+            // A linha toda é o alvo do toque: o ::after do link cobre o `li`.
+            <Link
+              to={`/evolucoes/${linha.evolucao.id}`}
+              className="rounded-sm foco-anel after:absolute after:inset-0 after:content-['']"
+            >
+              {linha.nome}
+            </Link>
+          )}
+        </b>
         <span className="flex min-w-0 items-center gap-1.5 overflow-hidden text-caption font-semibold whitespace-nowrap text-apagado">
           <Detalhe {...props} />
         </span>

@@ -62,7 +62,7 @@ A service role e a senha do banco não entram no repositório, no `.env.local` n
 
 - **Schemas:** `acesso` (usuários e papéis), `cadastro` (unidades, planos, carteiras e assistidos), `evolucao` (evoluções e as 4 partes), `auditoria` (histórico de alterações) e `interno` (funções auxiliares, fora da API).
 - **Migrações** em `supabase/migrations/`, aplicadas em ordem. Elas só acrescentam: nenhuma apaga coluna ou tabela com dado.
-- **Testes do RLS:** `supabase/tests/rls_evolucoes.sql` faz 47 verificações de acesso e de regra. Ele roda numa transação que sempre se desfaz, então pode rodar no SQL Editor de produção sem gravar nada. A saída esperada é `RESULTADO: 0 falhas de 47`.
+- **Testes do RLS:** `supabase/tests/rls_evolucoes.sql` faz 52 verificações de acesso e de regra. Ele roda numa transação que sempre se desfaz, então pode rodar no SQL Editor de produção sem gravar nada. A saída esperada é `RESULTADO: 0 falhas de 52`.
 
 ## Configuração do Supabase (uma vez, no painel)
 

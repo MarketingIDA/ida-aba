@@ -29,6 +29,9 @@ const RecuperarSenhaPage = lazy(() =>
 const EvolucoesPage = lazy(() =>
   import('@/features/evolucoes').then((m) => ({ default: m.EvolucoesPage })),
 );
+const EvolucaoPage = lazy(() =>
+  import('@/features/evolucoes').then((m) => ({ default: m.EvolucaoPage })),
+);
 const CadastrosPage = lazy(() =>
   import('@/features/cadastros').then((m) => ({ default: m.CadastrosPage })),
 );
@@ -47,6 +50,14 @@ const TELAS = [
     tela: (
       <ExigePapel papeis={['coordenador', 'coordenacao_geral']}>
         <EvolucoesPage />
+      </ExigePapel>
+    ),
+  },
+  {
+    rota: '/evolucoes/:id',
+    tela: (
+      <ExigePapel papeis={['coordenador', 'coordenacao_geral']}>
+        <EvolucaoPage />
       </ExigePapel>
     ),
   },
