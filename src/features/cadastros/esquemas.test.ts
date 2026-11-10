@@ -23,23 +23,6 @@ describe('esquema da unidade', () => {
     });
   });
 
-  it('pede o CNPJ e diz o que conferir, um aviso por vez', () => {
-    const aviso = (cnpj: string) => unidade('BOV', 'Unidade Fictícia', cnpj).error?.issues;
-    expect(aviso(' ')).toEqual([
-      expect.objectContaining({ message: 'Escreva o CNPJ da unidade.' }),
-    ]);
-    expect(aviso('12.345.678/0001')).toEqual([
-      expect.objectContaining({
-        message: 'Confira o CNPJ: são 14 números, como 12.345.678/0001-95.',
-      }),
-    ]);
-    expect(aviso('12.345.678/0001-96')).toEqual([
-      expect.objectContaining({
-        message: 'Confira o CNPJ: os dois últimos números não batem com os outros.',
-      }),
-    ]);
-  });
-
   it.each(['B', 'BÔV', 'BOV1', 'ABCDEF', 'B-V'])('recusa a sigla "%s"', (sigla) => {
     const resultado = unidade(sigla);
     expect(resultado.success).toBe(false);

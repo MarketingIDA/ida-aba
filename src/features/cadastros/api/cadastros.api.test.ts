@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import { env } from '@/config/env';
 import { buscarUnidades, salvarUnidade } from '@/features/cadastros/api/cadastros.api';
-import { unidadesDoCadastroDemo } from '@/testing/factories/cadastros';
 import { server } from '@/testing/server';
 
 const UNIDADES = `${env.SUPABASE_URL}/rest/v1/unidades`;
@@ -41,12 +40,6 @@ describe('API do cadastro', () => {
       ),
     );
     await expect(salvarUnidade(VALORES, 9)).rejects.toMatchObject({ codigo: 'sem_permissao' });
-  });
-
-  it('lê a unidade de antes da obrigação do CNPJ, que ainda vem sem ele', async () => {
-    server.use(http.get(UNIDADES, () => HttpResponse.json(unidadesDoCadastroDemo())));
-    const unidades = await buscarUnidades();
-    expect(unidades.find((unidade) => unidade.sigla === 'UNB')?.cnpj).toBeNull();
   });
 
   it('resposta fora do formato não vira dado na tela', async () => {

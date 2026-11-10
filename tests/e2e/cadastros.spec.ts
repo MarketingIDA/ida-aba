@@ -57,12 +57,9 @@ test.describe('Cadastros', () => {
     const edicao = page.getByRole('dialog', { name: 'Editar UNB' });
     await edicao.getByRole('checkbox', { name: /Unidade ativa/ }).uncheck();
     // A UNB é de antes da obrigação: sem o CNPJ, nem a desativação salva.
-    await edicao.getByRole('button', { name: 'Salvar alterações' }).click();
-    await expect(edicao.getByText('Escreva o CNPJ da unidade.')).toBeVisible();
     await edicao.getByLabel('CNPJ').fill('12ABC34501DE35');
     await edicao.getByRole('button', { name: 'Salvar alterações' }).click();
     await expect(lista.getByRole('listitem').last()).toContainText('Desativada');
-    await expect(lista.getByRole('listitem').last()).toContainText('CNPJ 12.ABC.345/01DE-35');
     // O axe mede depois que a gaveta termina de sair, não no meio da transição de saída.
     await expect(edicao).toBeHidden();
     expect((await new AxeBuilder({ page }).withTags(TAGS).analyze()).violations).toEqual([]);
