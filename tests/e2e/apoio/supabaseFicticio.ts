@@ -139,8 +139,23 @@ async function simularCadastros(page: Page, papel: Papel): Promise<void> {
     nome: 'unidades',
     unico: 'sigla',
     linhas: [
-      { id: 1, sigla: 'UNA', nome: 'Unidade Fictícia', ativa: true },
-      { id: 2, sigla: 'UNB', nome: 'Outra Unidade Fictícia', ativa: true },
+      // CNPJ fictício (só os dígitos batem); a UNB é de antes da obrigação e vem sem ele.
+      {
+        id: 1,
+        sigla: 'UNA',
+        nome: 'Unidade Fictícia',
+        cnpj: '12345678000195',
+        endereco: null,
+        ativa: true,
+      },
+      {
+        id: 2,
+        sigla: 'UNB',
+        nome: 'Outra Unidade Fictícia',
+        cnpj: null,
+        endereco: null,
+        ativa: true,
+      },
     ],
   });
   await simularTabela(page, papel, {

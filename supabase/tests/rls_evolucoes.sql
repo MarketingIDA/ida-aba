@@ -34,7 +34,9 @@ insert into resultado (teste, ok) select 'vincula conta de e-mail confirmado',
 insert into resultado (teste, ok) select 'não vincula e-mail não confirmado',
   (select auth_user_id is null from acesso.usuarios where email = 'nao.confirmado@exemplo.test');
 
-insert into cadastro.unidades (sigla, nome) values ('TST', 'Unidade Teste'), ('TSX', 'Unidade X');
+-- CNPJs fictícios, um numérico e um alfanumérico (o exemplo da Receita).
+insert into cadastro.unidades (sigla, nome, cnpj) values
+  ('TST', 'Unidade Teste', '12345678000195'), ('TSX', 'Unidade X', '12ABC34501DE35');
 insert into cadastro.planos (nome) values ('Plano Teste');
 insert into cadastro.carteiras (unidade_id, turno, coordenador_id)
   select u.id, 'tarde', (select id from acesso.usuarios where email = 'coord.a@exemplo.test')
@@ -106,6 +108,18 @@ begin
     insert into resultado (teste, ok) values ('nome do assistido com sobrenome (E09)', false);
   exception when check_violation then
     insert into resultado (teste, ok) values ('nome do assistido com sobrenome (E09)', true);
+  end;
+  begin
+    insert into cadastro.unidades (sigla, nome) values ('TSY', 'Unidade Y');
+    insert into resultado (teste, ok) values ('unidade nova só com CNPJ', false);
+  exception when check_violation then
+    insert into resultado (teste, ok) values ('unidade nova só com CNPJ', true);
+  end;
+  begin
+    insert into cadastro.unidades (sigla, nome, cnpj) values ('TSY', 'Unidade Y', '12345678000196');
+    insert into resultado (teste, ok) values ('CNPJ com dígito errado não entra', false);
+  exception when check_violation then
+    insert into resultado (teste, ok) values ('CNPJ com dígito errado não entra', true);
   end;
 end;
 $$;
@@ -189,6 +203,10 @@ insert into resultado (teste, ok) select 'coordenação geral lê a auditoria',
 update cadastro.planos set nome = 'Plano Teste Renomeado' where nome = 'Plano Teste';
 insert into resultado (teste, ok) select 'coordenação geral altera o cadastro',
   exists (select 1 from cadastro.planos where nome = 'Plano Teste Renomeado');
+update cadastro.unidades set cnpj = '87654321000198', endereco = 'Rua Fictícia, 100'
+ where sigla = 'TSX';
+insert into resultado (teste, ok) select 'coordenação geral grava CNPJ e endereço da unidade',
+  exists (select 1 from cadastro.unidades where sigla = 'TSX' and cnpj = '87654321000198');
 
 -- Pessoas: a coordenação geral cadastra e altera; o banco segura as travas. Os testes não
 -- dependem de quantas coordenações gerais reais existem: desativar todas tem de falhar sempre.
@@ -320,14 +338,15 @@ insert into resultado (teste, ok) select 'RLS ligado e forçado em todas as tabe
     select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
      where n.nspname in ('acesso', 'cadastro', 'evolucao', 'auditoria') and c.relkind = 'r'
        and not (c.relrowsecurity and c.relforcerowsecurity));
-insert into resultado (teste, ok) select 'funções de interno: anon nenhuma, authenticated só as das policies',
+insert into resultado (teste, ok) select 'funções de interno: anon nenhuma, authenticated só as das policies e checks',
   not exists (
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'interno'
        and (has_function_privilege('anon', p.oid, 'execute')
             or (has_function_privilege('authenticated', p.oid, 'execute')
                 and p.proname not in ('usuario_atual_id', 'usuario_ativo', 'eh_coordenacao_geral',
-                                      'carteiras_do_usuario', 'assistidos_do_usuario'))));
+                                      'carteiras_do_usuario', 'assistidos_do_usuario',
+                                      'cnpj_valido'))));
 insert into resultado (teste, ok) select 'authenticated sem DELETE em nenhuma tabela',
   not exists (
     select 1 from information_schema.role_table_grants

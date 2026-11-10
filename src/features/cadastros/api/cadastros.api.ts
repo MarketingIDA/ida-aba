@@ -12,6 +12,9 @@ export interface Unidade {
   id: number;
   sigla: string;
   nome: string;
+  /** Sem pontuação. Nulo só nas unidades de antes da obrigação, até a primeira alteração. */
+  cnpj: string | null;
+  endereco: string | null;
   ativa: boolean;
 }
 
@@ -28,13 +31,15 @@ const esquemaUnidade = z.object({
   id: z.number().int(),
   sigla: z.string(),
   nome: z.string(),
+  cnpj: z.string().nullable(),
+  endereco: z.string().nullable(),
   ativa: z.boolean(),
 });
 const esquemaPlano = z.object({ id: z.number().int(), nome: z.string(), ativo: z.boolean() });
 
 const UNIDADES = {
   tabela: 'unidades',
-  colunas: 'id, sigla, nome, ativa',
+  colunas: 'id, sigla, nome, cnpj, endereco, ativa',
   mensagens: {
     duplicado: 'Já existe uma unidade com esta sigla.',
     sem_permissao: 'Só a coordenação geral cadastra e altera unidades.',
@@ -63,7 +68,7 @@ async function buscarEm(tabela: Tabela, colunas: string, ordem: string): Promise
 /** Cadastra (sem `id`) ou altera (com `id`); devolve a linha como ficou no banco. */
 async function salvarEm(
   { tabela, colunas, mensagens }: { tabela: Tabela; colunas: string; mensagens: Mensagens },
-  valores: Record<string, string | boolean>,
+  valores: Record<string, string | boolean | null>,
   id: number | undefined,
 ): Promise<unknown> {
   const de = supabase.schema('cadastro').from(tabela);

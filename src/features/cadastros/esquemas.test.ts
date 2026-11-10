@@ -8,16 +8,36 @@ import {
   esquemaUnidade,
 } from '@/features/cadastros/esquemas';
 
-const unidade = (sigla: string, nome = 'Unidade Fictícia') =>
-  esquemaUnidade.safeParse({ sigla, nome, ativa: true });
+// CNPJ fictício: só os dígitos verificadores batem.
+const unidade = (sigla: string, nome = 'Unidade Fictícia', cnpj = '12.345.678/0001-95') =>
+  esquemaUnidade.safeParse({ sigla, nome, cnpj, endereco: '  ', ativa: true });
 
 describe('esquema da unidade', () => {
   it('tira os espaços e põe a sigla em maiúsculas', () => {
     expect(unidade(' bov ', '  Boa Viagem Fictícia ').data).toEqual({
       sigla: 'BOV',
       nome: 'Boa Viagem Fictícia',
+      cnpj: '12345678000195',
+      endereco: null,
       ativa: true,
     });
+  });
+
+  it('pede o CNPJ e diz o que conferir, um aviso por vez', () => {
+    const aviso = (cnpj: string) => unidade('BOV', 'Unidade Fictícia', cnpj).error?.issues;
+    expect(aviso(' ')).toEqual([
+      expect.objectContaining({ message: 'Escreva o CNPJ da unidade.' }),
+    ]);
+    expect(aviso('12.345.678/0001')).toEqual([
+      expect.objectContaining({
+        message: 'Confira o CNPJ: são 14 números, como 12.345.678/0001-95.',
+      }),
+    ]);
+    expect(aviso('12.345.678/0001-96')).toEqual([
+      expect.objectContaining({
+        message: 'Confira o CNPJ: os dois últimos números não batem com os outros.',
+      }),
+    ]);
   });
 
   it.each(['B', 'BÔV', 'BOV1', 'ABCDEF', 'B-V'])('recusa a sigla "%s"', (sigla) => {
