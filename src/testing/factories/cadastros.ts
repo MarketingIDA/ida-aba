@@ -4,7 +4,7 @@ import { AUTH_USER_ID_DEMO } from '@/testing/factories/usuario';
 
 /**
  * Unidades fictícias do cadastro, na ordem da Data API (por sigla). Nenhuma é real, nem os CNPJs
- * (só os dígitos verificadores batem). A UNB é de antes da obrigação do CNPJ: vem sem ele.
+ * (só os dígitos verificadores batem).
  */
 export function unidadesDoCadastroDemo(): Unidade[] {
   return [
@@ -20,7 +20,7 @@ export function unidadesDoCadastroDemo(): Unidade[] {
       id: 2,
       sigla: 'UNB',
       nome: 'Outra Unidade Fictícia',
-      cnpj: null,
+      cnpj: '12ABC34501DE35',
       endereco: null,
       ativa: false,
     },

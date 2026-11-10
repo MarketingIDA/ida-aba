@@ -12,8 +12,8 @@ export interface Unidade {
   id: number;
   sigla: string;
   nome: string;
-  /** Sem pontuação. Nulo só nas unidades de antes da obrigação, até a primeira alteração. */
-  cnpj: string | null;
+  /** Sem pontuação. */
+  cnpj: string;
   endereco: string | null;
   ativa: boolean;
 }
@@ -31,7 +31,7 @@ const esquemaUnidade = z.object({
   id: z.number().int(),
   sigla: z.string(),
   nome: z.string(),
-  cnpj: z.string().nullable(),
+  cnpj: z.string(),
   endereco: z.string().nullable(),
   ativa: z.boolean(),
 });

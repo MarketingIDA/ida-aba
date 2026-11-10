@@ -30,21 +30,13 @@ const DICA_DA_SIGLA = {
   edicao: 'Mudar a sigla vale para as evoluções novas; os códigos já dados não mudam.',
 };
 
-const DICA_DO_CNPJ = {
-  normal: 'Com ou sem pontos, barra e traço.',
-  falta: 'Esta unidade ainda não tem CNPJ: escreva para salvar qualquer alteração.',
-};
-
-function valoresIniciais(unidade: Unidade | null): CamposDaUnidade {
-  const cnpj = unidade?.cnpj ?? null;
-  return {
-    sigla: unidade?.sigla ?? '',
-    nome: unidade?.nome ?? '',
-    cnpj: cnpj === null ? '' : formatarCnpj(cnpj),
-    endereco: unidade?.endereco ?? '',
-    ativa: unidade?.ativa ?? true,
-  };
-}
+const valoresIniciais = (unidade: Unidade | null): CamposDaUnidade => ({
+  sigla: unidade?.sigla ?? '',
+  nome: unidade?.nome ?? '',
+  cnpj: unidade === null ? '' : formatarCnpj(unidade.cnpj),
+  endereco: unidade?.endereco ?? '',
+  ativa: unidade?.ativa ?? true,
+});
 
 interface PropsDoCorpo {
   unidade: Unidade | null;
@@ -53,13 +45,13 @@ interface PropsDoCorpo {
 }
 
 /** CNPJ e endereço, os dados da unidade que saem nos documentos. */
-function DocumentosDaUnidade({ unidade, register, errors }: Readonly<PropsDoCorpo>) {
+function DocumentosDaUnidade({ register, errors }: Readonly<Omit<PropsDoCorpo, 'unidade'>>) {
   return (
     <>
       <CampoDeTexto
         id="unidade-cnpj"
         rotulo="CNPJ"
-        dica={unidade !== null && unidade.cnpj === null ? DICA_DO_CNPJ.falta : DICA_DO_CNPJ.normal}
+        dica="Com ou sem pontos, barra e traço."
         erro={errors.cnpj?.message}
         autoComplete="off"
         autoCapitalize="characters"
@@ -104,7 +96,7 @@ function CorpoDaUnidade({ unidade, register, errors }: Readonly<PropsDoCorpo>) {
         autoComplete="off"
         {...register('nome')}
       />
-      <DocumentosDaUnidade unidade={unidade} register={register} errors={errors} />
+      <DocumentosDaUnidade register={register} errors={errors} />
       {unidade !== null && (
         <CaixaDeAtivo
           rotulo="Unidade ativa"
