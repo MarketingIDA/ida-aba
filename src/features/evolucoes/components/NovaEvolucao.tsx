@@ -55,6 +55,24 @@ function Item({ linha, aoEscolher }: Readonly<{ linha: LinhaDoMes; aoEscolher?: 
   );
 }
 
+/** Carteira vazia, ou toda com evolução no mês. */
+function Aviso({ total, livres, mes }: Readonly<{ total: number; livres: number; mes: string }>) {
+  if (total === 0) {
+    return (
+      <p className="text-sm font-bold text-texto-2">
+        Sua carteira ainda não tem assistidos. A coordenação geral inclui os assistidos na carteira.
+      </p>
+    );
+  }
+  if (livres > 0) return null;
+  return (
+    <p className="flex items-center gap-2 text-sm font-bold text-ok-text">
+      <CircleCheck aria-hidden="true" className="size-4" />
+      Todos os assistidos da carteira já têm evolução de {nomeDoMes(mes)}.
+    </p>
+  );
+}
+
 function Escolha({ mesAberto }: Readonly<{ mesAberto: string }>) {
   const lista = useQuery(evolucoesDoMesOptions(mesAberto));
   const criar = useCriarEvolucao();
@@ -73,12 +91,7 @@ function Escolha({ mesAberto }: Readonly<{ mesAberto: string }>) {
           {ehErroApp(criar.error) ? criar.error.message : 'Não foi possível criar agora.'}
         </p>
       )}
-      {lista.isSuccess && livres.length === 0 && (
-        <p className="flex items-center gap-2 text-sm font-bold text-ok-text">
-          <CircleCheck aria-hidden="true" className="size-4" />
-          Todos os assistidos da carteira já têm evolução de {nomeDoMes(mesAberto)}.
-        </p>
-      )}
+      {lista.isSuccess && <Aviso total={linhas.length} livres={livres.length} mes={mesAberto} />}
       <ul
         className="flex flex-col gap-2"
         aria-label="Sem evolução neste mês"
