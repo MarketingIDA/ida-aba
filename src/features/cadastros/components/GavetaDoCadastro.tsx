@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 
 import {
   Sheet,
@@ -13,6 +13,11 @@ interface Props {
   aoFechar: () => void;
   titulo: string;
   descricao: string;
+  /**
+   * Quem está no formulário (o `id`, ou "novo"). Mudou, o formulário nasce de novo: reaberta ainda
+   * na animação de saída, a gaveta não herda os valores digitados no outro.
+   */
+  chave: string | number;
   children: ReactNode;
 }
 
@@ -22,6 +27,7 @@ export function GavetaDoCadastro({
   aoFechar,
   titulo,
   descricao,
+  chave,
   children,
 }: Readonly<Props>) {
   return (
@@ -41,7 +47,7 @@ export function GavetaDoCadastro({
             {descricao}
           </SheetDescription>
         </SheetHeader>
-        {children}
+        <Fragment key={chave}>{children}</Fragment>
       </SheetContent>
     </Sheet>
   );

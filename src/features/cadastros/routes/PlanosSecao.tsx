@@ -58,6 +58,7 @@ export function PlanosSecao() {
           aoFechar={gaveta.fechar}
           titulo={editando === null ? 'Novo plano' : `Editar ${editando.nome}`}
           descricao="Só a coordenação geral cadastra e altera planos."
+          chave={editando?.id ?? 'novo'}
         >
           <FormularioDePlano plano={editando} aoSalvar={aoSalvar} aoCancelar={gaveta.fechar} />
         </GavetaDoCadastro>

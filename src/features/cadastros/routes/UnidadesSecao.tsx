@@ -58,6 +58,7 @@ export function UnidadesSecao() {
           aoFechar={gaveta.fechar}
           titulo={editando === null ? 'Nova unidade' : `Editar ${editando.sigla}`}
           descricao="Só a coordenação geral cadastra e altera unidades."
+          chave={editando?.id ?? 'nova'}
         >
           <FormularioDeUnidade unidade={editando} aoSalvar={aoSalvar} aoCancelar={gaveta.fechar} />
         </GavetaDoCadastro>
