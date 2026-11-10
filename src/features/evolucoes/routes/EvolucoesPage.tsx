@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import { CabecalhoDoMes } from '@/features/evolucoes/components/CabecalhoDoMes';
+import { NovaEvolucao } from '@/features/evolucoes/components/NovaEvolucao';
 import { coordenadoresOptions, evolucoesDoMesOptions } from '@/features/evolucoes/queries';
 import { ConteudoDoMes } from '@/features/evolucoes/routes/ConteudoDoMes';
 import { useFiltrosDaUrl } from '@/features/evolucoes/routes/useFiltrosDaUrl';
@@ -65,6 +66,7 @@ export function EvolucoesPage() {
         aoMudarMes={(mes) => {
           filtros.mudar({ mes: mes === mesAberto ? '' : mes });
         }}
+        acao={visaoGeral ? null : <NovaEvolucao mesAberto={mesAberto} />}
       />
       {evolucoes.isPending && <Carregando />}
       {evolucoes.isError && (

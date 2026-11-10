@@ -4,6 +4,7 @@ import { ROTULO_DO_TURNO, type Turno } from '@/utils/turno';
 import {
   diasAtePrazo,
   formatarData,
+  FUSO_DA_CLINICA,
   nomeDoMes,
   periodoAnalisado,
   prazoDoArquivo,
@@ -72,4 +73,21 @@ export function opcoesDeCoordenador(
     const turno = ROTULO_DO_TURNO[linha.turno].toLowerCase();
     return [{ valor: String(id), rotulo: `${nome} · ${linha.unidadeSigla} ${turno}` }];
   });
+}
+
+const DATA_HORA = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: FUSO_DA_CLINICA,
+  day: '2-digit',
+  month: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+/** "10/11 às 14:32", no horário da clínica. */
+export function formatarDataHora(instante: string): string {
+  const partes = new Map(
+    DATA_HORA.formatToParts(new Date(instante)).map((p) => [p.type, p.value] as const),
+  );
+  const de = (tipo: Intl.DateTimeFormatPartTypes) => partes.get(tipo) ?? '';
+  return `${de('day')}/${de('month')} às ${de('hour')}:${de('minute')}`;
 }

@@ -62,11 +62,11 @@ insert into evolucao.evolucoes (assistido_id, mes_ref, origem)
   select id, '2026-11-01', 'tita' from cadastro.assistidos where nome = 'Assistida Um Teste';
 insert into evolucao.evolucoes (assistido_id, mes_ref, origem)
   select id, '2026-11-01', 'manual' from cadastro.assistidos where nome = 'Assistido Tres Teste';
-insert into evolucao.partes (evolucao_id, numero, conferida, conferida_em)
-  select e.id, n, n <= 2, case when n <= 2 then now() end
-    from evolucao.evolucoes e
-    join cadastro.assistidos a on a.id = e.assistido_id and a.nome = 'Assistida Um Teste',
-         generate_series(1, 4) n;
+-- As 4 partes nascem com a evolução; a Um Teste tem 2 conferidas.
+update evolucao.partes pt set conferida = pt.numero <= 2
+  from evolucao.evolucoes e
+  join cadastro.assistidos a on a.id = e.assistido_id and a.nome = 'Assistida Um Teste'
+ where pt.evolucao_id = e.id;
 
 insert into resultado (teste, ok) select 'código da evolução UNI-AAMM-NNN-EV (E16)',
   (select e.codigo = 'TST-2611-' || lpad(a.sequencia::text, 3, '0') || '-EV'
@@ -124,6 +124,10 @@ begin
 end;
 $$;
 
+-- O id de um assistido da carteira do B, para a A tentar usar sem conseguir lê-lo.
+select set_config('teste.assistido_do_b',
+  (select id::text from cadastro.assistidos where nome = 'Assistido Tres Teste'), true);
+
 -- Coordenadora A: vê só a carteira dela.
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
@@ -158,9 +162,9 @@ begin
   begin
     insert into evolucao.evolucoes (assistido_id, mes_ref, origem)
       select id, '2026-12-01', 'tita' from cadastro.assistidos where nome = 'Assistida Um Teste';
-    insert into resultado (teste, ok) values ('coordenador ainda não escreve evolução direto', false);
+    insert into resultado (teste, ok) values ('coordenador não escolhe o mês da evolução', false);
   exception when insufficient_privilege then
-    insert into resultado (teste, ok) values ('coordenador ainda não escreve evolução direto', true);
+    insert into resultado (teste, ok) values ('coordenador não escolhe o mês da evolução', true);
   end;
   begin
     update acesso.usuarios set auth_user_id = null where email = 'coord.a@exemplo.test';
@@ -177,6 +181,53 @@ begin
   end;
 end;
 $$;
+
+-- Evolução escrita à mão: cria no mês aberto, não conclui sem conferir, conclui com tudo.
+do $$
+declare
+  nova uuid;
+  dica text;
+begin
+  begin
+    insert into evolucao.evolucoes (assistido_id)
+      values (current_setting('teste.assistido_do_b')::bigint);
+    insert into resultado (teste, ok) values ('coordenador não cria evolução de outra carteira', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('coordenador não cria evolução de outra carteira', true);
+  end;
+  insert into evolucao.evolucoes (assistido_id)
+    select id from cadastro.assistidos where nome = 'Assistido Dois Teste'
+    returning id into nova;
+  insert into resultado (teste, ok) select 'coordenador cria a evolução do mês aberto, com as 4 partes',
+    (select e.mes_ref = date_trunc('month', now() at time zone 'America/Recife')::date
+            and e.origem = 'manual'
+       from evolucao.evolucoes e where e.id = nova)
+    and (select count(*) from evolucao.partes where evolucao_id = nova) = 4;
+  begin
+    update evolucao.evolucoes set situacao = 'concluida' where id = nova;
+    insert into resultado (teste, ok) values ('não conclui sem as 4 partes conferidas', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('não conclui sem as 4 partes conferidas', dica = 'partes_a_conferir');
+  end;
+  update evolucao.partes set conferida = true where evolucao_id = nova;
+  insert into evolucao.versoes (evolucao_id, numero, conteudo) values
+    (nova, 2, jsonb_build_object('abertura', '', 'programas', repeat('Texto fictício de teste. ', 30),
+                                 'comportamentos', '', 'recursos', '', 'fechamento', '')),
+    (nova, 3, '{"metas": ["Meta alcançada fictícia"]}'),
+    (nova, 4, '{"metas": ["Meta um", "Meta dois", "Meta três", "Meta quatro"]}');
+  update evolucao.partes set conferida = true where evolucao_id = nova;
+  update evolucao.evolucoes set situacao = 'concluida' where id = nova;
+  insert into resultado (teste, ok) select 'conclui com as 4 partes conferidas, o texto e as metas',
+    (select situacao = 'concluida' and concluida_em is not null
+       from evolucao.evolucoes where id = nova);
+  insert into resultado (teste, ok) select 'a evolução inteira traz a versão atual de cada parte',
+    (select jsonb_array_length(c -> 'versoes') = 3 and jsonb_array_length(c -> 'partes') = 4
+            and (c ->> 'editavel')::boolean
+       from evolucao.evolucao_completa(nova) c);
+end;
+$$;
 reset role;
 
 -- Coordenador B: não vê a carteira da A.
@@ -185,7 +236,7 @@ set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000002","r
 insert into resultado (teste, ok) select 'outro coordenador não vê a carteira alheia',
   (select count(*) from cadastro.assistidos where nome like '%Teste') = 1
   and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1
-  and (select count(*) from evolucao.partes) = 0;
+  and (select count(distinct evolucao_id) from evolucao.partes) = 1;
 reset role;
 
 -- Coordenação geral: vê tudo e mantém o cadastro.
@@ -193,7 +244,7 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
 insert into resultado (teste, ok) select 'coordenação geral lê todos os assistidos e evoluções',
   (select count(*) from cadastro.assistidos where nome like '%Teste') = 3
-  and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 2;
+  and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 3;
 insert into resultado (teste, ok) select 'coordenação geral filtra a lista por coordenador',
   (select count(*) from evolucao.evolucoes_do_mes('2026-11-01',
      (select id from acesso.usuarios where email = 'coord.b@exemplo.test'))
@@ -346,7 +397,7 @@ insert into resultado (teste, ok) select 'funções de interno: anon nenhuma, au
             or (has_function_privilege('authenticated', p.oid, 'execute')
                 and p.proname not in ('usuario_atual_id', 'usuario_ativo', 'eh_coordenacao_geral',
                                       'carteiras_do_usuario', 'assistidos_do_usuario',
-                                      'cnpj_valido'))));
+                                      'cnpj_valido', 'evolucoes_do_usuario'))));
 insert into resultado (teste, ok) select 'authenticated sem DELETE em nenhuma tabela',
   not exists (
     select 1 from information_schema.role_table_grants
