@@ -1,5 +1,5 @@
 import { lazy, type ReactNode, Suspense } from 'react';
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 
 import {
   ArquivosRecebidosEmBreve,
@@ -29,6 +29,9 @@ const RecuperarSenhaPage = lazy(() =>
 const EvolucoesPage = lazy(() =>
   import('@/features/evolucoes').then((m) => ({ default: m.EvolucoesPage })),
 );
+const CadastrosPage = lazy(() =>
+  import('@/features/cadastros').then((m) => ({ default: m.CadastrosPage })),
+);
 
 /** Telas sem login: entrar, criar a senha pelo link do e-mail e pedir um link novo. */
 const PUBLICAS = [
@@ -44,6 +47,15 @@ const TELAS = [
     tela: (
       <ExigePapel papeis={['coordenador', 'coordenacao_geral']}>
         <EvolucoesPage />
+      </ExigePapel>
+    ),
+  },
+  { rota: '/cadastros', tela: <Navigate to="/cadastros/unidades" replace /> },
+  {
+    rota: '/cadastros/:aba',
+    tela: (
+      <ExigePapel papeis={['coordenacao_geral']}>
+        <CadastrosPage />
       </ExigePapel>
     ),
   },

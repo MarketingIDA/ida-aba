@@ -2,8 +2,9 @@ import type { Page } from '@playwright/test';
 
 /**
  * Supabase fictício para o E2E: o build de teste aponta para `exemplo.supabase.co`, que não
- * existe. O Playwright responde no lugar dele o que as telas usam: Auth, `acesso.usuarios` e a RPC
- * das evoluções do mês. Nenhuma senha, nome ou dado real: tudo aqui é dos testes.
+ * existe. O Playwright responde no lugar dele o que as telas usam: Auth, `acesso.usuarios`, a RPC
+ * das evoluções do mês e as unidades e os planos do cadastro. Nenhuma senha, nome ou dado real:
+ * tudo aqui é dos testes.
  */
 const BASE = 'https://exemplo.supabase.co';
 const AUTH_USER_ID = '11111111-1111-4111-8111-111111111111';
@@ -94,7 +95,57 @@ const COORDENADORES = [
   { id: 7, nome: 'Gil Fictício Coordenador' },
 ];
 
+type LinhaDoCadastro = Record<string, unknown> & { id: number };
+
+/**
+ * Tabela do cadastro em memória, por teste: lista, cadastra com o campo `unico` sem repetir (a
+ * constraint do banco) e altera pelo `id`. Só a coordenação geral escreve, como no RLS.
+ */
+async function simularTabela(
+  page: Page,
+  papel: Papel,
+  { nome, linhas, unico }: { nome: string; linhas: LinhaDoCadastro[]; unico: string },
+): Promise<void> {
+  await page.route(`${BASE}/rest/v1/${nome}**`, async (rota) => {
+    const pedido = rota.request();
+    if (pedido.method() === 'GET') return rota.fulfill({ json: linhas });
+    if (papel !== 'coordenacao_geral') {
+      return rota.fulfill({ status: 403, json: { code: '42501', message: 'RLS' } });
+    }
+    const corpo = pedido.postDataJSON() as Record<string, unknown>;
+    if (pedido.method() === 'POST') {
+      if (linhas.some((linha) => linha[unico] === corpo[unico])) {
+        return rota.fulfill({ status: 409, json: { code: '23505', message: 'duplicate key' } });
+      }
+      const nova = { ...corpo, id: linhas.length + 1 };
+      linhas.push(nova);
+      return rota.fulfill({ status: 201, json: nova });
+    }
+    const id = Number(new URL(pedido.url()).searchParams.get('id')?.replace('eq.', ''));
+    const indice = linhas.findIndex((linha) => linha.id === id);
+    linhas[indice] = { ...corpo, id };
+    return rota.fulfill({ json: linhas[indice] });
+  });
+}
+
+async function simularCadastros(page: Page, papel: Papel): Promise<void> {
+  await simularTabela(page, papel, {
+    nome: 'unidades',
+    unico: 'sigla',
+    linhas: [
+      { id: 1, sigla: 'UNA', nome: 'Unidade Fictícia', ativa: true },
+      { id: 2, sigla: 'UNB', nome: 'Outra Unidade Fictícia', ativa: true },
+    ],
+  });
+  await simularTabela(page, papel, {
+    nome: 'planos',
+    unico: 'nome',
+    linhas: [{ id: 1, nome: 'Plano Fictício', ativo: true }],
+  });
+}
+
 async function simularSupabase(page: Page, papel: Papel): Promise<void> {
+  await simularCadastros(page, papel);
   const { email, ...usuario } = USUARIOS[papel];
   await page.route(`${BASE}/auth/v1/token**`, async (rota) => {
     const corpo = rota.request().postDataJSON() as { email?: string; password?: string };
