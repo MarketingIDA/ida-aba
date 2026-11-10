@@ -6,7 +6,13 @@ import { buscarUnidades, salvarUnidade } from '@/features/cadastros/api/cadastro
 import { server } from '@/testing/server';
 
 const UNIDADES = `${env.SUPABASE_URL}/rest/v1/unidades`;
-const VALORES = { sigla: 'UNA', nome: 'Unidade Fictícia', ativa: true };
+const VALORES = {
+  sigla: 'UNA',
+  nome: 'Unidade Fictícia',
+  cnpj: '12345678000195',
+  endereco: null,
+  ativa: true,
+};
 
 describe('API do cadastro', () => {
   it('quem não é da coordenação geral recebe a recusa do RLS em português', async () => {

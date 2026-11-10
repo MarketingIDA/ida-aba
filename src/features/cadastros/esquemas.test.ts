@@ -8,14 +8,17 @@ import {
   esquemaUnidade,
 } from '@/features/cadastros/esquemas';
 
-const unidade = (sigla: string, nome = 'Unidade Fictícia') =>
-  esquemaUnidade.safeParse({ sigla, nome, ativa: true });
+// CNPJ fictício: só os dígitos verificadores batem.
+const unidade = (sigla: string, nome = 'Unidade Fictícia', cnpj = '12.345.678/0001-95') =>
+  esquemaUnidade.safeParse({ sigla, nome, cnpj, endereco: '  ', ativa: true });
 
 describe('esquema da unidade', () => {
   it('tira os espaços e põe a sigla em maiúsculas', () => {
     expect(unidade(' bov ', '  Boa Viagem Fictícia ').data).toEqual({
       sigla: 'BOV',
       nome: 'Boa Viagem Fictícia',
+      cnpj: '12345678000195',
+      endereco: null,
       ativa: true,
     });
   });

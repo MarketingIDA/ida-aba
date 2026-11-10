@@ -28,8 +28,8 @@ describe('Cadastros: unidades', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Unidades');
     expect(screen.getByRole('link', { name: 'Unidades' })).toHaveAttribute('aria-current', 'page');
     expect(itensDa('Unidades cadastradas')).toEqual([
-      'UNAUnidade FictíciaEditar',
-      'UNCTerceira Unidade FictíciaEditar',
+      'UNAUnidade FictíciaCNPJ 12.345.678/0001-95Editar',
+      'UNCTerceira Unidade FictíciaCNPJ 87.654.321/0001-98Editar',
       'UNBOutra Unidade FictíciaDesativadaEditar',
     ]);
     expect(await violacoesDeAcessibilidade(container)).toEqual([]);
@@ -54,6 +54,7 @@ describe('Cadastros: unidades', () => {
 
     await user.type(within(gaveta).getByLabelText('Sigla'), ' und ');
     await user.type(within(gaveta).getByLabelText('Nome'), 'Quarta Unidade Fictícia');
+    await user.type(within(gaveta).getByLabelText('CNPJ'), '87.654.321/0002-79');
     await user.click(within(gaveta).getByRole('button', { name: 'Cadastrar unidade' }));
 
     expect(await screen.findByText('Unidade UND cadastrada.')).toBeInTheDocument();
@@ -63,7 +64,13 @@ describe('Cadastros: unidades', () => {
     expect(escritas).toEqual([
       {
         metodo: 'POST',
-        corpo: { sigla: 'UND', nome: 'Quarta Unidade Fictícia', ativa: true },
+        corpo: {
+          sigla: 'UND',
+          nome: 'Quarta Unidade Fictícia',
+          cnpj: '87654321000279',
+          endereco: null,
+          ativa: true,
+        },
         perfil: 'cadastro',
       },
     ]);
@@ -86,15 +93,21 @@ describe('Cadastros: unidades', () => {
     expect(escritas).toEqual([
       {
         metodo: 'PATCH',
-        corpo: { sigla: 'UNA', nome: 'Unidade Fictícia', ativa: false },
+        corpo: {
+          sigla: 'UNA',
+          nome: 'Unidade Fictícia',
+          cnpj: '12345678000195',
+          endereco: 'Rua Fictícia, 100',
+          ativa: false,
+        },
         perfil: 'cadastro',
       },
     ]);
     // Desativada, ela desce para o grupo das desativadas, na ordem da sigla.
     await waitFor(() => {
       expect(itensDa('Unidades cadastradas')).toEqual([
-        'UNCTerceira Unidade FictíciaEditar',
-        'UNAUnidade FictíciaDesativadaEditar',
+        'UNCTerceira Unidade FictíciaCNPJ 87.654.321/0001-98Editar',
+        'UNAUnidade FictíciaDesativadaCNPJ 12.345.678/0001-95Editar',
         'UNBOutra Unidade FictíciaDesativadaEditar',
       ]);
     });
@@ -109,6 +122,7 @@ describe('Cadastros: unidades', () => {
     const gaveta = await screen.findByRole('dialog', { name: 'Nova unidade' });
     await user.type(within(gaveta).getByLabelText('Sigla'), 'una');
     await user.type(within(gaveta).getByLabelText('Nome'), 'Repetida Fictícia');
+    await user.type(within(gaveta).getByLabelText('CNPJ'), '12345678000195');
     await user.click(within(gaveta).getByRole('button', { name: 'Cadastrar unidade' }));
 
     expect(await within(gaveta).findByRole('alert')).toHaveTextContent(

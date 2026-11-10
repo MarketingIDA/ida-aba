@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { GENEROS } from '@/features/cadastros/api/assistidos.api';
+import { cnpjValido, normalizarCnpj } from '@/utils/cnpj';
 import { TURNOS } from '@/utils/turno';
 
 /**
@@ -14,6 +15,9 @@ const nome = (oQue: string) =>
     .min(2, `Escreva o nome ${oQue}, com 2 letras ou mais.`)
     .max(80, `O nome ${oQue} pode ter até 80 letras.`);
 
+/** Vazio vira nulo no banco; com texto, tira os espaços das pontas. */
+const opcional = (texto: string) => (texto.trim() === '' ? null : texto.trim());
+
 export const esquemaUnidade = z.object({
   // Entra no código da evolução (E16): só letras sem acento, em maiúsculas.
   sigla: z
@@ -22,6 +26,27 @@ export const esquemaUnidade = z.object({
     .toUpperCase()
     .regex(/^[A-Z]{2,5}$/, 'Use de 2 a 5 letras, sem acento e sem número (ex.: BOV).'),
   nome: nome('da unidade'),
+  // Obrigatório; vai ao banco sem pontuação.
+  cnpj: z
+    .string()
+    .transform(normalizarCnpj)
+    .pipe(
+      z
+        .string()
+        .min(1, { error: 'Escreva o CNPJ da unidade.', abort: true })
+        .regex(/^[\dA-Z]{12}\d{2}$/, {
+          error: 'Confira o CNPJ: são 14 números, como 12.345.678/0001-95.',
+          abort: true,
+        })
+        .refine(cnpjValido, 'Confira o CNPJ: os dois últimos números não batem com os outros.'),
+    ),
+  endereco: z
+    .string()
+    .refine((texto) => {
+      const tamanho = texto.trim().length;
+      return tamanho === 0 || (tamanho >= 5 && tamanho <= 200);
+    }, 'Escreva o endereço com 5 a 200 letras, ou deixe em branco.')
+    .transform(opcional),
   ativa: z.boolean(),
 });
 

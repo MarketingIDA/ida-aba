@@ -2,12 +2,36 @@ import type { Plano, Unidade } from '@/features/cadastros/api/cadastros.api';
 import type { Pessoa } from '@/features/cadastros/api/pessoas.api';
 import { AUTH_USER_ID_DEMO } from '@/testing/factories/usuario';
 
-/** Unidades fictícias do cadastro, na ordem da Data API (por sigla). Nenhuma é real. */
+/**
+ * Unidades fictícias do cadastro, na ordem da Data API (por sigla). Nenhuma é real, nem os CNPJs
+ * (só os dígitos verificadores batem). A UNB é de antes da obrigação do CNPJ: vem sem ele.
+ */
 export function unidadesDoCadastroDemo(): Unidade[] {
   return [
-    { id: 1, sigla: 'UNA', nome: 'Unidade Fictícia', ativa: true },
-    { id: 2, sigla: 'UNB', nome: 'Outra Unidade Fictícia', ativa: false },
-    { id: 3, sigla: 'UNC', nome: 'Terceira Unidade Fictícia', ativa: true },
+    {
+      id: 1,
+      sigla: 'UNA',
+      nome: 'Unidade Fictícia',
+      cnpj: '12345678000195',
+      endereco: 'Rua Fictícia, 100',
+      ativa: true,
+    },
+    {
+      id: 2,
+      sigla: 'UNB',
+      nome: 'Outra Unidade Fictícia',
+      cnpj: null,
+      endereco: null,
+      ativa: false,
+    },
+    {
+      id: 3,
+      sigla: 'UNC',
+      nome: 'Terceira Unidade Fictícia',
+      cnpj: '87654321000198',
+      endereco: null,
+      ativa: true,
+    },
   ];
 }
 

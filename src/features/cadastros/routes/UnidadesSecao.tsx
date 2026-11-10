@@ -5,10 +5,14 @@ import { useState } from 'react';
 import type { Unidade } from '@/features/cadastros/api/cadastros.api';
 import { FormularioDeUnidade } from '@/features/cadastros/components/FormularioDeUnidade';
 import { GavetaDoCadastro } from '@/features/cadastros/components/GavetaDoCadastro';
-import { ListaDoCadastro } from '@/features/cadastros/components/ListaDoCadastro';
+import {
+  type ItemDoCadastro,
+  ListaDoCadastro,
+} from '@/features/cadastros/components/ListaDoCadastro';
 import { SecaoDoCadastro } from '@/features/cadastros/components/SecaoDoCadastro';
 import { unidadesOptions, useSalvarUnidade } from '@/features/cadastros/queries';
 import { useGaveta } from '@/features/cadastros/routes/useGaveta';
+import { formatarCnpj } from '@/utils/cnpj';
 
 const VAZIO = {
   icone: Building2,
@@ -16,6 +20,19 @@ const VAZIO = {
   descricao:
     'Cadastre as unidades da clínica. Depois delas vêm as carteiras de cada unidade e turno e os assistidos.',
 };
+
+/** A linha da lista: o CNPJ embaixo do nome; a unidade ativa sem ele leva o aviso. */
+function itemDaUnidade({ id, sigla, nome, cnpj, ativa }: Unidade): ItemDoCadastro {
+  return {
+    id,
+    sigla,
+    nome,
+    ativo: ativa,
+    ...(cnpj === null
+      ? { marcas: ativa ? [{ rotulo: 'Sem CNPJ', tom: 'alerta' as const }] : [] }
+      : { detalhe: `CNPJ ${formatarCnpj(cnpj)}` }),
+  };
+}
 
 /** Unidades da clínica: a lista, o cadastro de uma nova e a alteração de uma existente. */
 export function UnidadesSecao() {
@@ -45,7 +62,7 @@ export function UnidadesSecao() {
         <ListaDoCadastro
           rotulo="Unidades cadastradas"
           rotuloDoInativo="Desativada"
-          itens={unidades.map(({ id, sigla, nome, ativa }) => ({ id, sigla, nome, ativo: ativa }))}
+          itens={unidades.map(itemDaUnidade)}
           aoEditar={(id) => {
             const unidade = unidades.find((u) => u.id === id);
             if (unidade !== undefined) gaveta.abrirEdicao(unidade);
