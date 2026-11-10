@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 
 import { env } from '@/config/env';
 import {
+  assistidosDemo,
   carteirasDemo,
   pessoasDemo,
   planosDemo,
@@ -50,6 +51,12 @@ export const handlersDeRest = [
   http.get(`${env.SUPABASE_URL}/rest/v1/carteiras`, ({ request }) =>
     request.headers.get('accept-profile') === 'cadastro'
       ? HttpResponse.json(carteirasDemo())
+      : schemaErrado(),
+  ),
+
+  http.get(`${env.SUPABASE_URL}/rest/v1/assistidos`, ({ request }) =>
+    request.headers.get('accept-profile') === 'cadastro'
+      ? HttpResponse.json(assistidosDemo())
       : schemaErrado(),
   ),
 

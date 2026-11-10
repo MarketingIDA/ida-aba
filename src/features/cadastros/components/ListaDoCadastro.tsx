@@ -18,6 +18,8 @@ export interface ItemDoCadastro {
   /** Pílulas ao lado do nome (ex.: "Você", "Sem conta"), sempre com texto. */
   marcas?: readonly MarcaDoItem[];
   ativo: boolean;
+  /** "Desativada" ou "Desativado" deste item, quando o gênero muda de um para outro. */
+  rotuloDoInativo?: string;
   /** Nome do botão "Editar" quando o nome do item pode repetir (padrão: `Editar <nome>`). */
   rotuloDaEdicao?: string;
 }
@@ -46,7 +48,7 @@ function Identificacao({
         {item.marcas?.map((marca) => (
           <Situacao key={marca.rotulo} {...marca} />
         ))}
-        {!item.ativo && <Situacao rotulo={rotuloDoInativo} tom="neutro" />}
+        {!item.ativo && <Situacao rotulo={item.rotuloDoInativo ?? rotuloDoInativo} tom="neutro" />}
       </span>
       {item.detalhe !== undefined && (
         <span className="text-xs font-semibold [overflow-wrap:anywhere] text-apagado">

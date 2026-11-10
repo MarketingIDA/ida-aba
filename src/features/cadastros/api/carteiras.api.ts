@@ -43,6 +43,10 @@ const MENSAGENS = {
   // O trigger `conferir_coordenador`: a pessoa escolhida não tem (mais) o papel de coordenador.
   regra_violada: 'A carteira precisa de alguém com o papel de coordenação de unidade.',
   sem_permissao: 'Só a coordenação geral cadastra e altera carteiras.',
+  regras: {
+    carteira_com_assistidos:
+      'Esta carteira tem assistidos ativos. Passe cada um para outra carteira, na aba Assistidos, antes de desativar.',
+  },
 };
 
 const tabela = () => supabase.schema('cadastro').from('carteiras');

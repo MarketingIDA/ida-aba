@@ -1,7 +1,11 @@
+import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
+
+import { env } from '@/config/env';
 
 import { alterarCarteira, cadastrarCarteira } from '@/features/cadastros/api/carteiras.api';
 import { carteirasDemo, mesmaVagaAtiva } from '@/testing/factories/cadastros';
+import { server } from '@/testing/server';
 import { tabelaEmMemoria } from '@/testing/tabelaEmMemoria';
 
 const tabelaDeCarteiras = () =>
@@ -31,6 +35,22 @@ describe('API das carteiras', () => {
     ).rejects.toMatchObject({
       codigo: 'duplicado',
       message: 'Esta unidade já tem carteira ativa neste turno. Passe a que existe ou desative-a.',
+    });
+  });
+
+  it('a carteira com assistidos ativos não se desativa: o motivo diz o que fazer', async () => {
+    server.use(
+      http.patch(`${env.SUPABASE_URL}/rest/v1/carteiras`, () =>
+        HttpResponse.json(
+          { code: '23514', hint: 'carteira_com_assistidos', message: 'regra' },
+          { status: 400 },
+        ),
+      ),
+    );
+    await expect(alterarCarteira(4, { coordenadorId: 2, ativa: false })).rejects.toMatchObject({
+      codigo: 'regra_violada',
+      message:
+        'Esta carteira tem assistidos ativos. Passe cada um para outra carteira, na aba Assistidos, antes de desativar.',
     });
   });
 });

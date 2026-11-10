@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  esquemaAssistido,
   esquemaNovaCarteira,
   esquemaPessoa,
   esquemaPlano,
@@ -103,6 +104,44 @@ describe('esquemas da carteira', () => {
       { path: ['unidadeId'], message: 'Escolha a unidade da carteira.' },
       { path: ['turno'], message: 'Escolha o turno da carteira.' },
       { path: ['coordenadorId'], message: 'Escolha quem coordena a carteira.' },
+    ]);
+  });
+});
+
+describe('esquema do assistido', () => {
+  const assistido = {
+    nome: '  Ana Fictícia  ',
+    genero: 'feminino',
+    dataNascimento: '',
+    planoId: '',
+    carteiraId: '4',
+    ativo: true,
+  };
+
+  it('nascimento e plano vazios viram nulos; a carteira vira o id', () => {
+    expect(esquemaAssistido.parse(assistido)).toEqual({
+      nome: 'Ana Fictícia',
+      genero: 'feminino',
+      dataNascimento: null,
+      planoId: null,
+      carteiraId: 4,
+      ativo: true,
+    });
+  });
+
+  it('pede o sobrenome, a data de 1990 até hoje e a escolha do gênero e da carteira', () => {
+    const recusa = esquemaAssistido.safeParse({
+      ...assistido,
+      nome: 'Ana',
+      genero: undefined,
+      dataNascimento: '1989-12-31',
+      carteiraId: '',
+    });
+    expect(recusa.error?.issues.map(({ path, message }) => ({ path, message }))).toEqual([
+      { path: ['nome'], message: 'Escreva o nome completo, com sobrenome.' },
+      { path: ['genero'], message: 'Escolha como o texto se refere: a assistida ou o assistido.' },
+      { path: ['dataNascimento'], message: 'Confira a data: de 1990 até hoje.' },
+      { path: ['carteiraId'], message: 'Escolha a carteira do assistido.' },
     ]);
   });
 });

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { GENEROS } from '@/features/cadastros/api/assistidos.api';
 import { TURNOS } from '@/utils/turno';
 
 /**
@@ -80,8 +81,39 @@ export const esquemaNovaCarteira = z.object({
 /** Carteira existente: passa para outra coordenação ou é desativada. */
 export const esquemaAlteracaoDaCarteira = z.object({ coordenadorId, ativa: z.boolean() });
 
+/** Hoje em Recife, `AAAA-MM-DD` (o formato do campo de data). */
+const hojeEmRecife = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Recife' });
+
+const NOME_COMPLETO = 'Escreva o nome completo, com sobrenome.';
+
+/**
+ * Assistido: nome completo (o banco exige sobrenome), como o texto se refere a ele e a carteira.
+ * Data de nascimento e plano podem ficar para depois: vazios, vão nulos ao banco.
+ */
+export const esquemaAssistido = z.object({
+  nome: z
+    .string()
+    .trim()
+    // Curto demais já diz o que falta: não repete o aviso do sobrenome.
+    .min(5, { error: NOME_COMPLETO, abort: true })
+    .max(120, 'O nome pode ter até 120 letras.')
+    .regex(/\S\s+\S/, NOME_COMPLETO),
+  genero: z.enum(GENEROS, 'Escolha como o texto se refere: a assistida ou o assistido.'),
+  dataNascimento: z
+    .string()
+    .refine(
+      (data) => data === '' || (data >= '1990-01-01' && data <= hojeEmRecife()),
+      'Confira a data: de 1990 até hoje.',
+    )
+    .transform((data) => (data === '' ? null : data)),
+  planoId: z.string().transform((plano) => (plano === '' ? null : Number(plano))),
+  carteiraId: escolhaDoSeletor('Escolha a carteira do assistido.'),
+  ativo: z.boolean(),
+});
+
 export type CamposDaUnidade = z.input<typeof esquemaUnidade>;
 export type CamposDoPlano = z.input<typeof esquemaPlano>;
 export type CamposDaPessoa = z.input<typeof esquemaPessoa>;
 export type CamposDaNovaCarteira = z.input<typeof esquemaNovaCarteira>;
 export type CamposDaAlteracaoDaCarteira = z.input<typeof esquemaAlteracaoDaCarteira>;
+export type CamposDoAssistido = z.input<typeof esquemaAssistido>;

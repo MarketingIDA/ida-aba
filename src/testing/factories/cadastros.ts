@@ -96,3 +96,55 @@ export const mesmaVagaAtiva = (existente: LinhaDeCarteira, nova: LinhaDeCarteira
   nova.ativa &&
   existente.unidade_id === nova.unidade_id &&
   existente.turno === nova.turno;
+
+/** Linha de `cadastro.assistidos` como a Data API devolve (em snake_case). */
+export interface LinhaDeAssistido {
+  id: number;
+  nome: string;
+  genero: 'feminino' | 'masculino';
+  data_nascimento: string | null;
+  plano_id: number | null;
+  unidade_id: number;
+  carteira_id: number;
+  ativo: boolean;
+}
+
+/**
+ * Assistidos fictícios, na ordem da Data API (por nome), sobre `carteirasDemo` e `planosDemo`.
+ * A Ana está na manhã da UNA com plano; o Caio, na tarde, ainda sem plano; o Davi, desativado,
+ * ficou na carteira antiga (desativada) com o plano antigo.
+ */
+export function assistidosDemo(): LinhaDeAssistido[] {
+  return [
+    {
+      id: 1,
+      nome: 'Ana Fictícia Souza',
+      genero: 'feminino',
+      data_nascimento: '2018-03-12',
+      plano_id: 1,
+      unidade_id: 1,
+      carteira_id: 4,
+      ativo: true,
+    },
+    {
+      id: 2,
+      nome: 'Caio Fictício Lima',
+      genero: 'masculino',
+      data_nascimento: null,
+      plano_id: null,
+      unidade_id: 1,
+      carteira_id: 1,
+      ativo: true,
+    },
+    {
+      id: 3,
+      nome: 'Davi Fictício Rocha',
+      genero: 'masculino',
+      data_nascimento: '2016-07-01',
+      plano_id: 2,
+      unidade_id: 1,
+      carteira_id: 3,
+      ativo: false,
+    },
+  ];
+}
