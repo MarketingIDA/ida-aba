@@ -10,7 +10,7 @@ import {
   opcoesDeUnidade,
   turnosOcupados,
 } from '@/features/cadastros/carteiras';
-import { FaltaParaACarteira } from '@/features/cadastros/components/FaltaParaACarteira';
+import { type Falta, FaltaParaCadastrar } from '@/features/cadastros/components/FaltaParaCadastrar';
 import {
   FormularioDaCarteira,
   FormularioDeNovaCarteira,
@@ -29,6 +29,26 @@ const VAZIO = {
   descricao:
     'Cada carteira junta uma unidade, um turno e quem coordena. Depois delas vêm os assistidos.',
 };
+
+/** Antes da carteira vêm uma unidade ativa e alguém ativo com o papel de coordenação de unidade. */
+function faltasDaCarteira(semUnidade: boolean, semCoordenacao: boolean): Falta[] {
+  const faltas: Falta[] = [];
+  if (semUnidade) {
+    faltas.push({
+      texto: 'Nenhuma unidade ativa.',
+      rota: '/cadastros/unidades',
+      link: 'Ir para Unidades',
+    });
+  }
+  if (semCoordenacao) {
+    faltas.push({
+      texto: 'Ninguém ativo com o papel de coordenação de unidade.',
+      rota: '/cadastros/pessoas',
+      link: 'Ir para Pessoas',
+    });
+  }
+  return faltas;
+}
 
 interface PropsDaGaveta {
   gaveta: ReturnType<typeof useGaveta<CarteiraNaTela>>;
@@ -61,9 +81,9 @@ function ConteudoDaGaveta({ gaveta, dados, aoCadastrar, aoAlterar }: Readonly<Pr
   const coordenacoes = opcoesDeCoordenacao(dados.pessoas);
   if (unidades.length === 0 || coordenacoes.length === 0) {
     return (
-      <FaltaParaACarteira
-        semUnidade={unidades.length === 0}
-        semCoordenacao={coordenacoes.length === 0}
+      <FaltaParaCadastrar
+        oQue="uma carteira"
+        faltas={faltasDaCarteira(unidades.length === 0, coordenacoes.length === 0)}
         aoFechar={gaveta.fechar}
       />
     );

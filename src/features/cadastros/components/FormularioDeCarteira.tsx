@@ -174,7 +174,7 @@ export function FormularioDaCarteira(props: Readonly<PropsDaAlteracao>) {
         />
         <CaixaDeAtivo
           rotulo="Carteira ativa"
-          dica="Desativada, ela libera a unidade e o turno para outra carteira. Nada se apaga."
+          dica="Desativada, ela libera a unidade e o turno para outra carteira. Antes, os assistidos ativos dela passam para outra, na aba Assistidos. Nada se apaga."
           {...register('ativa')}
         />
       </CorpoDoFormulario>

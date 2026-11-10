@@ -248,6 +248,45 @@ begin
   end;
 end;
 $$;
+
+-- Carteiras: a desativada não guarda assistido ativo, dos dois lados.
+insert into cadastro.carteiras (unidade_id, turno, coordenador_id, ativa)
+  select u.id, 'integral', (select id from acesso.usuarios where email = 'coord.a@exemplo.test'), false
+    from cadastro.unidades u where u.sigla = 'TSX';
+do $$
+declare
+  dica text;
+begin
+  begin
+    update cadastro.carteiras set ativa = false where turno = 'tarde'
+       and unidade_id = (select id from cadastro.unidades where sigla = 'TST');
+    insert into resultado (teste, ok) values ('carteira com assistidos ativos não se desativa', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('carteira com assistidos ativos não se desativa', dica = 'carteira_com_assistidos');
+  end;
+  begin
+    insert into cadastro.assistidos (nome, genero, unidade_id, carteira_id)
+      select 'Assistida Nova Teste', 'feminino', c.unidade_id, c.id
+        from cadastro.carteiras c where not c.ativa;
+    insert into resultado (teste, ok) values ('assistido não entra em carteira desativada', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('assistido não entra em carteira desativada', dica = 'carteira_desativada');
+  end;
+end;
+$$;
+update cadastro.assistidos set carteira_id = (
+    select c.id from cadastro.carteiras c join cadastro.unidades u on u.id = c.unidade_id
+     where u.sigla = 'TST' and c.turno = 'tarde')
+ where nome = 'Assistido Tres Teste';
+update cadastro.carteiras set ativa = false where turno = 'manha'
+   and unidade_id = (select id from cadastro.unidades where sigla = 'TST');
+insert into resultado (teste, ok) select 'desativa a carteira depois de passar os assistidos',
+  not (select ativa from cadastro.carteiras where turno = 'manha'
+        and unidade_id = (select id from cadastro.unidades where sigla = 'TST'));
 reset role;
 
 -- Contas médicas: nesta etapa não lê assistido nem evolução (recebe só o arquivo do mês, E24).

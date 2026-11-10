@@ -7,6 +7,7 @@ export const ABAS = [
   { rota: '/cadastros/planos', rotulo: 'Planos de saúde' },
   { rota: '/cadastros/pessoas', rotulo: 'Pessoas' },
   { rota: '/cadastros/carteiras', rotulo: 'Carteiras' },
+  { rota: '/cadastros/assistidos', rotulo: 'Assistidos' },
 ] as const;
 
 /** As partes do cadastro, cada uma com o seu endereço (dá para voltar e mandar o link). */

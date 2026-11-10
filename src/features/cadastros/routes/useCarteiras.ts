@@ -6,6 +6,30 @@ import { type CarteiraNaTela, montarCarteiras } from '@/features/cadastros/carte
 import type { ConsultaDaSecao } from '@/features/cadastros/components/SecaoDoCadastro';
 import { carteirasOptions, pessoasOptions, unidadesOptions } from '@/features/cadastros/queries';
 
+interface UmaConsulta {
+  isError: boolean;
+  error: unknown;
+  refetch: () => unknown;
+}
+
+/**
+ * Várias consultas lidas como uma pela seção: pendente até a lista existir, a falha de uma é a da
+ * seção, e "Tentar de novo" busca todas.
+ */
+export function consultaDaSoma(
+  todas: readonly UmaConsulta[],
+  lista: readonly unknown[] | undefined,
+): ConsultaDaSecao {
+  const falha = todas.find((consulta) => consulta.isError);
+  return {
+    isPending: falha === undefined && lista === undefined,
+    isError: falha !== undefined,
+    error: falha?.error ?? null,
+    data: lista,
+    refetch: () => Promise.all(todas.map((consulta) => consulta.refetch())),
+  };
+}
+
 export interface DadosDasCarteiras {
   carteiras: CarteiraNaTela[];
   unidades: Unidade[];
@@ -24,8 +48,6 @@ export function useCarteiras(): {
   return useQueries({
     queries: [carteirasOptions(), unidadesOptions(), pessoasOptions()],
     combine: ([carteiras, unidades, pessoas]) => {
-      const todas = [carteiras, unidades, pessoas];
-      const falha = todas.find((consulta) => consulta.isError);
       const dados =
         carteiras.data === undefined || unidades.data === undefined || pessoas.data === undefined
           ? undefined
@@ -34,13 +56,7 @@ export function useCarteiras(): {
               unidades: unidades.data,
               pessoas: pessoas.data,
             };
-      const consulta: ConsultaDaSecao = {
-        isPending: falha === undefined && dados === undefined,
-        isError: falha !== undefined,
-        error: falha?.error ?? null,
-        data: dados?.carteiras,
-        refetch: () => Promise.all(todas.map((uma) => uma.refetch())),
-      };
+      const consulta = consultaDaSoma([carteiras, unidades, pessoas], dados?.carteiras);
       return { consulta, dados };
     },
   });

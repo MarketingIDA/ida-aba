@@ -1,5 +1,6 @@
 import { Navigate, useParams } from 'react-router';
 
+import { AssistidosSecao } from '@/features/cadastros/routes/AssistidosSecao';
 import { CarteirasSecao } from '@/features/cadastros/routes/CarteirasSecao';
 import { PessoasSecao } from '@/features/cadastros/routes/PessoasSecao';
 import { PlanosSecao } from '@/features/cadastros/routes/PlanosSecao';
@@ -10,6 +11,7 @@ const SECOES = {
   planos: PlanosSecao,
   pessoas: PessoasSecao,
   carteiras: CarteirasSecao,
+  assistidos: AssistidosSecao,
 } as const;
 
 const ehSecao = (aba: string | undefined): aba is keyof typeof SECOES =>
@@ -17,7 +19,7 @@ const ehSecao = (aba: string | undefined): aba is keyof typeof SECOES =>
 
 /**
  * Cadastros da coordenação geral, uma parte por endereço (`/cadastros/unidades`,
- * `/cadastros/planos`, `/cadastros/pessoas`, `/cadastros/carteiras`). Endereço sem parte conhecida
+ * `/cadastros/planos`, `/cadastros/pessoas`, `/cadastros/carteiras`, `/cadastros/assistidos`). Endereço sem parte conhecida
  * vai para as unidades.
  */
 export function CadastrosPage() {

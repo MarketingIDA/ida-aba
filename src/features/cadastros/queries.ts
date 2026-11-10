@@ -9,6 +9,11 @@ import {
   type Unidade,
 } from '@/features/cadastros/api/cadastros.api';
 import {
+  buscarAssistidos,
+  type DadosDoAssistido,
+  salvarAssistido,
+} from '@/features/cadastros/api/assistidos.api';
+import {
   type AlteracaoDaCarteira,
   alterarCarteira,
   buscarCarteiras,
@@ -27,6 +32,7 @@ export const cadastrosKeys = {
   planos: () => [...cadastrosKeys.all, 'planos'] as const,
   pessoas: () => [...cadastrosKeys.all, 'pessoas'] as const,
   carteiras: () => [...cadastrosKeys.all, 'carteiras'] as const,
+  assistidos: () => [...cadastrosKeys.all, 'assistidos'] as const,
 };
 
 export const pessoasOptions = () =>
@@ -92,6 +98,19 @@ export function useSalvarCarteira() {
       salvamento.id === undefined
         ? cadastrarCarteira(salvamento.valores)
         : alterarCarteira(salvamento.id, salvamento.valores),
+    onSuccess: () => queryClient.invalidateQueries(),
+  });
+}
+
+export const assistidosOptions = () =>
+  queryOptions({ queryKey: cadastrosKeys.assistidos(), queryFn: buscarAssistidos });
+
+/** O assistido aparece na lista do mês das evoluções: depois de salvar, tudo volta do banco. */
+export function useSalvarAssistido() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ dados, id }: { dados: DadosDoAssistido; id?: number | undefined }) =>
+      salvarAssistido(dados, id),
     onSuccess: () => queryClient.invalidateQueries(),
   });
 }

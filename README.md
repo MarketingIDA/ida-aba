@@ -8,11 +8,11 @@ Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada 
 
 - **Acesso:** login por e-mail e senha, primeiro acesso (a pessoa cria a senha pelo link do convite) e recuperação de senha. O papel vem do cadastro em `acesso.usuarios`, nunca do token, e conta sem cadastro ativo não entra.
 - **Coordenação de unidade e coordenação geral:** Evoluções do mês, com cards por situação que filtram a lista, busca por nome ou código, escolha do mês (o aberto e os 5 anteriores), período analisado e prazo do arquivo do mês. A coordenação geral vê todas as unidades e recorta por unidade e coordenador.
-- **Cadastros (coordenação geral):** unidades, planos de saúde, pessoas e carteiras, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. A carteira junta uma unidade, um turno e quem coordena; só pode haver uma carteira ativa por unidade e turno, e passar a carteira para outra pessoa muda quem vê os assistidos e as evoluções dela. Os assistidos chegam na próxima etapa.
+- **Cadastros (coordenação geral):** unidades, planos de saúde, pessoas, carteiras e assistidos, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. A carteira junta uma unidade, um turno e quem coordena; só pode haver uma carteira ativa por unidade e turno, e passar a carteira para outra pessoa muda quem vê os assistidos e as evoluções dela. O assistido fica numa carteira ativa e leva a unidade dela; o número dele na unidade, que entra no código da evolução, o banco dá sozinho. A lista de assistidos tem busca pelo nome (sem ligar para acento) e filtro por carteira, e avisa quem está sem plano.
   - Cada pessoa tem um papel (coordenação de unidade, coordenação geral ou contas médicas) e, se coordena unidade, o CRP. Quem ainda não entrou aparece como "Sem conta".
   - Desativar corta o acesso na hora. O e-mail trava depois que a pessoa tem conta, e ninguém muda o próprio papel nem se desativa.
 - **Contas médicas:** a tela de arquivos recebidos existe, mas fica vazia até a etapa do envio do arquivo do mês.
-- **Banco:** RLS em todas as tabelas. O coordenador lê só a própria carteira; a coordenação geral lê tudo e é a única que cadastra; contas médicas não lê evolução solta. O banco nunca fica sem coordenação geral ativa e não deixa mudar o papel de quem tem carteira ativa. Toda alteração fica na auditoria.
+- **Banco:** RLS em todas as tabelas. O coordenador lê só a própria carteira; a coordenação geral lê tudo e é a única que cadastra; contas médicas não lê evolução solta. O banco nunca fica sem coordenação geral ativa não deixa mudar o papel de quem tem carteira ativa nem desativar carteira com assistidos ativos, e não põe assistido ativo em carteira desativada. Toda alteração fica na auditoria.
 
 ## Rodar localmente
 
@@ -102,7 +102,7 @@ ida-aba/
 │   ├── app/                     # rotas, layout (menu lateral) e providers
 │   ├── features/
 │   │   ├── auth/                # login, primeiro acesso, recuperação de senha
-│   │   ├── cadastros/           # unidades, planos de saúde, pessoas e carteiras (coordenação geral)
+│   │   ├── cadastros/           # unidades, planos de saúde, pessoas, carteiras e assistidos (coordenação geral)
 │   │   └── evolucoes/           # Evoluções do mês (api, queries, componentes, tela)
 │   ├── components/  hooks/  lib/  utils/  config/   # código compartilhado
 │   └── testing/                 # MSW, factories fictícias e helpers de teste
