@@ -35,7 +35,7 @@ describe('Cadastros: assistidos', () => {
     ]);
     expect(await violacoesDeAcessibilidade(container)).toEqual([]);
 
-    await user.type(screen.getByLabelText('Buscar pelo nome'), 'fictícia');
+    await user.type(screen.getByLabelText('Buscar pelo nome'), 'FICTICIA');
     expect(itensDa(LISTA)).toEqual([
       'UNAAna Fictícia SouzaManhã · Carla Fictícia Coordenadora · Plano FictícioEditar',
     ]);
@@ -65,12 +65,15 @@ describe('Cadastros: assistidos', () => {
       'Escolha a carteira',
       'UNA · Manhã · Carla Fictícia Coordenadora',
       'UNA · Tarde · Bruno Fictício Novo',
-      'UNB · Integral · Carla Fictícia Coordenadora',
+      'UNB · Integral · Carla Fictícia Coordenadora (unidade desativada)',
     ]);
     await user.type(within(gaveta).getByLabelText('Nome completo'), 'Elisa Fictícia Prado');
     await user.click(within(gaveta).getByRole('radio', { name: 'Feminino' }));
     await user.selectOptions(within(gaveta).getByLabelText('Plano de saúde'), 'Plano Fictício');
-    await user.selectOptions(carteira, 'UNB · Integral · Carla Fictícia Coordenadora');
+    await user.selectOptions(
+      carteira,
+      'UNB · Integral · Carla Fictícia Coordenadora (unidade desativada)',
+    );
     await user.click(within(gaveta).getByRole('button', { name: 'Cadastrar assistido' }));
 
     expect(await screen.findByText('Cadastro de Elisa Fictícia Prado criado.')).toBeInTheDocument();

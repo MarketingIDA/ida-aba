@@ -55,12 +55,18 @@ export function itemDoAssistido(assistido: AssistidoNaTela): ItemDoCadastro {
   };
 }
 
-const opcaoDaCarteira = (carteira: CarteiraNaTela): OpcaoDoSeletor => ({
-  valor: String(carteira.id),
-  rotulo: carteira.ativa
-    ? rotuloDaCarteira(carteira)
-    : `${rotuloDaCarteira(carteira)} (desativada)`,
-});
+/** A carteira desativada, ou ativa numa unidade desativada, leva o aviso no rótulo. */
+function opcaoDaCarteira(carteira: CarteiraNaTela): OpcaoDoSeletor {
+  const avisos = [
+    ...(carteira.ativa ? [] : ['desativada']),
+    ...(carteira.unidade.ativa ? [] : ['unidade desativada']),
+  ];
+  const rotulo = rotuloDaCarteira(carteira);
+  return {
+    valor: String(carteira.id),
+    rotulo: avisos.length === 0 ? rotulo : `${rotulo} (${avisos.join(', ')})`,
+  };
+}
 
 /** As carteiras ativas e, na alteração, a de hoje mesmo desativada (para não sugerir troca). */
 export const opcoesDeCarteiraDoAssistido = (

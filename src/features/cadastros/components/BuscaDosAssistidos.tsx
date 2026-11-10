@@ -20,6 +20,7 @@ export function BuscaDosAssistidos({
   mostrando,
   total,
 }: Readonly<Props>) {
+  const palavra = total === 1 ? 'assistido' : 'assistidos';
   return (
     <div className="flex flex-col gap-2">
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -55,8 +56,8 @@ export function BuscaDosAssistidos({
       </div>
       <p aria-live="polite" className="text-xs font-semibold text-apagado">
         {mostrando === total
-          ? `${String(total)} assistidos.`
-          : `${String(mostrando)} de ${String(total)} assistidos.`}
+          ? `${String(total)} ${palavra}.`
+          : `${String(mostrando)} de ${String(total)} ${palavra}.`}
       </p>
     </div>
   );

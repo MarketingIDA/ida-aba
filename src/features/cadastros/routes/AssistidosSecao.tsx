@@ -81,6 +81,12 @@ function GavetaDoAssistido(props: Readonly<PropsDaGaveta>) {
   );
 }
 
+/** O aviso da lista vazia diz qual filtro deixou ninguém. */
+function ninguemNo({ busca, carteiraId }: FiltroDosAssistidos) {
+  if (busca.trim() === '') return 'Nenhum assistido nesta carteira.';
+  return carteiraId === '' ? 'Ninguém com este nome.' : 'Ninguém com este nome nesta carteira.';
+}
+
 interface PropsDaLista {
   dados: DadosDosAssistidos | undefined;
   aoEditar: (assistido: AssistidoNaTela) => void;
@@ -102,7 +108,7 @@ function ListaDosAssistidos({ dados, aoEditar }: Readonly<PropsDaLista>) {
       />
       {filtrados.length === 0 ? (
         <p className="rounded-xl border border-borda bg-superficie px-5 py-4 text-sm font-semibold text-texto-2">
-          Ninguém com este nome nesta carteira.
+          {ninguemNo(filtro)}
         </p>
       ) : (
         <ListaDoCadastro
