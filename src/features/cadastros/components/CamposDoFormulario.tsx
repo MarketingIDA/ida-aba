@@ -1,5 +1,6 @@
 import { type ComponentProps, type ReactNode, useState } from 'react';
 
+import { Seletor } from '@/components/Seletor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,23 +16,27 @@ interface PropsDoCampo extends ComponentProps<'input'> {
   erro?: string | undefined;
 }
 
-/** Rótulo, campo, dica e o erro de validação, ligados por `aria-describedby`. */
-export function CampoDeTexto({ id, rotulo, dica, erro, ...campo }: Readonly<PropsDoCampo>) {
-  const descritores = [
-    dica === undefined ? '' : `${id}-dica`,
-    erro === undefined ? '' : `${id}-erro`,
-  ]
-    .filter(Boolean)
-    .join(' ');
+type Rotulagem = Pick<PropsDoCampo, 'id' | 'rotulo' | 'dica' | 'erro'>;
+
+/** O que o leitor de tela lê depois do rótulo: a dica e, se houver, o erro. */
+function descritoresDe({ id, dica, erro }: Rotulagem) {
+  const ids = [dica === undefined ? '' : `${id}-dica`, erro === undefined ? '' : `${id}-erro`];
+  const juntos = ids.filter(Boolean).join(' ');
+  return { 'aria-invalid': erro !== undefined, 'aria-describedby': juntos || undefined };
+}
+
+/** Rótulo em cima, o controle, a dica e o erro de validação embaixo. */
+function Rotulado({
+  id,
+  rotulo,
+  dica,
+  erro,
+  children,
+}: Readonly<Rotulagem & { children: ReactNode }>) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{rotulo}</Label>
-      <Input
-        id={id}
-        aria-invalid={erro !== undefined}
-        aria-describedby={descritores === '' ? undefined : descritores}
-        {...campo}
-      />
+      {children}
       {dica !== undefined && (
         <p id={`${id}-dica`} className="text-xs font-semibold text-apagado">
           {dica}
@@ -43,6 +48,38 @@ export function CampoDeTexto({ id, rotulo, dica, erro, ...campo }: Readonly<Prop
         </p>
       )}
     </div>
+  );
+}
+
+/** Rótulo, campo, dica e o erro de validação, ligados por `aria-describedby`. */
+export function CampoDeTexto({ id, rotulo, dica, erro, ...campo }: Readonly<PropsDoCampo>) {
+  return (
+    <Rotulado id={id} rotulo={rotulo} dica={dica} erro={erro}>
+      <Input id={id} {...descritoresDe({ id, rotulo, dica, erro })} {...campo} />
+    </Rotulado>
+  );
+}
+
+interface PropsDaSelecao extends Omit<ComponentProps<'select'>, 'children' | 'id'>, Rotulagem {
+  /** O texto da opção vazia, a que pede a escolha (ex.: "Escolha a unidade"). */
+  vazio: string;
+  opcoes: readonly { valor: string; rotulo: string }[];
+}
+
+/** Lista curta e fixa num `select` nativo, com rótulo, dica e erro como o campo de texto. */
+export function CampoDeSelecao(props: Readonly<PropsDaSelecao>) {
+  const { id, rotulo, dica, erro, vazio, opcoes, ...selecao } = props;
+  return (
+    <Rotulado id={id} rotulo={rotulo} dica={dica} erro={erro}>
+      <Seletor id={id} {...descritoresDe({ id, rotulo, dica, erro })} {...selecao}>
+        <option value="">{vazio}</option>
+        {opcoes.map(({ valor, rotulo: texto }) => (
+          <option key={valor} value={valor}>
+            {texto}
+          </option>
+        ))}
+      </Seletor>
+    </Rotulado>
   );
 }
 
@@ -115,4 +152,20 @@ export function useEnvio<Valores>(aoSalvar: (valores: Valores) => Promise<unknow
 /** Corpo rolável do formulário, entre o título da gaveta e o rodapé. */
 export function CorpoDoFormulario({ children }: Readonly<{ children: ReactNode }>) {
   return <div className="flex flex-col gap-4 overflow-y-auto px-5 py-5">{children}</div>;
+}
+
+/** Um dado que não muda neste formulário, com o motivo e o caminho para quem precisar mudar. */
+export function CampoTravado({
+  rotulo,
+  valor,
+  explicacao,
+}: Readonly<{ rotulo: string; valor: string; explicacao: string }>) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-sm font-bold text-marinho">{rotulo}</p>
+      <p className="rounded-md border border-borda bg-neutro-suave p-3 text-sm font-semibold text-texto-2">
+        <b className="text-marinho">{valor}.</b> {explicacao}
+      </p>
+    </div>
+  );
 }

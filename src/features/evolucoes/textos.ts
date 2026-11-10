@@ -1,5 +1,6 @@
-import type { Coordenador, LinhaDoMes, Turno } from '@/features/evolucoes/api/evolucoes.api';
-import { carteiraUnica, ROTULO_DO_TURNO, textoDoPrazo } from '@/features/evolucoes/logica';
+import type { Coordenador, LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
+import { carteiraUnica, textoDoPrazo } from '@/features/evolucoes/logica';
+import { ROTULO_DO_TURNO, type Turno } from '@/utils/turno';
 import {
   diasAtePrazo,
   formatarData,

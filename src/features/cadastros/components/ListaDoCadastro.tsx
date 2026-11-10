@@ -18,6 +18,8 @@ export interface ItemDoCadastro {
   /** Pílulas ao lado do nome (ex.: "Você", "Sem conta"), sempre com texto. */
   marcas?: readonly MarcaDoItem[];
   ativo: boolean;
+  /** Nome do botão "Editar" quando o nome do item pode repetir (padrão: `Editar <nome>`). */
+  rotuloDaEdicao?: string;
 }
 
 interface Props {
@@ -73,7 +75,7 @@ export function ListaDoCadastro({ rotulo, itens, rotuloDoInativo, aoEditar }: Re
           <Button
             variant="secondary"
             size="sm"
-            aria-label={`Editar ${item.nome}`}
+            aria-label={item.rotuloDaEdicao ?? `Editar ${item.nome}`}
             onClick={() => {
               aoEditar(item.id);
             }}

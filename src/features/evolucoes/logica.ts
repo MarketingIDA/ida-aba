@@ -1,4 +1,5 @@
-import type { LinhaDoMes, Turno } from '@/features/evolucoes/api/evolucoes.api';
+import type { LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
+import type { Turno } from '@/utils/turno';
 
 /** Situação de um assistido no mês: as três da evolução e "sem evolução" ainda. */
 export type Situacao = 'sem' | 'em_conferencia' | 'concluida' | 'enviada';
@@ -14,12 +15,6 @@ export const SITUACAO: Record<
   em_conferencia: { rotulo: 'Em conferência', plural: 'Em conferência', tom: 'alerta' },
   concluida: { rotulo: 'Concluída', plural: 'Concluídas', tom: 'info' },
   enviada: { rotulo: 'Enviada', plural: 'Enviadas', tom: 'ok' },
-};
-
-export const ROTULO_DO_TURNO: Record<Turno, string> = {
-  manha: 'Manhã',
-  tarde: 'Tarde',
-  integral: 'Integral',
 };
 
 export function ehSituacao(valor: string | null): valor is Situacao {
