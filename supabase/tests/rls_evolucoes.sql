@@ -15,13 +15,15 @@ insert into auth.users (id, email, email_confirmed_at, aud, role) values
   ('a0000000-0000-4000-8000-000000000004', 'contas@exemplo.test', now(), 'authenticated', 'authenticated'),
   ('a0000000-0000-4000-8000-000000000005', 'inativo@exemplo.test', now(), 'authenticated', 'authenticated'),
   ('a0000000-0000-4000-8000-000000000006', 'sem.cadastro@exemplo.test', now(), 'authenticated', 'authenticated'),
-  ('a0000000-0000-4000-8000-000000000007', 'nao.confirmado@exemplo.test', null, 'authenticated', 'authenticated');
+  ('a0000000-0000-4000-8000-000000000007', 'nao.confirmado@exemplo.test', null, 'authenticated', 'authenticated'),
+  ('a0000000-0000-4000-8000-000000000008', 'email.corrigido@exemplo.test', now(), 'authenticated', 'authenticated');
 
 -- O cadastro nasce depois da conta: o trigger liga pelo e-mail confirmado.
 insert into acesso.usuarios (nome, email, papel, crp, ativo) values
   ('Coordenadora A', 'coord.a@exemplo.test', 'coordenador', '02/00001', true),
   ('Coordenador B', 'coord.b@exemplo.test', 'coordenador', '02/00002', true),
   ('Coordenação Geral', 'geral@exemplo.test', 'coordenacao_geral', null, true),
+  ('Coordenação Geral Dois', 'geral.dois@exemplo.test', 'coordenacao_geral', null, true),
   ('Contas Médicas', 'contas@exemplo.test', 'contas_medicas', null, true),
   ('Coordenador Inativo', 'inativo@exemplo.test', 'coordenador', null, false),
   ('Não Confirmado', 'nao.confirmado@exemplo.test', 'coordenador', null, true);
@@ -152,6 +154,13 @@ begin
   exception when insufficient_privilege then
     insert into resultado (teste, ok) values ('ninguém altera auth_user_id pela API', true);
   end;
+  begin
+    insert into acesso.usuarios (nome, email, papel)
+      values ('Intrusa', 'intrusa@exemplo.test', 'coordenacao_geral');
+    insert into resultado (teste, ok) values ('coordenador não cadastra pessoa', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('coordenador não cadastra pessoa', true);
+  end;
 end;
 $$;
 reset role;
@@ -180,6 +189,65 @@ insert into resultado (teste, ok) select 'coordenação geral lê a auditoria',
 update cadastro.planos set nome = 'Plano Teste Renomeado' where nome = 'Plano Teste';
 insert into resultado (teste, ok) select 'coordenação geral altera o cadastro',
   exists (select 1 from cadastro.planos where nome = 'Plano Teste Renomeado');
+
+-- Pessoas: a coordenação geral cadastra e altera; o banco segura as travas. Os testes não
+-- dependem de quantas coordenações gerais reais existem: desativar todas tem de falhar sempre.
+insert into acesso.usuarios (nome, email, papel) values
+  ('Pessoa Nova Teste', 'pessoa.nova@exemplo.test', 'contas_medicas');
+insert into resultado (teste, ok) select 'coordenação geral cadastra pessoa',
+  exists (select 1 from acesso.usuarios where email = 'pessoa.nova@exemplo.test');
+update acesso.usuarios set ativo = false where email = 'geral.dois@exemplo.test';
+insert into resultado (teste, ok) select 'desativa uma coordenação geral quando outra segue ativa',
+  (select not ativo from acesso.usuarios where email = 'geral.dois@exemplo.test');
+update acesso.usuarios set email = 'email.corrigido@exemplo.test'
+ where email = 'nao.confirmado@exemplo.test';
+insert into resultado (teste, ok) select 'corrige o e-mail de quem não tem conta e liga a conta',
+  (select auth_user_id from acesso.usuarios where email = 'email.corrigido@exemplo.test')
+    = 'a0000000-0000-4000-8000-000000000008';
+update acesso.usuarios set papel = 'contas_medicas' where email = 'inativo@exemplo.test';
+insert into resultado (teste, ok) select 'muda o papel de coordenador sem carteira',
+  (select papel = 'contas_medicas' from acesso.usuarios where email = 'inativo@exemplo.test');
+update acesso.usuarios set ativo = false where email = 'coord.b@exemplo.test';
+insert into resultado (teste, ok) select 'desativa coordenador com carteira (o acesso cai na hora)',
+  (select not ativo from acesso.usuarios where email = 'coord.b@exemplo.test');
+do $$
+declare
+  dica text;
+begin
+  begin
+    update acesso.usuarios set ativo = false where papel = 'coordenacao_geral';
+    insert into resultado (teste, ok) values ('nunca fica sem coordenação geral ativa', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('nunca fica sem coordenação geral ativa', dica = 'ultima_coordenacao_geral');
+  end;
+  begin
+    update acesso.usuarios set papel = 'coordenador' where papel = 'coordenacao_geral';
+    insert into resultado (teste, ok) values ('nem tirando o papel de todas', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('nem tirando o papel de todas', dica = 'ultima_coordenacao_geral');
+  end;
+  begin
+    update acesso.usuarios set email = 'trocado@exemplo.test' where email = 'coord.a@exemplo.test';
+    insert into resultado (teste, ok) values ('e-mail de quem tem conta não muda', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('e-mail de quem tem conta não muda', dica = 'email_com_conta');
+  end;
+  begin
+    update acesso.usuarios set papel = 'contas_medicas' where email = 'coord.a@exemplo.test';
+    insert into resultado (teste, ok) values ('coordenador com carteira ativa não muda de papel', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('coordenador com carteira ativa não muda de papel', dica = 'coordenador_com_carteira');
+  end;
+end;
+$$;
 reset role;
 
 -- Contas médicas: nesta etapa não lê assistido nem evolução (recebe só o arquivo do mês, E24).
@@ -213,6 +281,14 @@ insert into resultado (teste, ok) select 'RLS ligado e forçado em todas as tabe
     select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
      where n.nspname in ('acesso', 'cadastro', 'evolucao', 'auditoria') and c.relkind = 'r'
        and not (c.relrowsecurity and c.relforcerowsecurity));
+insert into resultado (teste, ok) select 'funções de interno: anon nenhuma, authenticated só as das policies',
+  not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'interno'
+       and (has_function_privilege('anon', p.oid, 'execute')
+            or (has_function_privilege('authenticated', p.oid, 'execute')
+                and p.proname not in ('usuario_atual_id', 'usuario_ativo', 'eh_coordenacao_geral',
+                                      'carteiras_do_usuario', 'assistidos_do_usuario'))));
 insert into resultado (teste, ok) select 'authenticated sem DELETE em nenhuma tabela',
   not exists (
     select 1 from information_schema.role_table_grants
