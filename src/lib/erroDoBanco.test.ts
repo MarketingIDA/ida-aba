@@ -20,6 +20,28 @@ describe('erroDoBanco', () => {
     expect(erroDoBanco({ code: 'PGRST116' }).codigo).toBe('sem_permissao');
   });
 
+  it('regra do banco com `hint` conhecido ganha a mensagem própria', () => {
+    const mensagens = {
+      regra_violada: 'Regra da tabela.',
+      regras: { ultima_coordenacao_geral: 'Precisa de uma coordenação geral ativa.' },
+    };
+    const erro = erroDoBanco({ code: '23514', hint: 'ultima_coordenacao_geral' }, mensagens);
+    expect(erro.codigo).toBe('regra_violada');
+    expect(erro.message).toBe('Precisa de uma coordenação geral ativa.');
+    // `hint` desconhecido, nulo ou herdado do protótipo cai na mensagem da tabela.
+    expect(erroDoBanco({ code: '23514', hint: 'outra' }, mensagens).message).toBe(
+      'Regra da tabela.',
+    );
+    expect(erroDoBanco({ code: '23514', hint: null }, mensagens).message).toBe('Regra da tabela.');
+    expect(erroDoBanco({ code: '23514', hint: 'toString' }, mensagens).message).toBe(
+      'Regra da tabela.',
+    );
+    // O `hint` só vale para regra: num duplicado, manda a mensagem do duplicado.
+    expect(erroDoBanco({ code: '23505', hint: 'ultima_coordenacao_geral' }, mensagens).codigo).toBe(
+      'duplicado',
+    );
+  });
+
   it('código desconhecido ou ausente vira "indisponível", com o erro original na causa', () => {
     const original = { code: '08006' };
     const erro = erroDoBanco(original);

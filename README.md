@@ -8,9 +8,11 @@ Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada 
 
 - **Acesso:** login por e-mail e senha, primeiro acesso (a pessoa cria a senha pelo link do convite) e recuperação de senha. O papel vem do cadastro em `acesso.usuarios`, nunca do token, e conta sem cadastro ativo não entra.
 - **Coordenação de unidade e coordenação geral:** Evoluções do mês, com cards por situação que filtram a lista, busca por nome ou código, escolha do mês (o aberto e os 5 anteriores), período analisado e prazo do arquivo do mês. A coordenação geral vê todas as unidades e recorta por unidade e coordenador.
-- **Cadastros (coordenação geral):** unidades e planos de saúde, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. As pessoas, as carteiras e os assistidos chegam nas próximas etapas, nessa ordem.
+- **Cadastros (coordenação geral):** unidades, planos de saúde e pessoas, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. As carteiras e os assistidos chegam nas próximas etapas, nessa ordem.
+  - Cada pessoa tem um papel (coordenação de unidade, coordenação geral ou contas médicas) e, se coordena unidade, o CRP. Quem ainda não entrou aparece como "Sem conta".
+  - Desativar corta o acesso na hora. O e-mail trava depois que a pessoa tem conta, e ninguém muda o próprio papel nem se desativa.
 - **Contas médicas:** a tela de arquivos recebidos existe, mas fica vazia até a etapa do envio do arquivo do mês.
-- **Banco:** RLS em todas as tabelas. O coordenador lê só a própria carteira; a coordenação geral lê tudo e é a única que cadastra; contas médicas não lê evolução solta. Toda alteração fica na auditoria.
+- **Banco:** RLS em todas as tabelas. O coordenador lê só a própria carteira; a coordenação geral lê tudo e é a única que cadastra; contas médicas não lê evolução solta. O banco nunca fica sem coordenação geral ativa e não deixa mudar o papel de quem tem carteira ativa. Toda alteração fica na auditoria.
 
 ## Rodar localmente
 
@@ -73,21 +75,24 @@ Estes passos ficam com o dono do projeto e não estão no código:
 5. **E-mail:** o SMTP padrão do Supabase só entrega para os membros do time do projeto. Antes de convidar os coordenadores, configure um SMTP próprio em Authentication → Emails → SMTP Settings.
 6. **Segredos das Edge Functions:** renomeie `SUBAPASE-OPENAI_API` para `OPENAI_API_KEY` e apague `SUPABASE-ULR` e `SUPABASE-ANON-PUBLIC`. O Supabase já injeta `SUPABASE_URL` e `SUPABASE_ANON_KEY` em toda função.
 
-## Primeiro acesso da coordenação geral
+## Contas de acesso
 
-Unidades e planos já se cadastram pela tela Cadastros; as pessoas, as carteiras e os assistidos chegam nas próximas etapas. Até lá, a primeira pessoa da coordenação geral entra assim:
+**A primeira coordenação geral** é cadastrada uma vez, pelo SQL Editor (o e-mail vai em minúsculas):
 
-1. No SQL Editor, cadastre a pessoa (o e-mail vai em minúsculas):
+```sql
+insert into acesso.usuarios (nome, email, papel)
+values ('Nome Sobrenome', lower('email@dominio.com.br'), 'coordenacao_geral');
+```
 
-   ```sql
-   insert into acesso.usuarios (nome, email, papel)
-   values ('Nome Sobrenome', lower('email@dominio.com.br'), 'coordenacao_geral');
-   ```
+**As demais pessoas** a coordenação geral cadastra pela tela Cadastros → Pessoas. Cada uma aparece como "Sem conta" até entrar a primeira vez.
 
-2. Em Authentication → Users → Invite user, convide o mesmo e-mail.
-3. A pessoa abre o convite, cai em `/primeiro-acesso` e cria a senha. Quando o e-mail é confirmado, um trigger liga a conta ao cadastro sozinho.
+**A conta de acesso** de qualquer pessoa vem do convite:
 
-Coordenadores e contas médicas entram do mesmo jeito, com o papel `coordenador` ou `contas_medicas`.
+1. Em Authentication → Users → Invite user, convide o mesmo e-mail do cadastro. Para e-mails de fora da equipe do Supabase, o convite precisa do SMTP próprio, que ainda não está configurado.
+2. A pessoa abre o convite, cai em `/primeiro-acesso` e cria a senha.
+3. Quando o e-mail é confirmado, um trigger liga a conta ao cadastro sozinho.
+
+O e-mail se corrige pela tela enquanto a pessoa está "Sem conta"; corrigido, ele liga a conta que já existir com o e-mail novo.
 
 ## Estrutura
 
@@ -97,6 +102,7 @@ ida-aba/
 │   ├── app/                     # rotas, layout (menu lateral) e providers
 │   ├── features/
 │   │   ├── auth/                # login, primeiro acesso, recuperação de senha
+│   │   ├── cadastros/           # unidades, planos de saúde e pessoas (coordenação geral)
 │   │   └── evolucoes/           # Evoluções do mês (api, queries, componentes, tela)
 │   ├── components/  hooks/  lib/  utils/  config/   # código compartilhado
 │   └── testing/                 # MSW, factories fictícias e helpers de teste

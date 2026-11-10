@@ -27,5 +27,42 @@ export const esquemaPlano = z.object({
   ativo: z.boolean(),
 });
 
+export const PAPEIS = ['coordenador', 'coordenacao_geral', 'contas_medicas'] as const;
+
+/**
+ * Pessoa: o papel é escolha obrigatória (decide o que ela vê). O CRP só vale para a coordenação
+ * de unidade e pode ficar para depois; para os outros papéis, vai vazio ao banco.
+ */
+export const esquemaPessoa = z
+  .object({
+    nome: z
+      .string()
+      .trim()
+      .min(2, 'Escreva o nome da pessoa, com 2 letras ou mais.')
+      .max(120, 'O nome pode ter até 120 letras.'),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .pipe(z.email('Escreva o e-mail completo, como nome@clinica.com.br.')),
+    papel: z.enum(PAPEIS, 'Escolha o papel da pessoa.'),
+    crp: z.string().trim(),
+    ativo: z.boolean(),
+  })
+  .superRefine(({ papel, crp }, contexto) => {
+    if (papel === 'coordenador' && crp !== '' && (crp.length < 4 || crp.length > 20)) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['crp'],
+        message: 'Escreva o CRP como no carimbo, com 4 a 20 caracteres (ex.: 06/12345).',
+      });
+    }
+  })
+  .transform(({ crp, ...pessoa }) => ({
+    ...pessoa,
+    crp: pessoa.papel === 'coordenador' && crp !== '' ? crp : null,
+  }));
+
 export type CamposDaUnidade = z.input<typeof esquemaUnidade>;
 export type CamposDoPlano = z.input<typeof esquemaPlano>;
+export type CamposDaPessoa = z.input<typeof esquemaPessoa>;

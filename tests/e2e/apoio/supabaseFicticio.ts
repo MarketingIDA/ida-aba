@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test';
 /**
  * Supabase fictício para o E2E: o build de teste aponta para `exemplo.supabase.co`, que não
  * existe. O Playwright responde no lugar dele o que as telas usam: Auth, `acesso.usuarios`, a RPC
- * das evoluções do mês e as unidades e os planos do cadastro. Nenhuma senha, nome ou dado real:
+ * das evoluções do mês e as unidades, os planos e as pessoas do cadastro. Nenhuma senha, nome ou dado real:
  * tudo aqui é dos testes.
  */
 const BASE = 'https://exemplo.supabase.co';
@@ -104,7 +104,12 @@ type LinhaDoCadastro = Record<string, unknown> & { id: number };
 async function simularTabela(
   page: Page,
   papel: Papel,
-  { nome, linhas, unico }: { nome: string; linhas: LinhaDoCadastro[]; unico: string },
+  {
+    nome,
+    linhas,
+    unico,
+    padrao = {},
+  }: { nome: string; linhas: LinhaDoCadastro[]; unico: string; padrao?: Record<string, unknown> },
 ): Promise<void> {
   await page.route(`${BASE}/rest/v1/${nome}**`, async (rota) => {
     const pedido = rota.request();
@@ -117,14 +122,15 @@ async function simularTabela(
       if (linhas.some((linha) => linha[unico] === corpo[unico])) {
         return rota.fulfill({ status: 409, json: { code: '23505', message: 'duplicate key' } });
       }
-      const nova = { ...corpo, id: linhas.length + 1 };
+      const nova = { ...padrao, ...corpo, id: linhas.length + 1 };
       linhas.push(nova);
       return rota.fulfill({ status: 201, json: nova });
     }
     const id = Number(new URL(pedido.url()).searchParams.get('id')?.replace('eq.', ''));
     const indice = linhas.findIndex((linha) => linha.id === id);
-    linhas[indice] = { ...corpo, id };
-    return rota.fulfill({ json: linhas[indice] });
+    const alterada = { ...linhas[indice], ...corpo, id };
+    linhas[indice] = alterada;
+    return rota.fulfill({ json: alterada });
   });
 }
 
@@ -141,6 +147,30 @@ async function simularCadastros(page: Page, papel: Papel): Promise<void> {
     nome: 'planos',
     unico: 'nome',
     linhas: [{ id: 1, nome: 'Plano Fictício', ativo: true }],
+  });
+  // As pessoas: as três contas dos testes e uma pessoa que ainda não entrou.
+  await simularTabela(page, papel, {
+    nome: 'usuarios',
+    unico: 'email',
+    padrao: { auth_user_id: null },
+    linhas: [
+      ...Object.entries(USUARIOS).map(([papelDaConta, conta]) => ({
+        ...conta,
+        papel: papelDaConta,
+        crp: papelDaConta === 'coordenador' ? '06/12345' : null,
+        ativo: true,
+        auth_user_id: `0000000${String(conta.id)}-0000-4000-8000-000000000000`,
+      })),
+      {
+        id: 4,
+        nome: 'Bruno Fictício Novo',
+        email: 'novo.demo@evolucao-aba.test',
+        papel: 'coordenador',
+        crp: null,
+        ativo: true,
+        auth_user_id: null,
+      },
+    ],
   });
 }
 
@@ -169,11 +199,15 @@ async function simularSupabase(page: Page, papel: Papel): Promise<void> {
   });
   await page.route(`${BASE}/auth/v1/user`, (rota) => rota.fulfill({ json: usuarioDoAuth(email) }));
   await page.route(`${BASE}/auth/v1/logout**`, (rota) => rota.fulfill({ status: 204 }));
+  // Registrada depois da tabela de pessoas, responde antes dela: a conta da sessão e o filtro de
+  // coordenadores. A lista inteira e as escritas seguem para a tabela (`fallback`).
   await page.route(`${BASE}/rest/v1/usuarios**`, (rota) => {
-    const coordenadores = rota.request().url().includes('papel=eq.coordenador');
-    return rota.fulfill({
-      json: coordenadores ? COORDENADORES : [{ ...usuario, email, papel, ativo: true }],
-    });
+    const url = rota.request().url();
+    if (url.includes('papel=eq.coordenador')) return rota.fulfill({ json: COORDENADORES });
+    if (url.includes('auth_user_id=eq.')) {
+      return rota.fulfill({ json: [{ ...usuario, email, papel, ativo: true }] });
+    }
+    return rota.fallback();
   });
   // A RPC respeita o papel como o RLS faria: o coordenador vê só a carteira dele.
   await page.route(`${BASE}/rest/v1/rpc/evolucoes_do_mes`, (rota) =>

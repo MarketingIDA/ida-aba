@@ -74,6 +74,37 @@ test.describe('Cadastros', () => {
     await expect(gaveta.getByRole('alert')).toHaveText('Já existe um plano com este nome.');
   });
 
+  test('a coordenação geral cadastra uma pessoa com papel e CRP', async ({ page }) => {
+    await entrar(page, 'coordenacao_geral');
+    await page.goto('/cadastros/unidades');
+    await page.getByRole('link', { name: 'Pessoas' }).click();
+
+    await expect(page).toHaveURL(/\/cadastros\/pessoas$/);
+    const lista = page.getByRole('list', { name: 'Pessoas cadastradas' });
+    await expect(lista.getByRole('listitem')).toHaveCount(4);
+    await expect(lista.getByRole('listitem').filter({ hasText: 'Você' })).toContainText(
+      'Gabriela Fictícia Geral',
+    );
+
+    await page.getByRole('button', { name: 'Nova pessoa' }).click();
+    const gaveta = page.getByRole('dialog', { name: 'Nova pessoa' });
+    await gaveta.getByLabel('Nome').fill('Dora Fictícia Nova');
+    await gaveta.getByLabel('E-mail').fill('dora.demo@evolucao-aba.test');
+    await gaveta.getByRole('radio', { name: 'Coordenação de unidade' }).check();
+    await gaveta.getByLabel('CRP (opcional)').fill('06/99999');
+    await expect(gaveta).toHaveCSS('opacity', '1');
+    await esperarAGaveta(page);
+    expect((await new AxeBuilder({ page }).withTags(TAGS).analyze()).violations).toEqual([]);
+    await gaveta.getByRole('button', { name: 'Cadastrar pessoa' }).click();
+
+    await expect(page.getByText('Cadastro de Dora Fictícia Nova criado.')).toBeVisible();
+    await expect(gaveta).toBeHidden();
+    await expect(
+      lista.getByRole('listitem').filter({ hasText: 'Dora Fictícia Nova' }),
+    ).toContainText('Sem conta');
+    expect((await new AxeBuilder({ page }).withTags(TAGS).analyze()).violations).toEqual([]);
+  });
+
   test('o coordenador não tem Cadastros no menu nem entra pelo endereço', async ({ page }) => {
     await entrar(page);
     const menu = await abrirMenu(page);
