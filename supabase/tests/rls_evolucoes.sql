@@ -112,7 +112,7 @@ begin
   begin
     insert into cadastro.unidades (sigla, nome) values ('TSY', 'Unidade Y');
     insert into resultado (teste, ok) values ('unidade nova só com CNPJ', false);
-  exception when check_violation then
+  exception when not_null_violation then
     insert into resultado (teste, ok) values ('unidade nova só com CNPJ', true);
   end;
   begin

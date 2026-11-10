@@ -21,18 +21,14 @@ const VAZIO = {
     'Cadastre as unidades da clínica. Depois delas vêm as carteiras de cada unidade e turno e os assistidos.',
 };
 
-/** A linha da lista: o CNPJ embaixo do nome; a unidade ativa sem ele leva o aviso. */
-function itemDaUnidade({ id, sigla, nome, cnpj, ativa }: Unidade): ItemDoCadastro {
-  return {
-    id,
-    sigla,
-    nome,
-    ativo: ativa,
-    ...(cnpj === null
-      ? { marcas: ativa ? [{ rotulo: 'Sem CNPJ', tom: 'alerta' as const }] : [] }
-      : { detalhe: `CNPJ ${formatarCnpj(cnpj)}` }),
-  };
-}
+/** A linha da lista: o CNPJ embaixo do nome. */
+const itemDaUnidade = ({ id, sigla, nome, cnpj, ativa }: Unidade): ItemDoCadastro => ({
+  id,
+  sigla,
+  nome,
+  detalhe: `CNPJ ${formatarCnpj(cnpj)}`,
+  ativo: ativa,
+});
 
 /** Unidades da clínica: a lista, o cadastro de uma nova e a alteração de uma existente. */
 export function UnidadesSecao() {

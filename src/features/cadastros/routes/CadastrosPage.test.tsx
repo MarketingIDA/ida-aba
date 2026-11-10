@@ -30,7 +30,7 @@ describe('Cadastros: unidades', () => {
     expect(itensDa('Unidades cadastradas')).toEqual([
       'UNAUnidade FictíciaCNPJ 12.345.678/0001-95Editar',
       'UNCTerceira Unidade FictíciaCNPJ 87.654.321/0001-98Editar',
-      'UNBOutra Unidade FictíciaDesativadaEditar',
+      'UNBOutra Unidade FictíciaDesativadaCNPJ 12.ABC.345/01DE-35Editar',
     ]);
     expect(await violacoesDeAcessibilidade(container)).toEqual([]);
   });
@@ -108,7 +108,7 @@ describe('Cadastros: unidades', () => {
       expect(itensDa('Unidades cadastradas')).toEqual([
         'UNCTerceira Unidade FictíciaCNPJ 87.654.321/0001-98Editar',
         'UNAUnidade FictíciaDesativadaCNPJ 12.345.678/0001-95Editar',
-        'UNBOutra Unidade FictíciaDesativadaEditar',
+        'UNBOutra Unidade FictíciaDesativadaCNPJ 12.ABC.345/01DE-35Editar',
       ]);
     });
   });
