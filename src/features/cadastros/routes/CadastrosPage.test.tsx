@@ -5,19 +5,12 @@ import { describe, expect, it } from 'vitest';
 
 import { env } from '@/config/env';
 import { CadastrosPage } from '@/features/cadastros';
-import type { Plano, Unidade } from '@/features/cadastros/api/cadastros.api';
 import { violacoesDeAcessibilidade } from '@/testing/axe';
 import { planosDemo, unidadesDoCadastroDemo } from '@/testing/factories/cadastros';
 import { usuarioDemo } from '@/testing/factories/usuario';
 import { renderWithProviders } from '@/testing/renderWithProviders';
 import { server } from '@/testing/server';
-
-type Linha = Unidade | Plano;
-interface Escrita {
-  metodo: 'POST' | 'PATCH';
-  corpo: Record<string, unknown>;
-  perfil: string | null;
-}
+import { itensDa, tabelaEmMemoria } from '@/testing/tabelaEmMemoria';
 
 const abrir = (rota = '/cadastros/unidades') =>
   renderWithProviders(
@@ -26,46 +19,6 @@ const abrir = (rota = '/cadastros/unidades') =>
     </Routes>,
     { rota, usuario: usuarioDemo({ papel: 'coordenacao_geral' }) },
   );
-
-/**
- * Uma tabela da Data API em memória: lista, cadastra (o campo `unico` não se repete, como a
- * constraint do banco) e altera pelo `id`. Devolve as escritas, para conferir o que foi mandado.
- */
-function tabelaEmMemoria<T extends Linha>(nome: string, inicial: T[], unico: keyof T): Escrita[] {
-  const url = `${env.SUPABASE_URL}/rest/v1/${nome}`;
-  const linhas = [...inicial];
-  const escritas: Escrita[] = [];
-  const registrar = async (metodo: Escrita['metodo'], request: Request) => {
-    const corpo = (await request.json()) as Record<string, unknown>;
-    escritas.push({ metodo, corpo, perfil: request.headers.get('content-profile') });
-    return corpo as Omit<T, 'id'>;
-  };
-  server.use(
-    http.get(url, () => HttpResponse.json(linhas)),
-    http.post(url, async ({ request }) => {
-      const corpo = await registrar('POST', request);
-      if (linhas.some((l) => l[unico] === (corpo as T)[unico])) {
-        return HttpResponse.json({ code: '23505', message: 'duplicate key' }, { status: 409 });
-      }
-      const nova = { ...corpo, id: linhas.length + 1 } as T;
-      linhas.push(nova);
-      return HttpResponse.json(nova, { status: 201 });
-    }),
-    http.patch(url, async ({ request }) => {
-      const corpo = await registrar('PATCH', request);
-      const id = Number(new URL(request.url).searchParams.get('id')?.replace('eq.', ''));
-      const indice = linhas.findIndex((l) => l.id === id);
-      linhas[indice] = { ...corpo, id } as T;
-      return HttpResponse.json(linhas[indice]);
-    }),
-  );
-  return escritas;
-}
-
-const itensDa = (lista: string) =>
-  within(screen.getByRole('list', { name: lista }))
-    .getAllByRole('listitem')
-    .map((item) => item.textContent);
 
 describe('Cadastros: unidades', () => {
   it('lista as unidades, as ativas primeiro, sem violação de acessibilidade', async () => {

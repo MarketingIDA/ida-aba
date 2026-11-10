@@ -1,9 +1,13 @@
 import '@testing-library/jest-dom/vitest';
 
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 
 import { server } from '@/testing/server';
+
+// Com a cobertura ligada e vários jsdom em paralelo, a primeira tela de cada arquivo passa de
+// 1 s para aparecer. Os `findBy` esperam até 3 s: falha de verdade continua falha.
+configure({ asyncUtilTimeout: 3000 });
 
 // O jsdom não rola a página: a rolagem até a lista (card que leva à lista) vira nada.
 Element.prototype.scrollIntoView = () => undefined;

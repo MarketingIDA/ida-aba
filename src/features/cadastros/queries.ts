@@ -8,12 +8,34 @@ import {
   salvarUnidade,
   type Unidade,
 } from '@/features/cadastros/api/cadastros.api';
+import {
+  buscarPessoas,
+  type DadosDaPessoa,
+  salvarPessoa,
+} from '@/features/cadastros/api/pessoas.api';
 
 export const cadastrosKeys = {
   all: ['cadastros'] as const,
   unidades: () => [...cadastrosKeys.all, 'unidades'] as const,
   planos: () => [...cadastrosKeys.all, 'planos'] as const,
+  pessoas: () => [...cadastrosKeys.all, 'pessoas'] as const,
 };
+
+export const pessoasOptions = () =>
+  queryOptions({ queryKey: cadastrosKeys.pessoas(), queryFn: buscarPessoas });
+
+/**
+ * A pessoa aparece em outras telas: o nome no topo, o filtro de coordenadores, o próprio acesso.
+ * Depois de salvar, tudo o que está na tela volta do banco, não só a lista.
+ */
+export function useSalvarPessoa() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ valores, id }: { valores: DadosDaPessoa; id?: number | undefined }) =>
+      salvarPessoa(valores, id),
+    onSuccess: () => queryClient.invalidateQueries(),
+  });
+}
 
 export const unidadesOptions = () =>
   queryOptions({ queryKey: cadastrosKeys.unidades(), queryFn: buscarUnidades });

@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { env } from '@/config/env';
-import { planosDemo, unidadesDoCadastroDemo } from '@/testing/factories/cadastros';
+import { pessoasDemo, planosDemo, unidadesDoCadastroDemo } from '@/testing/factories/cadastros';
 import {
   carteiraDemo,
   coordenadoresDemo,
@@ -24,8 +24,10 @@ export const handlersDeRest = [
     if (url.searchParams.get('papel') === 'eq.coordenador') {
       return HttpResponse.json(coordenadoresDemo());
     }
-    const doUsuario = url.searchParams.get('auth_user_id') === `eq.${AUTH_USER_ID_DEMO}`;
-    return HttpResponse.json(doUsuario ? [usuarioDemo()] : []);
+    const conta = url.searchParams.get('auth_user_id');
+    // Sem filtro: a lista de pessoas da coordenação geral.
+    if (conta === null) return HttpResponse.json(pessoasDemo());
+    return HttpResponse.json(conta === `eq.${AUTH_USER_ID_DEMO}` ? [usuarioDemo()] : []);
   }),
 
   http.get(`${env.SUPABASE_URL}/rest/v1/unidades`, ({ request }) =>

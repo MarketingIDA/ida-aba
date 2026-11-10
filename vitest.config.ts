@@ -14,6 +14,8 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}', 'supabase/functions/_shared/dominio/**/*.test.ts'],
     css: false,
     restoreMocks: true,
+    // Os testes de tela digitam como o usuário; sob cobertura, 5 s não bastam na máquina lenta.
+    testTimeout: 15_000,
     env: {
       VITE_SUPABASE_URL: 'https://exemplo.supabase.co',
       VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_teste',

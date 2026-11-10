@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 export const ABAS = [
   { rota: '/cadastros/unidades', rotulo: 'Unidades' },
   { rota: '/cadastros/planos', rotulo: 'Planos de saúde' },
+  { rota: '/cadastros/pessoas', rotulo: 'Pessoas' },
 ] as const;
 
 /** As partes do cadastro, cada uma com o seu endereço (dá para voltar e mandar o link). */

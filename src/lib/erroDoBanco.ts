@@ -15,6 +15,14 @@ const CODIGOS = {
 
 type CodigoDoBanco = (typeof CODIGOS)[keyof typeof CODIGOS] | 'indisponivel';
 
+export type MensagensDoBanco = Partial<Record<CodigoDoBanco, string>> & {
+  /**
+   * Regras dos triggers: recusam com 23514 e um `hint` fixo (ex.: `ultima_coordenacao_geral`).
+   * Cada `hint` conhecido ganha a sua mensagem; o desconhecido cai na de `regra_violada`.
+   */
+  regras?: Readonly<Record<string, string>>;
+};
+
 const PADRAO: Record<CodigoDoBanco, string> = {
   duplicado: 'Já existe um cadastro com estes dados.',
   regra_violada: 'O cadastro não segue uma regra do sistema.',
@@ -27,10 +35,17 @@ function codigoDe(erro: { code?: string }): CodigoDoBanco {
   return codigo in CODIGOS ? CODIGOS[codigo as keyof typeof CODIGOS] : 'indisponivel';
 }
 
+function mensagemDaRegra(hint: string | null | undefined, regras: MensagensDoBanco['regras']) {
+  if (hint === null || hint === undefined || regras === undefined) return undefined;
+  return Object.hasOwn(regras, hint) ? regras[hint] : undefined;
+}
+
 export function erroDoBanco(
-  erro: { code?: string },
-  mensagens: Partial<Record<CodigoDoBanco, string>> = {},
+  erro: { code?: string; hint?: string | null },
+  mensagens: MensagensDoBanco = {},
 ): ErroApp {
   const codigo = codigoDe(erro);
-  return new ErroApp(codigo, mensagens[codigo] ?? PADRAO[codigo], erro);
+  const daRegra =
+    codigo === 'regra_violada' ? mensagemDaRegra(erro.hint, mensagens.regras) : undefined;
+  return new ErroApp(codigo, daRegra ?? mensagens[codigo] ?? PADRAO[codigo], erro);
 }

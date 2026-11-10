@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { esquemaPlano, esquemaUnidade } from '@/features/cadastros/esquemas';
+import { esquemaPessoa, esquemaPlano, esquemaUnidade } from '@/features/cadastros/esquemas';
 
 const unidade = (sigla: string, nome = 'Unidade Fictícia') =>
   esquemaUnidade.safeParse({ sigla, nome, ativa: true });
@@ -40,6 +40,53 @@ describe('esquema do plano', () => {
     });
     expect(esquemaPlano.safeParse({ nome: '', ativo: true }).error?.issues[0]?.message).toBe(
       'Escreva o nome do plano, com 2 letras ou mais.',
+    );
+  });
+});
+
+describe('esquema da pessoa', () => {
+  const pessoa = (campos: Record<string, unknown>) =>
+    esquemaPessoa.safeParse({
+      nome: 'Dora Fictícia',
+      email: 'dora.demo@evolucao-aba.test',
+      papel: 'coordenador',
+      crp: '',
+      ativo: true,
+      ...campos,
+    });
+
+  it('limpa o nome, põe o e-mail em minúsculas e manda CRP vazio como nulo', () => {
+    expect(
+      pessoa({ nome: ' Dora Fictícia ', email: ' Dora.Demo@Evolucao-ABA.test ' }).data,
+    ).toEqual({
+      nome: 'Dora Fictícia',
+      email: 'dora.demo@evolucao-aba.test',
+      papel: 'coordenador',
+      crp: null,
+      ativo: true,
+    });
+  });
+
+  it('o CRP só vale para a coordenação de unidade', () => {
+    expect(pessoa({ crp: ' 06/12345 ' }).data?.crp).toBe('06/12345');
+    expect(pessoa({ papel: 'contas_medicas', crp: '06/12345' }).data?.crp).toBeNull();
+    // Para os outros papéis, nem o CRP fora da medida trava o cadastro: ele não vai ao banco.
+    expect(pessoa({ papel: 'coordenacao_geral', crp: '1' }).success).toBe(true);
+    expect(pessoa({ crp: '1' }).error?.issues[0]).toMatchObject({
+      path: ['crp'],
+      message: 'Escreva o CRP como no carimbo, com 4 a 20 caracteres (ex.: 06/12345).',
+    });
+  });
+
+  it('pede o papel, o e-mail completo e o nome', () => {
+    expect(pessoa({ papel: undefined }).error?.issues[0]?.message).toBe(
+      'Escolha o papel da pessoa.',
+    );
+    expect(pessoa({ email: 'dora@' }).error?.issues[0]?.message).toBe(
+      'Escreva o e-mail completo, como nome@clinica.com.br.',
+    );
+    expect(pessoa({ nome: 'D' }).error?.issues[0]?.message).toBe(
+      'Escreva o nome da pessoa, com 2 letras ou mais.',
     );
   });
 });
