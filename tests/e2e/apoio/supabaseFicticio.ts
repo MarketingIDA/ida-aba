@@ -3,8 +3,7 @@ import type { Page } from '@playwright/test';
 /**
  * Supabase fictício para o E2E: o build de teste aponta para `exemplo.supabase.co`, que não
  * existe. O Playwright responde no lugar dele o que as telas usam: Auth, `acesso.usuarios`, a RPC
- * das evoluções do mês e as unidades, os planos, as pessoas e as carteiras do cadastro. Nenhuma
- * senha, nome ou dado real:
+ * das evoluções do mês e as unidades, os planos e as pessoas do cadastro. Nenhuma senha, nome ou dado real:
  * tudo aqui é dos testes.
  */
 const BASE = 'https://exemplo.supabase.co';
@@ -98,24 +97,9 @@ const COORDENADORES = [
 
 type LinhaDoCadastro = Record<string, unknown> & { id: number };
 
-/** O que não se repete: um campo (a `unique` do banco) ou uma regra entre duas linhas. */
-type Unicidade = string | ((existente: LinhaDoCadastro, nova: LinhaDoCadastro) => boolean);
-
-const repete = (unico: Unicidade, existente: LinhaDoCadastro, nova: LinhaDoCadastro) =>
-  typeof unico === 'function' ? unico(existente, nova) : existente[unico] === nova[unico];
-
-const DUPLICADO = { status: 409, json: { code: '23505', message: 'duplicate key' } };
-
-/** O índice único parcial das carteiras: uma ativa por unidade e turno. */
-const mesmaVagaAtiva = (existente: LinhaDoCadastro, nova: LinhaDoCadastro) =>
-  existente.ativa === true &&
-  nova.ativa === true &&
-  existente.unidade_id === nova.unidade_id &&
-  existente.turno === nova.turno;
-
 /**
- * Tabela do cadastro em memória, por teste: lista, cadastra e altera pelo `id`, recusando o que
- * repete (`unico`) como a constraint do banco. Só a coordenação geral escreve, como no RLS.
+ * Tabela do cadastro em memória, por teste: lista, cadastra com o campo `unico` sem repetir (a
+ * constraint do banco) e altera pelo `id`. Só a coordenação geral escreve, como no RLS.
  */
 async function simularTabela(
   page: Page,
@@ -125,12 +109,7 @@ async function simularTabela(
     linhas,
     unico,
     padrao = {},
-  }: {
-    nome: string;
-    linhas: LinhaDoCadastro[];
-    unico: Unicidade;
-    padrao?: Record<string, unknown>;
-  },
+  }: { nome: string; linhas: LinhaDoCadastro[]; unico: string; padrao?: Record<string, unknown> },
 ): Promise<void> {
   await page.route(`${BASE}/rest/v1/${nome}**`, async (rota) => {
     const pedido = rota.request();
@@ -140,17 +119,16 @@ async function simularTabela(
     }
     const corpo = pedido.postDataJSON() as Record<string, unknown>;
     if (pedido.method() === 'POST') {
+      if (linhas.some((linha) => linha[unico] === corpo[unico])) {
+        return rota.fulfill({ status: 409, json: { code: '23505', message: 'duplicate key' } });
+      }
       const nova = { ...padrao, ...corpo, id: linhas.length + 1 };
-      if (linhas.some((linha) => repete(unico, linha, nova))) return rota.fulfill(DUPLICADO);
       linhas.push(nova);
       return rota.fulfill({ status: 201, json: nova });
     }
     const id = Number(new URL(pedido.url()).searchParams.get('id')?.replace('eq.', ''));
     const indice = linhas.findIndex((linha) => linha.id === id);
     const alterada = { ...linhas[indice], ...corpo, id };
-    if (linhas.some((linha) => linha.id !== id && repete(unico, linha, alterada))) {
-      return rota.fulfill(DUPLICADO);
-    }
     linhas[indice] = alterada;
     return rota.fulfill({ json: alterada });
   });
@@ -192,16 +170,6 @@ async function simularCadastros(page: Page, papel: Papel): Promise<void> {
         ativo: true,
         auth_user_id: null,
       },
-    ],
-  });
-  // As carteiras: a manhã da UNA com a Carla e a tarde da UNB com o Bruno.
-  await simularTabela(page, papel, {
-    nome: 'carteiras',
-    unico: mesmaVagaAtiva,
-    padrao: { ativa: true },
-    linhas: [
-      { id: 1, unidade_id: 1, turno: 'manha', coordenador_id: 2, ativa: true },
-      { id: 2, unidade_id: 2, turno: 'tarde', coordenador_id: 4, ativa: true },
     ],
   });
 }

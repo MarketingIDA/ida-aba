@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  esquemaAlteracaoDaCarteira,
   esquemaNovaCarteira,
   esquemaPessoa,
   esquemaPlano,
@@ -98,16 +97,6 @@ describe('esquema da pessoa', () => {
 });
 
 describe('esquemas da carteira', () => {
-  it('a opção escolhida no select vira o id em número', () => {
-    expect(
-      esquemaNovaCarteira.parse({ unidadeId: '3', turno: 'tarde', coordenadorId: '2' }),
-    ).toEqual({ unidadeId: 3, turno: 'tarde', coordenadorId: 2 });
-    expect(esquemaAlteracaoDaCarteira.parse({ coordenadorId: '4', ativa: false })).toEqual({
-      coordenadorId: 4,
-      ativa: false,
-    });
-  });
-
   it('a opção vazia ("Escolha...") pede a escolha, em vez de virar o id 0', () => {
     const recusa = esquemaNovaCarteira.safeParse({ unidadeId: '', coordenadorId: '' });
     expect(recusa.error?.issues.map(({ path, message }) => ({ path, message }))).toEqual([

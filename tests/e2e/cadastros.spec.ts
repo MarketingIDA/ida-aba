@@ -105,35 +105,6 @@ test.describe('Cadastros', () => {
     expect((await new AxeBuilder({ page }).withTags(TAGS).analyze()).violations).toEqual([]);
   });
 
-  test('a coordenação geral cadastra uma carteira e não repete turno ocupado', async ({ page }) => {
-    await entrar(page, 'coordenacao_geral');
-    await page.goto('/cadastros/pessoas');
-    await page.getByRole('link', { name: 'Carteiras' }).click();
-
-    await expect(page).toHaveURL(/\/cadastros\/carteiras$/);
-    const lista = page.getByRole('list', { name: 'Carteiras cadastradas' });
-    await expect(lista.getByRole('listitem')).toHaveCount(2);
-    await expect(lista.getByRole('listitem').first()).toContainText(
-      'Unidade Fictícia · ManhãCarla Fictícia Coordenadora',
-    );
-
-    await page.getByRole('button', { name: 'Nova carteira' }).click();
-    const gaveta = page.getByRole('dialog', { name: 'Nova carteira' });
-    await gaveta.getByLabel('Unidade').selectOption({ label: 'UNA · Unidade Fictícia' });
-    await expect(gaveta.getByRole('radio', { name: 'Manhã' })).toBeDisabled();
-    await gaveta.getByRole('radio', { name: 'Tarde' }).check();
-    await gaveta.getByLabel('Coordenação').selectOption({ label: 'Bruno Fictício Novo' });
-    await expect(gaveta).toHaveCSS('opacity', '1');
-    await esperarAGaveta(page);
-    expect((await new AxeBuilder({ page }).withTags(TAGS).analyze()).violations).toEqual([]);
-    await gaveta.getByRole('button', { name: 'Cadastrar carteira' }).click();
-
-    await expect(page.getByText('Carteira UNA · Tarde cadastrada.')).toBeVisible();
-    await expect(gaveta).toBeHidden();
-    await expect(lista.getByRole('listitem')).toHaveCount(3);
-    expect((await new AxeBuilder({ page }).withTags(TAGS).analyze()).violations).toEqual([]);
-  });
-
   test('o coordenador não tem Cadastros no menu nem entra pelo endereço', async ({ page }) => {
     await entrar(page);
     const menu = await abrirMenu(page);

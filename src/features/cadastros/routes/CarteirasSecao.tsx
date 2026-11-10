@@ -122,7 +122,7 @@ export function CarteirasSecao() {
   return (
     <SecaoDoCadastro
       titulo="Carteiras"
-      descricao="Cada unidade e turno tem uma carteira ativa, com quem a coordena. Desativar libera a unidade e o turno; nada se apaga."
+      descricao="Uma carteira ativa por unidade e turno, com quem a coordena. Desativar libera a vaga; nada se apaga."
       botao="Nova carteira"
       aoCriar={gaveta.abrirNovo}
       aviso={aviso}
