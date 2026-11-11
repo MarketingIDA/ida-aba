@@ -358,6 +358,47 @@ insert into resultado (teste, ok) select 'desativa a carteira depois de passar o
         and unidade_id = (select id from cadastro.unidades where sigla = 'TST'));
 reset role;
 
+-- Assinatura (E14): o coordenador envia a imagem à própria pasta e grava o caminho.
+select set_config('teste.id_a',
+  (select id::text from acesso.usuarios where email = 'coord.a@exemplo.test'), true);
+select set_config('teste.id_b',
+  (select id::text from acesso.usuarios where email = 'coord.b@exemplo.test'), true);
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
+insert into storage.objects (bucket_id, name) values
+  ('assinaturas', current_setting('teste.id_a') || '/00000000-0000-4000-8000-00000000000a.png');
+insert into acesso.assinaturas (caminho) values
+  (current_setting('teste.id_a') || '/00000000-0000-4000-8000-00000000000a.png');
+insert into resultado (teste, ok) select 'coordenador grava a própria assinatura (E14)',
+  (select usuario_id::text = current_setting('teste.id_a') from acesso.assinaturas);
+do $$
+begin
+  begin
+    insert into storage.objects (bucket_id, name) values
+      ('assinaturas', current_setting('teste.id_b') || '/00000000-0000-4000-8000-00000000000b.png');
+    insert into resultado (teste, ok) values ('não envia imagem à pasta de outro coordenador', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('não envia imagem à pasta de outro coordenador', true);
+  end;
+  begin
+    insert into acesso.assinaturas (caminho) values
+      (current_setting('teste.id_a') || '/00000000-0000-4000-8000-00000000000c.png');
+    insert into resultado (teste, ok) values ('assinatura só com a imagem no Storage', false);
+  exception when check_violation then
+    insert into resultado (teste, ok) values ('assinatura só com a imagem no Storage', true);
+  end;
+end;
+$$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
+insert into resultado (teste, ok) select 'coordenação geral lê a assinatura do coordenador',
+  (select count(*) from acesso.assinaturas
+    where usuario_id = current_setting('teste.id_a')::bigint) = 1
+  and (select count(*) from storage.objects
+        where bucket_id = 'assinaturas' and name like current_setting('teste.id_a') || '/%') = 1;
+reset role;
+
 -- Contas médicas: nesta etapa não lê assistido nem evolução (recebe só o arquivo do mês, E24).
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000004","role":"authenticated"}';
@@ -365,6 +406,9 @@ insert into resultado (teste, ok) select 'contas médicas não lê assistido nem
   (select count(*) from cadastro.assistidos) = 0
   and (select count(*) from evolucao.evolucoes) = 0
   and (select count(*) from evolucao.evolucoes_do_mes('2026-11-01')) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê assinatura solta',
+  (select count(*) from acesso.assinaturas) = 0
+  and (select count(*) from storage.objects where bucket_id = 'assinaturas') = 0;
 reset role;
 
 -- Inativo e conta sem cadastro: nada.
