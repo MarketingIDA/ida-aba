@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+
 import type { Coordenador, LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { BarraDoPrazo } from '@/features/evolucoes/components/BarraDoPrazo';
 import { FiltrosDaLista, type Recorte } from '@/features/evolucoes/components/FiltrosDaLista';
@@ -39,11 +41,14 @@ function recorteDaVisaoGeral(
   };
 }
 
-/** O prazo só aparece no mês aberto: nos anteriores o arquivo já foi. */
+/**
+ * O prazo só aparece no mês aberto: nos anteriores o arquivo já foi. Para o coordenador, a barra
+ * leva ao arquivo do mês, onde ele envia.
+ */
 function prazoDoMes(
   contagem: ReturnType<typeof contarPorSituacao>,
   mes: Props['mesAberto'],
-  props: Pick<Props, 'mesAberto' | 'hoje'>,
+  props: Pick<Props, 'mesAberto' | 'hoje' | 'visaoGeral'>,
 ) {
   if (mes !== props.mesAberto) return null;
   return (
@@ -51,6 +56,13 @@ function prazoDoMes(
       faltam={contagem.sem + contagem.em_conferencia}
       prazo={formatarData(prazoDoArquivo(mes), true)}
       dias={diasAtePrazo(props.hoje, mes)}
+      acao={
+        props.visaoGeral ? null : (
+          <Link to="/arquivo" className="ml-auto rounded-sm text-azul underline foco-anel">
+            Arquivo do mês
+          </Link>
+        )
+      }
     />
   );
 }
@@ -101,7 +113,7 @@ export function ConteudoDoMes({
           filtros.mudar(TIRAR_TUDO);
         }}
       />
-      {prazoDoMes(contagem, filtros.mes, mes)}
+      {prazoDoMes(contagem, filtros.mes, { ...mes, visaoGeral })}
     </>
   );
 }

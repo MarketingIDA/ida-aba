@@ -22,7 +22,7 @@ Proposta para depois da aprovação do protótipo. A stack é a da casa, a mesma
 |---|---|
 | `cadastro` | Unidades, planos de saúde, assistidos, coordenadores (CRP e assinatura), carteiras por unidade e turno e o **cadastro de metas** de cada assistido, com o histórico de cada meta (E23). A decidir se é compartilhado com o sistema de contas médicas (P11). |
 | `tita` | Cada importação: o PDF original (Storage privado), os Dados do Favorecido, o período do PDF e as análises lidas, com data, falta, situação diante do período analisado e datas citadas no texto (E19). Nada se apaga; uma nova importação substitui a anterior sem apagá-la. |
-| `evolucao` | Evolução por assistido e mês da evolução, com o período analisado calculado (E18) e a origem (PDF do Tita ou entrada manual, E26); os **outros documentos** da análise (E25); os **dias analisados** (E20); as 4 partes com as versões (IA ou coordenador, com a instrução usada), as datas e os documentos de origem de cada frase e meta, lacunas resolvidas, conferências com ciência, situação e devolução; o **arquivo do mês** de cada coordenador, que é o que vai para contas médicas e leva as evoluções (E24); o **nível de apoio** que a IA leu para cada programa em cada evolução diária, base da evolução das metas em gráfico (E27). |
+| `evolucao` | Evolução por assistido e mês da evolução, com o período analisado calculado (E18) e a origem (PDF do Tita ou entrada manual, E26); os **outros documentos** da análise (E25); os **dias analisados** (E20); as 4 partes com as versões (IA ou coordenador, com a instrução usada), as datas e os documentos de origem de cada frase e meta, lacunas resolvidas, conferências com ciência, situação e devolução; o **arquivo do mês** de cada carteira, que é o que vai para contas médicas e leva as evoluções (E24); o **nível de apoio** que a IA leu para cada programa em cada evolução diária, base da evolução das metas em gráfico (E27). |
 | `config` | Termos inadequados e substitutos (P12), limites (linhas mínimas, semelhança, frequência), a frase padrão das metas, o catálogo de programas, as **dicas para a IA** (`dica_ia`) e as **orientações da IA** aprovadas (`orientacao_ia`) (E21, E22). |
 | `acesso` | Usuários e papéis. O RLS limita o coordenador à carteira dele e contas médicas aos arquivos do mês enviados. |
 | `auditoria` | Trilha de quem fez o quê e quando (o "Histórico" do protótipo), inclusive cada download, envio e link copiado do relatório de metas (E28). |
@@ -38,26 +38,31 @@ Proposta para depois da aprovação do protótipo. A stack é a da casa, a mesma
 | `gerar-rascunho` | Chama a API da OpenAI só pelo servidor (P10), com as orientações da IA ativas no início do prompt (E22), o texto pseudonimizado só das análises do período e dos outros documentos aceitos (E25), a evolução anterior e as metas em desenvolvimento do cadastro (E23). Registra na versão quais orientações estavam ativas. Na mesma transação grava os dias analisados (E20). Pede saída estruturada (JSON validado por zod) com as 4 partes, as datas e os documentos de origem e as lacunas, e o nível de apoio de cada programa em cada evolução diária, com a frase de onde saiu (E27; o de mais apoio quando a frase cita mais de um, nulo quando não diz). Também gera uma parte de novo com instrução. |
 | `concluir-evolucao`, `reabrir-evolucao`, `devolver-evolucao` | As transições de E13, validadas no servidor: só conclui sem bloqueio; reabrir e devolver só enquanto o arquivo do mês não foi enviado. |
 | `aprimorar-texto` | Entrada manual (E26): recebe as seções escritas pelo coordenador, sem o nome (E05), com as orientações ativas (E22), e pede à IA o texto aprimorado por seção, sem fato novo (o prompt proíbe acrescentar o que não está no texto e a saída é conferida contra ele). Calcula as lacunas pelo cadastro de metas e grava as duas versões de cada parte (E07). Não grava dia analisado. |
-| `enviar-arquivo` | Envia o arquivo do mês (E24) numa transação só: confere que a carteira toda está concluída e que há assinatura (E14), grava o arquivo, marca as evoluções como enviadas, emite o Word e atualiza o cadastro de metas de cada assistido (E23). Não existe envio de uma evolução sozinha. |
+| (sem função) envio do arquivo | Feito sem Edge Function: enviar o arquivo do mês (E24) é gravar uma linha em `evolucao.arquivos` com a carteira. Os triggers, na mesma transação, conferem que a carteira toda está concluída e que há assinatura (E14), preenchem o mês aberto e quem assina e marcam as evoluções como enviadas. A atualização do cadastro de metas (E23) entra com o cadastro de metas. Não existe envio de uma evolução sozinha. |
 | `emitir-docx` | Gera o Word do modelo (Cambria 12, espaçamento 1,5), com o nome de volta e a assinatura: o arquivo do mês, que vai para contas médicas, e a evolução de um assistido, só para conferência. |
 | `emitir-relatorio-metas` | Gera o PDF da evolução das metas (E28) com os números do domínio puro, os mesmos da tela, e uma biblioteca de PDF que roda no Deno (pdf-lib, por exemplo), sem navegador. O texto é selecionável, o nome volta só no PDF e o arquivo leva o código do assistido. Confere o acesso (coordenador da carteira ou coordenação geral) e grava o registro em `auditoria.relatorio_metas`. O envio pelo aparelho usa a Web Share API no navegador, com o arquivo, e cai no download onde ela não envia arquivo; o registro do envio chega por uma chamada à mesma função. |
 
 **Tabelas novas do período, das dicas, das metas e do arquivo do mês** (esboço; os nomes "dica-ia" e "orientacao-ia" do pedido viram `dica_ia` e `orientacao_ia`, porque hífen não é nome válido sem aspas no Postgres):
 
 ```sql
--- E24: o que vai para contas médicas é o arquivo do mês do coordenador, não a evolução sozinha
-create table evolucao.arquivo_mes (
-  id              uuid primary key default gen_random_uuid(),
-  coordenador_id  uuid not null references cadastro.coordenador,
-  mes_ref         date not null check (extract(day from mes_ref) = 1),
-  enviado_por     uuid not null references acesso.usuario,
-  enviado_em      timestamptz not null default now(),
-  docx_path       text not null,                                             -- Storage privado
-  n_evolucoes     smallint not null check (n_evolucoes > 0),
-  unique (coordenador_id, mes_ref)                                           -- um arquivo por coordenador e mês
+-- E24: o que vai para contas médicas é o arquivo do mês da carteira, não a evolução sozinha.
+-- Feito na migração 20261113120000_arquivo_do_mes.sql; só existe linha do que foi enviado.
+create table evolucao.arquivos (
+  id                bigint generated always as identity primary key,
+  carteira_id       bigint not null references cadastro.carteiras,
+  mes_ref           date not null check (extract(day from mes_ref) = 1),
+  coordenador_id    bigint not null references acesso.usuarios,              -- quem assina
+  coordenador_nome  text not null,                                           -- o nome e o CRP da época
+  coordenador_crp   text,
+  assinatura_id     bigint not null references acesso.assinaturas,           -- a assinatura da época (E14)
+  n_evolucoes       smallint not null check (n_evolucoes > 0),
+  enviado_em        timestamptz not null default now(),
+  enviado_por       bigint not null references acesso.usuarios,
+  unique (carteira_id, mes_ref)                                              -- um arquivo por carteira e mês
 );
--- Enviar é a RPC evolucao.enviar_arquivo(coordenador_id, mes_ref): recusa se há assistido da carteira
--- sem evolução ou em conferência; grava o arquivo, liga as evoluções (arquivo_id) e as marca enviadas.
+-- Enviar é gravar a linha com a carteira: o trigger recusa se há assistido ativo da carteira sem
+-- evolução ou em conferência, ou se falta a assinatura; depois liga as evoluções (arquivo_id) e as
+-- marca enviadas. O Word é gerado na etapa seguinte.
 
 -- E01, E18: uma evolução por assistido e mês; o período analisado sai do mês e não se edita
 create table evolucao.evolucao (
@@ -68,7 +73,7 @@ create table evolucao.evolucao (
   periodo_fim   date generated always as (mes_ref - 1) stored,                           -- 2026-10-31
   origem        text not null default 'tita' check (origem in ('tita', 'manual')),  -- E26
   -- situação, conclusão, devolução...
-  arquivo_id    uuid references evolucao.arquivo_mes,                        -- preenchido no envio do arquivo (E24)
+  arquivo_id    bigint references evolucao.arquivos,                         -- preenchido no envio do arquivo (E24)
   unique (assistido_id, mes_ref),
   unique (id, assistido_id, mes_ref)                                           -- alvo da FK composta abaixo
 );
@@ -192,8 +197,8 @@ create table cadastro.meta_historico (
 );
 ```
 
-**RLS dessas tabelas:** o coordenador grava `dica_ia` só para evoluções da carteira dele e não lê as dicas dos outros; a coordenação geral lê e cura todas; `orientacao_ia` é lida pela coordenação geral e pela função `gerar-rascunho` (service role). `cadastro.meta` segue a carteira, como o assistido: o coordenador edita a dele, a coordenação geral lê todas. Contas médicas lê `arquivo_mes` e as evoluções com `arquivo_id` preenchido, e nada mais. `nivel_apoio` segue a evolução diária: o coordenador lê o da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E27). `auditoria.relatorio_metas` só recebe linha pela função `emitir-relatorio-metas`; o coordenador lê o registro da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E28).
+**RLS dessas tabelas:** o coordenador grava `dica_ia` só para evoluções da carteira dele e não lê as dicas dos outros; a coordenação geral lê e cura todas; `orientacao_ia` é lida pela coordenação geral e pela função `gerar-rascunho` (service role). `cadastro.meta` segue a carteira, como o assistido: o coordenador edita a dele, a coordenação geral lê todas. Contas médicas lê `evolucao.arquivos`, as evoluções com `arquivo_id` preenchido e os assistidos delas, e nada mais; o texto das partes chega com o Word. `nivel_apoio` segue a evolução diária: o coordenador lê o da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E27). `auditoria.relatorio_metas` só recebe linha pela função `emitir-relatorio-metas`; o coordenador lê o registro da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E28).
 
-**Testes de banco (pgTAP):** evolução de novembro calcula 01/10 a 31/10 e a de janeiro calcula o dezembro do ano anterior; `dia_analisado` aceita 01/10 e 31/10 e recusa 30/09 e 01/11 na evolução de novembro; o mesmo dia em duas evoluções falha pela PK; dia de outro assistido falha pela FK composta; `dica_ia` não aceita dica curta nem curadoria sem curador; uma orientação por dica; o coordenador não lê dica de outro coordenador; um programa ativo por vez no cadastro de metas; `enviar_arquivo` recusa carteira com evolução em conferência ou assistido sem evolução, e um segundo arquivo do mesmo coordenador e mês; contas médicas não lê evolução fora de arquivo enviado; documento de outro assistido não vai para `gerar-rascunho`; evolução manual não grava dia analisado; `nivel_apoio` recusa nível fora de 1 a 5 e o mesmo programa duas vezes na mesma evolução diária; contas médicas não lê `nivel_apoio`; `relatorio_metas` recusa ação fora da lista, o coordenador não lê o registro de outra carteira e contas médicas não lê o registro.
+**Testes de banco (pgTAP):** evolução de novembro calcula 01/10 a 31/10 e a de janeiro calcula o dezembro do ano anterior; `dia_analisado` aceita 01/10 e 31/10 e recusa 30/09 e 01/11 na evolução de novembro; o mesmo dia em duas evoluções falha pela PK; dia de outro assistido falha pela FK composta; `dica_ia` não aceita dica curta nem curadoria sem curador; uma orientação por dica; o coordenador não lê dica de outro coordenador; um programa ativo por vez no cadastro de metas; o envio do arquivo recusa carteira com evolução em conferência ou assistido sem evolução, e um segundo arquivo da mesma carteira e mês; contas médicas não lê evolução fora de arquivo enviado; documento de outro assistido não vai para `gerar-rascunho`; evolução manual não grava dia analisado; `nivel_apoio` recusa nível fora de 1 a 5 e o mesmo programa duas vezes na mesma evolução diária; contas médicas não lê `nivel_apoio`; `relatorio_metas` recusa ação fora da lista, o coordenador não lê o registro de outra carteira e contas médicas não lê o registro.
 
 **Rotas do front** seguem as telas do protótipo, listadas em [`../escopo/01-dominio.md`](../escopo/01-dominio.md#6-telas-do-protótipo).

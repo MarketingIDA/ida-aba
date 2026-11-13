@@ -2,8 +2,8 @@ import type { Page } from '@playwright/test';
 
 /**
  * Supabase fictício para o E2E: o build de teste aponta para `exemplo.supabase.co`, que não
- * existe. O Playwright responde no lugar dele o que as telas usam: Auth, `acesso.usuarios`, a RPC
- * das evoluções do mês e as unidades, os planos e as pessoas do cadastro. Nenhuma senha, nome ou dado real:
+ * existe. O Playwright responde no lugar dele o que as telas usam: Auth, `acesso.usuarios`, as RPCs
+ * das evoluções e dos arquivos do mês e as unidades, os planos e as pessoas do cadastro. Nenhuma senha, nome ou dado real:
  * tudo aqui é dos testes.
  */
 const BASE = 'https://exemplo.supabase.co';
@@ -228,6 +228,29 @@ async function simularSupabase(page: Page, papel: Papel): Promise<void> {
   await page.route(`${BASE}/rest/v1/rpc/evolucoes_do_mes`, (rota) =>
     rota.fulfill({
       json: papel === 'coordenacao_geral' ? [...CARTEIRA, ...OUTRA_UNIDADE] : CARTEIRA,
+    }),
+  );
+  // O arquivo do mês da carteira fictícia ainda não foi: faltam 3 das 5 evoluções.
+  await page.route(`${BASE}/rest/v1/rpc/arquivos_do_mes`, (rota) =>
+    rota.fulfill({
+      json: [
+        {
+          carteira_id: 1,
+          unidade_sigla: 'UNA',
+          unidade_nome: 'Unidade Fictícia',
+          turno: 'manha',
+          coordenador: papel === 'contas_medicas' ? null : USUARIOS.coordenador.nome,
+          minha: papel === 'coordenador',
+          assistidos: 5,
+          sem_evolucao: 2,
+          em_conferencia: 1,
+          concluidas: 2,
+          com_assinatura: papel === 'contas_medicas' ? null : false,
+          arquivo_id: null,
+          enviado_em: null,
+          n_evolucoes: null,
+        },
+      ],
     }),
   );
 }

@@ -1,12 +1,7 @@
 import { lazy, type ReactNode, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 
-import {
-  ArquivosRecebidosEmBreve,
-  ExigePapel,
-  InicioDoPapel,
-  PaginaNaoEncontrada,
-} from '@/app/TelasProvisorias';
+import { ExigePapel, InicioDoPapel, PaginaNaoEncontrada } from '@/app/TelasProvisorias';
 import { LimiteDaRota } from '@/components/ErrorBoundary';
 import { ExigeUsuario } from '@/features/auth';
 import { LoginPage } from '@/features/auth/routes/LoginPage';
@@ -38,6 +33,12 @@ const CadastrosPage = lazy(() =>
 const AssinaturaPage = lazy(() =>
   import('@/features/assinatura').then((m) => ({ default: m.AssinaturaPage })),
 );
+const ArquivoDoMesPage = lazy(() =>
+  import('@/features/arquivo-do-mes').then((m) => ({ default: m.ArquivoDoMesPage })),
+);
+const ArquivosPage = lazy(() =>
+  import('@/features/arquivo-do-mes').then((m) => ({ default: m.ArquivosPage })),
+);
 
 /** Telas sem login: entrar, criar a senha pelo link do e-mail e pedir um link novo. */
 const PUBLICAS = [
@@ -65,6 +66,14 @@ const TELAS = [
     ),
   },
   {
+    rota: '/arquivo',
+    tela: (
+      <ExigePapel papeis={['coordenador']}>
+        <ArquivoDoMesPage />
+      </ExigePapel>
+    ),
+  },
+  {
     rota: '/assinatura',
     tela: (
       <ExigePapel papeis={['coordenador']}>
@@ -84,8 +93,8 @@ const TELAS = [
   {
     rota: '/arquivos',
     tela: (
-      <ExigePapel papeis={['contas_medicas']}>
-        <ArquivosRecebidosEmBreve />
+      <ExigePapel papeis={['contas_medicas', 'coordenacao_geral']}>
+        <ArquivosPage />
       </ExigePapel>
     ),
   },

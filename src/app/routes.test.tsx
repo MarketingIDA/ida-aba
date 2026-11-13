@@ -16,6 +16,7 @@ describe('Rotas e AppLayout', () => {
     await Promise.all([
       import('@/app/layouts/AppLayout'),
       import('@/features/evolucoes'),
+      import('@/features/arquivo-do-mes'),
       import('@/features/auth/routes/PrimeiroAcessoPage'),
     ]);
   });
@@ -58,7 +59,7 @@ describe('Rotas e AppLayout', () => {
   it('contas médicas cai nos arquivos recebidos e não abre as evoluções', async () => {
     como('contas_medicas');
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Arquivos recebidos' }),
+      await screen.findByRole('heading', { level: 1, name: 'Arquivos recebidos nov/2026' }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Evoluções' })).not.toBeInTheDocument();
   });

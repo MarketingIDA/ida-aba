@@ -1,23 +1,3 @@
-import { FUSO_DA_CLINICA } from '@dominio/mes.ts';
-
-const DATA_HORA = new Intl.DateTimeFormat('pt-BR', {
-  timeZone: FUSO_DA_CLINICA,
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-
-/** "11/11/2026 às 14:32", no horário da clínica. */
-export function dataEHora(instante: string): string {
-  const partes = new Map(
-    DATA_HORA.formatToParts(new Date(instante)).map((p) => [p.type, p.value] as const),
-  );
-  const de = (tipo: Intl.DateTimeFormatPartTypes) => partes.get(tipo) ?? '';
-  return `${de('day')}/${de('month')}/${de('year')} às ${de('hour')}:${de('minute')}`;
-}
-
 interface Props {
   endereco: string;
   nome: string;

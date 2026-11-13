@@ -123,6 +123,9 @@ const MENSAGENS: MensagensDoBanco = {
     texto_curto: 'O texto da evolução precisa de 7 linhas ou mais.',
     poucas_metas_do_mes: 'São precisas 4 metas ou mais para o mês atual.',
     situacao_invalida: 'A evolução não pode mudar para esta situação.',
+    evolucao_enviada: 'A evolução já foi a contas médicas no arquivo do mês e não muda mais.',
+    arquivo_ja_enviado:
+      'O arquivo deste mês já foi a contas médicas. A carteira não abre outra evolução neste mês.',
   },
 };
 

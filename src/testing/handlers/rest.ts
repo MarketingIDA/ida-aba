@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { env } from '@/config/env';
+import { carteiraDaRpc, carteiraDoMes } from '@/testing/factories/arquivos';
 import {
   assistidosDemo,
   carteirasDemo,
@@ -65,5 +66,12 @@ export const handlersDeRest = [
     if (request.headers.get('content-profile') !== 'evolucao') return schemaErrado();
     const corpo = (await request.json()) as { p_mes?: string };
     return HttpResponse.json(corpo.p_mes === MES_DEMO ? carteiraDemo().map(linhaDaRpc) : []);
+  }),
+
+  // A carteira demo no mês dos testes, pronta para enviar o arquivo.
+  http.post(`${env.SUPABASE_URL}/rest/v1/rpc/arquivos_do_mes`, async ({ request }) => {
+    if (request.headers.get('content-profile') !== 'evolucao') return schemaErrado();
+    const corpo = (await request.json()) as { p_mes?: string };
+    return HttpResponse.json(corpo.p_mes === MES_DEMO ? [carteiraDaRpc(carteiraDoMes())] : []);
   }),
 ];
