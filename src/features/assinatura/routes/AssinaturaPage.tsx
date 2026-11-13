@@ -6,11 +6,12 @@ import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import { Button } from '@/components/ui/button';
 import type { DadosDaAssinatura } from '@/features/assinatura/api/assinatura.api';
 import { EscolhaDaImagem } from '@/features/assinatura/components/EscolhaDaImagem';
-import { dataEHora, PreviaDaAssinatura } from '@/features/assinatura/components/PreviaDaAssinatura';
+import { PreviaDaAssinatura } from '@/features/assinatura/components/PreviaDaAssinatura';
 import { assinaturaOptions } from '@/features/assinatura/queries';
 import { useTrocaDaAssinatura } from '@/features/assinatura/routes/useTrocaDaAssinatura';
 import { type Usuario, useUsuario } from '@/hooks/useUsuario';
 import { ehErroApp } from '@/lib/erroApp';
+import { dataEHora } from '@/utils/textos';
 
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise a coordenação geral.';

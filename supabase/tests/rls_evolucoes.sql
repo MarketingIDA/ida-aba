@@ -226,6 +226,14 @@ begin
     (select jsonb_array_length(c -> 'versoes') = 3 and jsonb_array_length(c -> 'partes') = 4
             and (c ->> 'editavel')::boolean
        from evolucao.evolucao_completa(nova) c);
+  begin
+    insert into evolucao.arquivos (carteira_id) select interno.carteiras_do_usuario();
+    insert into resultado (teste, ok) values ('arquivo do mês não vai sem assinatura (E14)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('arquivo do mês não vai sem assinatura (E14)', dica = 'arquivo_sem_assinatura');
+  end;
 end;
 $$;
 reset role;
@@ -399,16 +407,109 @@ insert into resultado (teste, ok) select 'coordenação geral lê a assinatura d
         where bucket_id = 'assinaturas' and name like current_setting('teste.id_a') || '/%') = 1;
 reset role;
 
--- Contas médicas: nesta etapa não lê assistido nem evolução (recebe só o arquivo do mês, E24).
+-- Contas médicas: antes do envio do arquivo do mês, não lê assistido nem evolução dos testes (E24).
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000004","role":"authenticated"}';
-insert into resultado (teste, ok) select 'contas médicas não lê assistido nem evolução',
-  (select count(*) from cadastro.assistidos) = 0
-  and (select count(*) from evolucao.evolucoes) = 0
-  and (select count(*) from evolucao.evolucoes_do_mes('2026-11-01')) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê assistido nem evolução fora de arquivo',
+  (select count(*) from cadastro.assistidos where nome like '%Teste') = 0
+  and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 0
+  and (select count(*) from evolucao.evolucoes_do_mes('2026-11-01') where unidade_sigla = 'TST') = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê assinatura solta',
   (select count(*) from acesso.assinaturas) = 0
   and (select count(*) from storage.objects where bucket_id = 'assinaturas') = 0;
+reset role;
+
+-- Arquivo do mês (E24): vai com a carteira toda concluída, e o que foi fica só para leitura.
+select set_config('teste.carteira_a',
+  (select c.id::text from cadastro.carteiras c join cadastro.unidades u on u.id = c.unidade_id
+    where u.sigla = 'TST' and c.turno = 'tarde'), true);
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
+do $$
+declare
+  dica text;
+begin
+  insert into evolucao.arquivos (carteira_id) values (current_setting('teste.carteira_a')::bigint);
+  insert into resultado (teste, ok) values ('arquivo do mês não vai com evolução pendente (E24)', false);
+exception when check_violation then
+  get stacked diagnostics dica = pg_exception_hint;
+  insert into resultado (teste, ok)
+    values ('arquivo do mês não vai com evolução pendente (E24)', dica = 'arquivo_com_pendencia');
+end;
+$$;
+reset role;
+-- Quem não teve sessão no mês sai pelo cadastro (P19): o arquivo leva só os ativos.
+update cadastro.assistidos set ativo = false
+ where nome in ('Assistida Um Teste', 'Assistido Tres Teste');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
+insert into evolucao.arquivos (carteira_id) values (current_setting('teste.carteira_a')::bigint);
+insert into resultado (teste, ok) select 'coordenador envia o arquivo do mês, com quem assina e a assinatura (E24)',
+  (select ar.n_evolucoes = 1 and ar.coordenador_nome = 'Coordenadora A'
+          and ar.coordenador_crp = '02/00001' and ar.assinatura_id is not null
+          and ar.mes_ref = date_trunc('month', now() at time zone 'America/Recife')::date
+     from evolucao.arquivos ar where ar.carteira_id = current_setting('teste.carteira_a')::bigint);
+insert into resultado (teste, ok) select 'as evoluções do arquivo ficam enviadas na mesma data e hora',
+  (select count(*) = 1 and bool_and(e.situacao = 'enviada' and e.enviada_em = ar.enviado_em)
+     from evolucao.evolucoes e join evolucao.arquivos ar on ar.id = e.arquivo_id
+    where ar.carteira_id = current_setting('teste.carteira_a')::bigint);
+reset role;
+insert into cadastro.assistidos (nome, genero, unidade_id, carteira_id)
+  select 'Assistida Quatro Teste', 'feminino', c.unidade_id, c.id
+    from cadastro.carteiras c where c.id = current_setting('teste.carteira_a')::bigint;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
+do $$
+declare
+  dica text;
+begin
+  begin
+    insert into evolucao.arquivos (carteira_id) values (current_setting('teste.carteira_a')::bigint);
+    insert into resultado (teste, ok) values ('um arquivo por carteira e mês', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok) values ('um arquivo por carteira e mês', dica = 'arquivo_ja_enviado');
+  end;
+  begin
+    update evolucao.evolucoes set situacao = 'em_conferencia' where arquivo_id is not null;
+    insert into resultado (teste, ok) values ('evolução enviada não reabre (E13)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok) values ('evolução enviada não reabre (E13)', dica = 'evolucao_enviada');
+  end;
+  begin
+    insert into evolucao.evolucoes (assistido_id)
+      select id from cadastro.assistidos where nome = 'Assistida Quatro Teste';
+    insert into resultado (teste, ok) values ('carteira com o arquivo enviado não abre evolução no mês', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('carteira com o arquivo enviado não abre evolução no mês', dica = 'arquivo_ja_enviado');
+  end;
+end;
+$$;
+reset role;
+
+-- Contas médicas, depois do envio: o arquivo, as evoluções dele e os assistidos delas. Nada mais.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000004","role":"authenticated"}';
+insert into resultado (teste, ok) select 'contas médicas lê o arquivo enviado, a evolução dele e o assistido dela',
+  (select count(*) from evolucao.arquivos
+    where carteira_id = current_setting('teste.carteira_a')::bigint) = 1
+  and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1
+  and not exists (select 1 from evolucao.evolucoes where arquivo_id is null)
+  and (select count(*) from cadastro.assistidos where nome like '%Teste') = 1;
+insert into resultado (teste, ok) select 'contas médicas não lê o texto nem os rascunhos da evolução',
+  (select count(*) from evolucao.versoes) = 0 and (select count(*) from evolucao.partes) = 0;
+insert into resultado (teste, ok) select 'lista dos arquivos do mês: o recebido, com quem enviou e as evoluções',
+  (select count(*) = 1
+          and bool_and(arquivo_id is not null and coordenador = 'Coordenadora A' and n_evolucoes = 1)
+     from evolucao.arquivos_do_mes(date_trunc('month', now() at time zone 'America/Recife')::date)
+    where unidade_sigla = 'TST')
+  and (select count(*) = 1 and bool_and(assistido = 'Assistido Dois Teste' and plano is not null)
+         from evolucao.evolucoes_do_arquivo((
+           select id from evolucao.arquivos
+            where carteira_id = current_setting('teste.carteira_a')::bigint)));
 reset role;
 
 -- Inativo e conta sem cadastro: nada.
@@ -441,7 +542,8 @@ insert into resultado (teste, ok) select 'funções de interno: anon nenhuma, au
             or (has_function_privilege('authenticated', p.oid, 'execute')
                 and p.proname not in ('usuario_atual_id', 'usuario_ativo', 'eh_coordenacao_geral',
                                       'carteiras_do_usuario', 'assistidos_do_usuario',
-                                      'cnpj_valido', 'evolucoes_do_usuario'))));
+                                      'cnpj_valido', 'evolucoes_do_usuario',
+                                      'eh_contas_medicas', 'andamento_da_carteira'))));
 insert into resultado (teste, ok) select 'authenticated sem DELETE em nenhuma tabela',
   not exists (
     select 1 from information_schema.role_table_grants

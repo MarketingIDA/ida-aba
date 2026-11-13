@@ -91,15 +91,5 @@ export function carteiraUnica(
   return mesma ? { unidadeNome: primeira.unidadeNome, turno: primeira.turno } : null;
 }
 
-/** "faltam 6 dias", "falta 1 dia", "o prazo é hoje", "o prazo passou há 2 dias". */
-export function textoDoPrazo(dias: number): string {
-  if (dias > 1) return `faltam ${String(dias)} dias`;
-  if (dias === 1) return 'falta 1 dia';
-  if (dias === 0) return 'o prazo é hoje';
-  return dias === -1 ? 'o prazo passou há 1 dia' : `o prazo passou há ${String(-dias)} dias`;
-}
-
-/** "1 evolução", "3 evoluções". */
-export function plural(n: number, singular: string, varias: string): string {
-  return `${String(n)} ${n === 1 ? singular : varias}`;
-}
+// O prazo e o plural também servem ao arquivo do mês: moram no código compartilhado.
+export { plural, textoDoPrazo } from '@/utils/textos';

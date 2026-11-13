@@ -2,7 +2,7 @@
 
 Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada coordenador de unidade faz a evolução de cada assistido da sua carteira e, até o dia 10, envia a contas médicas o **arquivo do mês**, com as evoluções da carteira toda. A evolução nasce das evoluções diárias registradas no Tita: o coordenador importa o PDF do assistido e, se quiser, outros documentos (escola, outras terapias, família); uma IA escreve o rascunho no formato do modelo da clínica e o coordenador confere parte por parte e conclui. Sem o PDF, ele escreve o mês à mão e a IA aprimora o texto. Cada assistido tem ainda a evolução das metas em gráfico, a partir do nível de apoio que a IA lê nas análises.
 
-**Fase atual: arquivo do mês (fatia 2).** No ar: o login dos três perfis, os cadastros, a tela Evoluções do mês e a evolução escrita à mão, com a conferência das 4 partes (fatia 1). A fatia 2 leva o arquivo do mês a contas médicas em três partes: a assinatura do coordenador, o envio e o Word. A importação do Tita e o rascunho com a IA vêm depois; o [protótipo](#protótipo) continua como referência de telas e regras. A evolução de supervisão é outro relatório e fica para uma fase posterior.
+**Fase atual: arquivo do mês (fatia 2).** No ar: o login dos três perfis, os cadastros, a tela Evoluções do mês e a evolução escrita à mão, com a conferência das 4 partes (fatia 1). A fatia 2 leva o arquivo do mês a contas médicas em três partes: a assinatura do coordenador e o envio, já feitos, e o Word, que vem a seguir. A importação do Tita e o rascunho com a IA vêm depois; o [protótipo](#protótipo) continua como referência de telas e regras. A evolução de supervisão é outro relatório e fica para uma fase posterior.
 
 ## O que já funciona
 
@@ -13,8 +13,9 @@ Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada 
 - **Cadastros (coordenação geral):** unidades, planos de saúde, pessoas, carteiras e assistidos, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. A unidade tem CNPJ, obrigatório (numérico ou alfanumérico, com os dígitos conferidos), e endereço, opcional. A carteira junta uma unidade, um turno e quem coordena; só pode haver uma carteira ativa por unidade e turno, e passar a carteira para outra pessoa muda quem vê os assistidos e as evoluções dela. O assistido fica numa carteira ativa e leva a unidade dela; o número dele na unidade, que entra no código da evolução, o banco dá sozinho. A lista de assistidos tem busca pelo nome (sem ligar para acento) e filtro por carteira, e avisa quem está sem plano.
   - Cada pessoa tem um papel (coordenação de unidade, coordenação geral ou contas médicas) e, se coordena unidade, o CRP. Quem ainda não entrou aparece como "Sem conta".
   - Desativar corta o acesso na hora. O e-mail trava depois que a pessoa tem conta, e ninguém muda o próprio papel nem se desativa.
-- **Contas médicas:** a tela de arquivos recebidos existe, mas fica vazia até a etapa do envio do arquivo do mês.
-- **Banco:** RLS em todas as tabelas. O coordenador lê só a própria carteira; a coordenação geral lê tudo e é a única que cadastra; contas médicas não lê evolução solta. O banco nunca fica sem coordenação geral ativa, não deixa mudar o papel de quem tem carteira ativa nem desativar carteira com assistidos ativos, não põe assistido ativo em carteira desativada e não grava unidade sem CNPJ válido. Toda alteração fica na auditoria.
+- **Arquivo do mês (coordenador):** cada carteira (unidade e turno) envia um arquivo por mês a contas médicas. A tela mostra o que falta: evoluções sem concluir e a assinatura. Com a carteira toda concluída, o coordenador confirma e envia. O envio não tem volta: as evoluções ficam enviadas na mesma data e hora, só para leitura, e a carteira não abre outra evolução naquele mês. Só o mês aberto pode ser enviado.
+- **Arquivos recebidos (contas médicas) e arquivos enviados (coordenação geral):** as carteiras do mês, com cards que filtram entre as que já enviaram e as que faltam. Cada arquivo recebido abre a lista das evoluções, com o nome, o código e o plano. O Word chega na próxima parte.
+- **Banco:** RLS em todas as tabelas. O coordenador lê só a própria carteira; a coordenação geral lê tudo e é a única que cadastra; contas médicas lê só os arquivos enviados, as evoluções que estão neles e os assistidos delas, sem o texto das partes. O banco nunca fica sem coordenação geral ativa, não deixa mudar o papel de quem tem carteira ativa nem desativar carteira com assistidos ativos, não põe assistido ativo em carteira desativada e não grava unidade sem CNPJ válido. Toda alteração fica na auditoria.
 
 ## Rodar localmente
 
@@ -62,9 +63,9 @@ A service role e a senha do banco não entram no repositório, no `.env.local` n
 
 ## Banco (Supabase)
 
-- **Schemas:** `acesso` (usuários, papéis e assinaturas), `cadastro` (unidades, planos, carteiras e assistidos), `evolucao` (evoluções e as 4 partes), `auditoria` (histórico de alterações) e `interno` (funções auxiliares, fora da API).
+- **Schemas:** `acesso` (usuários, papéis e assinaturas), `cadastro` (unidades, planos, carteiras e assistidos), `evolucao` (evoluções, as 4 partes e os arquivos do mês), `auditoria` (histórico de alterações) e `interno` (funções auxiliares, fora da API).
 - **Migrações** em `supabase/migrations/`, aplicadas em ordem. Elas só acrescentam: nenhuma apaga coluna ou tabela com dado.
-- **Testes do RLS:** `supabase/tests/rls_evolucoes.sql` faz 57 verificações de acesso e de regra, inclusive as do Storage da assinatura. Ele roda numa transação que sempre se desfaz, então pode rodar no SQL Editor de produção sem gravar nada. A saída esperada é `RESULTADO: 0 falhas de 57`.
+- **Testes do RLS:** `supabase/tests/rls_evolucoes.sql` faz 67 verificações de acesso e de regra, inclusive as do Storage da assinatura e as do envio do arquivo do mês. Ele roda numa transação que sempre se desfaz, então pode rodar no SQL Editor de produção sem gravar nada. A saída esperada é `RESULTADO: 0 falhas de 67`.
 
 ## Configuração do Supabase (uma vez, no painel)
 

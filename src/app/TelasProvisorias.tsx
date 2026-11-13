@@ -1,4 +1,4 @@
-import { Inbox, SearchX, ShieldX } from 'lucide-react';
+import { SearchX, ShieldX } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, Navigate } from 'react-router';
 
@@ -38,23 +38,6 @@ export function ExigePapel({
         titulo="Você não tem acesso a esta parte do sistema"
         descricao="Use o menu para chegar às telas do seu perfil. Se precisar deste acesso, fale com a coordenação geral."
         acao={voltarAoInicio}
-      />
-    </section>
-  );
-}
-
-/** Contas médicas recebe o arquivo do mês; o envio entra na etapa do arquivo do mês. */
-export function ArquivosRecebidosEmBreve() {
-  return (
-    <section className="flex flex-col gap-6">
-      <div>
-        <p className="mb-1.5 rotulo text-azul">Contas médicas</p>
-        <h1>Arquivos recebidos</h1>
-      </div>
-      <EmptyState
-        icone={Inbox}
-        titulo="O envio do arquivo do mês ainda não está no sistema"
-        descricao="Quando a coordenação de cada unidade enviar o arquivo do mês pelo sistema, ele aparece aqui com as evoluções do período. Esta parte chega na próxima etapa."
       />
     </section>
   );

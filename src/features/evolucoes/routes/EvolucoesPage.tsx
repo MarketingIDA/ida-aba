@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { Users } from 'lucide-react';
+import { FileText, Users } from 'lucide-react';
 
+import { CabecalhoDoMes } from '@/components/CabecalhoDoMes';
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
-import { CabecalhoDoMes } from '@/features/evolucoes/components/CabecalhoDoMes';
 import { NovaEvolucao } from '@/features/evolucoes/components/NovaEvolucao';
 import { coordenadoresOptions, evolucoesDoMesOptions } from '@/features/evolucoes/queries';
 import { ConteudoDoMes } from '@/features/evolucoes/routes/ConteudoDoMes';
@@ -59,6 +59,9 @@ export function EvolucoesPage() {
   return (
     <section className="flex flex-col gap-5">
       <CabecalhoDoMes
+        icone={FileText}
+        sobretitulo="Evoluções mensais"
+        titulo="Evoluções"
         mes={filtros.mes}
         mesAberto={mesAberto}
         meses={mesesRecentes(mesAberto, MESES_NA_ESCOLHA)}

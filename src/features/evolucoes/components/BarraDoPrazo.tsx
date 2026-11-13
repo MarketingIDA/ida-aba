@@ -1,4 +1,5 @@
 import { CircleCheck, Clock } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { plural, textoDoPrazo } from '@/features/evolucoes/logica';
 import { cn } from '@/lib/utils';
@@ -8,10 +9,12 @@ interface Props {
   faltam: number;
   prazo: string;
   dias: number;
+  /** No fim da barra: para o coordenador, o caminho até o arquivo do mês. */
+  acao?: ReactNode;
 }
 
 /** Rodapé do mês aberto (fixo do tablet para cima; no celular, depois da lista): quantas evoluções faltam e quanto tempo resta até o prazo (E15). */
-export function BarraDoPrazo({ faltam, prazo, dias }: Readonly<Props>) {
+export function BarraDoPrazo({ faltam, prazo, dias, acao }: Readonly<Props>) {
   const pronto = faltam === 0;
   const atrasado = !pronto && dias < 0;
   const Icone = pronto ? CircleCheck : Clock;
@@ -36,6 +39,7 @@ export function BarraDoPrazo({ faltam, prazo, dias }: Readonly<Props>) {
           : `Faltam ${plural(faltam, 'evolução', 'evoluções')} para o arquivo do mês`}
         {` · prazo ${prazo}, ${textoDoPrazo(dias)}`}
       </span>
+      {acao}
     </p>
   );
 }
