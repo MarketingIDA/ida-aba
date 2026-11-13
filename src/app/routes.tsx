@@ -35,6 +35,9 @@ const EvolucaoPage = lazy(() =>
 const CadastrosPage = lazy(() =>
   import('@/features/cadastros').then((m) => ({ default: m.CadastrosPage })),
 );
+const AssinaturaPage = lazy(() =>
+  import('@/features/assinatura').then((m) => ({ default: m.AssinaturaPage })),
+);
 
 /** Telas sem login: entrar, criar a senha pelo link do e-mail e pedir um link novo. */
 const PUBLICAS = [
@@ -58,6 +61,14 @@ const TELAS = [
     tela: (
       <ExigePapel papeis={['coordenador', 'coordenacao_geral']}>
         <EvolucaoPage />
+      </ExigePapel>
+    ),
+  },
+  {
+    rota: '/assinatura',
+    tela: (
+      <ExigePapel papeis={['coordenador']}>
+        <AssinaturaPage />
       </ExigePapel>
     ),
   },

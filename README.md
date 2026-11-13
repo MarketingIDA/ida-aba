@@ -2,12 +2,14 @@
 
 Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada coordenador de unidade faz a evolução de cada assistido da sua carteira e, até o dia 10, envia a contas médicas o **arquivo do mês**, com as evoluções da carteira toda. A evolução nasce das evoluções diárias registradas no Tita: o coordenador importa o PDF do assistido e, se quiser, outros documentos (escola, outras terapias, família); uma IA escreve o rascunho no formato do modelo da clínica e o coordenador confere parte por parte e conclui. Sem o PDF, ele escreve o mês à mão e a IA aprimora o texto. Cada assistido tem ainda a evolução das metas em gráfico, a partir do nível de apoio que a IA lê nas análises.
 
-**Fase atual: fundação do sistema.** O sistema roda na stack da casa com o login dos três perfis e a tela Evoluções do mês lendo o banco de produção. A importação do Tita, o rascunho com a IA, a conferência e o arquivo do mês chegam nas próximas etapas; o [protótipo](#protótipo) continua como referência de telas e regras. A evolução de supervisão é outro relatório e fica para uma fase posterior.
+**Fase atual: arquivo do mês (fatia 2).** No ar: o login dos três perfis, os cadastros, a tela Evoluções do mês e a evolução escrita à mão, com a conferência das 4 partes (fatia 1). A fatia 2 leva o arquivo do mês a contas médicas em três partes: a assinatura do coordenador, o envio e o Word. A importação do Tita e o rascunho com a IA vêm depois; o [protótipo](#protótipo) continua como referência de telas e regras. A evolução de supervisão é outro relatório e fica para uma fase posterior.
 
 ## O que já funciona
 
 - **Acesso:** login por e-mail e senha, primeiro acesso (a pessoa cria a senha pelo link do convite) e recuperação de senha. O papel vem do cadastro em `acesso.usuarios`, nunca do token, e conta sem cadastro ativo não entra.
 - **Coordenação de unidade e coordenação geral:** Evoluções do mês, com cards por situação que filtram a lista, busca por nome ou código, escolha do mês (o aberto e os 5 anteriores), período analisado e prazo do arquivo do mês. A coordenação geral vê todas as unidades e recorta por unidade e coordenador.
+- **Evolução escrita à mão (coordenador):** "Nova evolução mensal" cria a evolução de um assistido da carteira no mês aberto. O coordenador escreve o texto e as metas, confere as 4 partes e conclui ou reabre. Cada gravação de uma parte vira uma versão nova. A coordenação geral lê a evolução.
+- **Assinatura (coordenador):** a imagem da assinatura ou do carimbo, por arquivo ou foto, que vai no fim do arquivo do mês, acima do nome e do CRP. A imagem fica no bucket privado `assinaturas` do Storage. Trocar não apaga a anterior: o arquivo já enviado fica com a assinatura da época.
 - **Cadastros (coordenação geral):** unidades, planos de saúde, pessoas, carteiras e assistidos, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. A unidade tem CNPJ, obrigatório (numérico ou alfanumérico, com os dígitos conferidos), e endereço, opcional. A carteira junta uma unidade, um turno e quem coordena; só pode haver uma carteira ativa por unidade e turno, e passar a carteira para outra pessoa muda quem vê os assistidos e as evoluções dela. O assistido fica numa carteira ativa e leva a unidade dela; o número dele na unidade, que entra no código da evolução, o banco dá sozinho. A lista de assistidos tem busca pelo nome (sem ligar para acento) e filtro por carteira, e avisa quem está sem plano.
   - Cada pessoa tem um papel (coordenação de unidade, coordenação geral ou contas médicas) e, se coordena unidade, o CRP. Quem ainda não entrou aparece como "Sem conta".
   - Desativar corta o acesso na hora. O e-mail trava depois que a pessoa tem conta, e ninguém muda o próprio papel nem se desativa.
@@ -60,9 +62,9 @@ A service role e a senha do banco não entram no repositório, no `.env.local` n
 
 ## Banco (Supabase)
 
-- **Schemas:** `acesso` (usuários e papéis), `cadastro` (unidades, planos, carteiras e assistidos), `evolucao` (evoluções e as 4 partes), `auditoria` (histórico de alterações) e `interno` (funções auxiliares, fora da API).
+- **Schemas:** `acesso` (usuários, papéis e assinaturas), `cadastro` (unidades, planos, carteiras e assistidos), `evolucao` (evoluções e as 4 partes), `auditoria` (histórico de alterações) e `interno` (funções auxiliares, fora da API).
 - **Migrações** em `supabase/migrations/`, aplicadas em ordem. Elas só acrescentam: nenhuma apaga coluna ou tabela com dado.
-- **Testes do RLS:** `supabase/tests/rls_evolucoes.sql` faz 52 verificações de acesso e de regra. Ele roda numa transação que sempre se desfaz, então pode rodar no SQL Editor de produção sem gravar nada. A saída esperada é `RESULTADO: 0 falhas de 52`.
+- **Testes do RLS:** `supabase/tests/rls_evolucoes.sql` faz 57 verificações de acesso e de regra, inclusive as do Storage da assinatura. Ele roda numa transação que sempre se desfaz, então pode rodar no SQL Editor de produção sem gravar nada. A saída esperada é `RESULTADO: 0 falhas de 57`.
 
 ## Configuração do Supabase (uma vez, no painel)
 
