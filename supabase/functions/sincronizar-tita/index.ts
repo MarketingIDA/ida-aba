@@ -64,7 +64,11 @@ async function conferirQuemPede(pedido: Request, servico: SupabaseClient): Promi
     const conferido = await servico
       .schema('cadastro')
       .rpc('conferir_agendamento_da_tita', { p_token: token });
-    if (conferido.error !== null || conferido.data !== true) {
+    if (conferido.error !== null) {
+      console.error('sincronizar-tita: conferir agendamento', conferido.error.code);
+      throw new Recusa(500, 'indisponivel', 'Não foi possível conferir o agendamento.');
+    }
+    if (conferido.data !== true) {
       throw new Recusa(401, 'sem_permissao', 'Agendamento não reconhecido.');
     }
     return { origem: 'agendada', pedidaPor: null };
