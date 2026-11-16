@@ -20,13 +20,15 @@ import { GavetaDoCadastro } from '@/features/cadastros/components/GavetaDoCadast
 import { ListaDoCadastro } from '@/features/cadastros/components/ListaDoCadastro';
 import { SecaoDoCadastro } from '@/features/cadastros/components/SecaoDoCadastro';
 import { useSalvarAssistido } from '@/features/cadastros/queries';
+import { SincronizacaoDaTita } from '@/features/cadastros/routes/SincronizacaoDaTita';
 import { type DadosDosAssistidos, useAssistidos } from '@/features/cadastros/routes/useAssistidos';
 import { useGaveta } from '@/features/cadastros/routes/useGaveta';
 
 const VAZIO = {
   icone: UserRound,
   titulo: 'Nenhum assistido cadastrado',
-  descricao: 'Cadastre quem é atendido, cada um na carteira da sua unidade e turno.',
+  descricao:
+    'Sincronize com a Tita ou cadastre à mão quem é atendido, cada um na carteira da sua unidade e turno.',
 };
 
 const SEM_CARTEIRA = [
@@ -148,12 +150,13 @@ export function AssistidosSecao() {
   return (
     <SecaoDoCadastro
       titulo="Assistidos"
-      descricao="Quem é atendido, em qual carteira e com qual plano. O número na unidade, que entra no código da evolução, o sistema dá sozinho."
+      descricao="Quem é atendido, em qual carteira e com qual plano. Quem vem da Tita entra como rascunho, até ganhar a carteira. O número na unidade, que entra no código da evolução, o sistema dá sozinho."
       botao="Novo assistido"
       aoCriar={gaveta.abrirNovo}
       aviso={aviso}
       consulta={consulta}
       vazio={VAZIO}
+      topo={<SincronizacaoDaTita />}
       lista={<ListaDosAssistidos dados={dados} aoEditar={gaveta.abrirEdicao} />}
       gaveta={<GavetaDoAssistido gaveta={gaveta} dados={dados} aoSalvar={aoSalvar} />}
     />

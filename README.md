@@ -12,6 +12,7 @@ Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada 
 - **PDF do Tita (coordenador):** na evolução em conferência, o coordenador importa o Relatório de Evoluções Diárias do assistido. O PDF é lido no navegador, com a biblioteca `pdfjs-dist`, e não é guardado: vão ao banco só os Dados do Favorecido e, de cada evolução diária, a data, a análise do atendimento e se foi falta. A tela mostra o que foi lido, bloqueia o PDF de outro assistido, de outro período, de outra terapia ou com filtro de profissional, e alerta as datas fora do período. Depois de importar, as análises ficam na evolução para consulta enquanto o coordenador escreve.
 - **Rascunho pela IA (coordenador):** com o PDF do Tita importado, "Gerar rascunho com a IA" escreve as partes 2 a 4 (o texto em 5 trechos, as metas alcançadas e as metas para o mês atual), e o coordenador confere cada parte. A Edge Function `gerar-rascunho` tira o nome do assistido das análises antes de mandar para a IA (E05), e a chave da IA fica só no servidor. Cada rascunho é uma versão nova da parte; o texto anterior fica guardado.
 - **Metas (coordenador e coordenação geral):** o plano terapêutico de cada assistido. Cada meta tem o programa, o texto, o critério de alcance e a situação (em desenvolvimento, alcançada, em manutenção ou suspensa), com cards que filtram a lista. O coordenador cadastra e altera as metas da carteira dele; a coordenação geral lê todas. Na parte 4 da evolução, "Trazer do cadastro de metas" acrescenta as metas em desenvolvimento. A atualização do cadastro no envio do arquivo ainda não está feita.
+- **Sincronização com a Tita (coordenação geral):** na tela de Assistidos, "Sincronizar com a Tita" busca a lista de favorecidos na API da Tita pela Edge Function `sincronizar-tita` (o token fica só no servidor). Primeiro vêm os números, sem gravar nada; depois de confirmar, quem falta entra como **rascunho**, sem carteira, porque a Tita não diz o turno. A coordenação geral escolhe a carteira (e o gênero, quando a Tita diz "Outros") para o rascunho sair do rascunho; até lá, ele não aparece para coordenador nenhum. O id da Tita é a chave; sem ele, o cadastro feito à mão se liga pelo nome completo e pelo nascimento. A sincronização atualiza nome, gênero e nascimento e nunca mexe em carteira, plano ou ativo. A Imbiribeira fica de fora. O que não entra vira pendência na mesma tela: unidade da Tita que ainda não está ligada (liga-se ali mesmo), nome sem sobrenome, possível duplicado, quem sumiu da Tita e outros. Da Tita entram só id, nome, sexo, nascimento, ativo e unidades: CPF e responsáveis não vêm.
 - **Assinatura (coordenador):** a imagem da assinatura ou do carimbo, por arquivo ou foto, que vai no fim do arquivo do mês, acima do nome e do CRP. A imagem fica no bucket privado `assinaturas` do Storage. Trocar não apaga a anterior: o arquivo já enviado fica com a assinatura da época.
 - **Cadastros (coordenação geral):** unidades, planos de saúde, pessoas, carteiras e assistidos, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. A unidade tem CNPJ, obrigatório (numérico ou alfanumérico, com os dígitos conferidos), e endereço, opcional. A carteira junta uma unidade, um turno e quem coordena; só pode haver uma carteira ativa por unidade e turno, e passar a carteira para outra pessoa muda quem vê os assistidos e as evoluções dela. O assistido fica numa carteira ativa e leva a unidade dela; o número dele na unidade, que entra no código da evolução, o banco dá sozinho. A lista de assistidos tem busca pelo nome (sem ligar para acento) e filtro por carteira, e avisa quem está sem plano.
   - Cada pessoa tem um papel (coordenação de unidade, coordenação geral ou contas médicas) e, se coordena unidade, o CRP. Quem ainda não entrou aparece como "Sem conta".
@@ -63,12 +64,14 @@ O CI (`.github/workflows/ci.yml`) roda lint, tipos, testes com cobertura, build,
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | `.env.local` e Vercel | chave publicável (`sb_publishable_…`). É pública por desenho: quem protege os dados é o RLS |
 | `OPENAI_API_KEY` | segredos das Edge Functions do Supabase | chave da IA; nunca vai para o navegador nem para a Vercel |
 | `OPENAI_MODEL` | segredos das Edge Functions do Supabase | o modelo da OpenAI que escreve o rascunho; sem ele a função recusa o pedido |
+| `TITA_TOKEN` | segredos das Edge Functions do Supabase | o token da API da Tita (`X-API-TOKEN`) |
+| `TITA_ENDPOINT` | segredos das Edge Functions do Supabase | opcional: o endereço da consulta de favorecidos. Se não for um `https://` válido, a função usa o documentado (`https://apiv2.apptita.com.br/api/cadastro/favorecido/consulta/empresa`); só o domínio ganha o caminho da consulta |
 
 A service role e a senha do banco não entram no repositório, no `.env.local` nem na Vercel.
 
 ## Banco (Supabase)
 
-- **Schemas:** `acesso` (usuários, papéis e assinaturas), `cadastro` (unidades, planos, carteiras, assistidos e metas), `evolucao` (evoluções, as 4 partes, as importações do Tita, os dias analisados e os arquivos do mês), `auditoria` (histórico de alterações) e `interno` (funções auxiliares, fora da API).
+- **Schemas:** `acesso` (usuários, papéis e assinaturas), `cadastro` (unidades, planos, carteiras, assistidos, metas e a sincronização com a Tita), `evolucao` (evoluções, as 4 partes, as importações do Tita, os dias analisados e os arquivos do mês), `auditoria` (histórico de alterações) e `interno` (funções auxiliares, fora da API).
 - **Migrações** em `supabase/migrations/`, aplicadas em ordem. Elas só acrescentam: nenhuma apaga coluna ou tabela com dado.
 - **Testes do RLS:** `supabase/tests/rls_evolucoes.sql` faz 78 verificações de acesso e de regra, inclusive as do Storage da assinatura, as do envio do arquivo do mês e as do conteúdo do Word. Ele roda numa transação que sempre se desfaz, então pode rodar no SQL Editor de produção sem gravar nada. A saída esperada é `RESULTADO: 0 falhas de 78`.
 
@@ -81,7 +84,25 @@ Estes passos ficam com o dono do projeto e não estão no código:
 3. **URLs:** em Authentication → URL Configuration, use `https://ida-aba.vercel.app/primeiro-acesso` como Site URL, para que o convite caia direto na criação da senha. Em Redirect URLs, ponha `https://ida-aba.vercel.app/primeiro-acesso` e `http://localhost:5173/primeiro-acesso`.
 4. **Senhas:** em Authentication → Attack Protection (ou Passwords), exija no mínimo 15 caracteres, a mesma regra da tela, e ligue a proteção contra senha vazada se o plano permitir.
 5. **E-mail:** o SMTP padrão do Supabase só entrega para os membros do time do projeto. Antes de convidar os coordenadores, configure um SMTP próprio em Authentication → Emails → SMTP Settings.
-6. **Segredos das Edge Functions:** renomeie `SUBAPASE-OPENAI_API` para `OPENAI_API_KEY` e apague `SUPABASE-ULR` e `SUPABASE-ANON-PUBLIC`. O Supabase já injeta `SUPABASE_URL` e `SUPABASE_ANON_KEY` em toda função. Crie também `OPENAI_MODEL`, com o nome do modelo da OpenAI que escreve o rascunho.
+6. **Segredos das Edge Functions:** renomeie `SUBAPASE-OPENAI_API` para `OPENAI_API_KEY` e apague `SUPABASE-ULR` e `SUPABASE-ANON-PUBLIC`. O Supabase já injeta `SUPABASE_URL` e `SUPABASE_ANON_KEY` em toda função. Crie também `OPENAI_MODEL`, com o nome do modelo da OpenAI que escreve o rascunho, e `TITA_TOKEN` (e, se quiser, `TITA_ENDPOINT`) para a sincronização com a Tita.
+7. **Sincronização automática com a Tita:** depois da primeira sincronização pela tela dar certo, rode uma vez no SQL Editor de produção (o token do agendamento é gerado no próprio banco e fica no Vault; ninguém precisa vê-lo):
+
+   ```sql
+   create extension if not exists pg_cron;
+   create extension if not exists pg_net;
+   select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'tita_agendamento');
+   -- Todo dia às 6h de Recife (9h UTC).
+   select cron.schedule('sincronizar-tita', '0 9 * * *', $$
+     select net.http_post(
+       url := 'https://<ref-do-projeto>.supabase.co/functions/v1/sincronizar-tita',
+       headers := jsonb_build_object('Content-Type', 'application/json', 'x-agendamento',
+         (select decrypted_secret from vault.decrypted_secrets where name = 'tita_agendamento')),
+       body := '{}'::jsonb,
+       timeout_milliseconds := 60000)
+   $$);
+   ```
+
+   Para parar: `select cron.unschedule('sincronizar-tita');`. Cada rodada aparece na tela de Assistidos como "(automática)".
 
 ## Contas de acesso
 

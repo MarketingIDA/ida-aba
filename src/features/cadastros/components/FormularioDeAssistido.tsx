@@ -45,10 +45,10 @@ const DICA_DA_CARTEIRA = {
 
 const valoresIniciais = (assistido: AssistidoNaTela | null): DefaultValues<CamposDoAssistido> => ({
   nome: assistido?.nome ?? '',
-  ...(assistido === null ? {} : { genero: assistido.genero }),
+  ...(assistido?.genero == null ? {} : { genero: assistido.genero }),
   dataNascimento: assistido?.dataNascimento ?? '',
   planoId: assistido?.planoId === null || assistido === null ? '' : String(assistido.planoId),
-  carteiraId: assistido === null ? '' : String(assistido.carteiraId),
+  carteiraId: assistido?.carteiraId == null ? '' : String(assistido.carteiraId),
   ativo: assistido?.ativo ?? true,
 });
 

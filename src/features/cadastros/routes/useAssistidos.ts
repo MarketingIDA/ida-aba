@@ -47,7 +47,7 @@ export function useAssistidos(): {
       ) {
         const montadas = montarCarteiras(carteiras.data, unidades.data, pessoas.data);
         dados = {
-          assistidos: montarAssistidos(assistidos.data, montadas, planos.data),
+          assistidos: montarAssistidos(assistidos.data, montadas, planos.data, unidades.data),
           carteiras: montadas,
           planos: planos.data,
         };

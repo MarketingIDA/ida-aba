@@ -25,6 +25,12 @@ import {
   type DadosDaPessoa,
   salvarPessoa,
 } from '@/features/cadastros/api/pessoas.api';
+import {
+  buscarPendenciasDaTita,
+  buscarUltimaSincronizacao,
+  ligarUnidadeDaTita,
+  sincronizarComATita,
+} from '@/features/cadastros/api/tita.api';
 
 export const cadastrosKeys = {
   all: ['cadastros'] as const,
@@ -112,5 +118,34 @@ export function useSalvarAssistido() {
     mutationFn: ({ dados, id }: { dados: DadosDoAssistido; id?: number | undefined }) =>
       salvarAssistido(dados, id),
     onSuccess: () => queryClient.invalidateQueries(),
+  });
+}
+
+export const ultimaSincronizacaoOptions = () =>
+  queryOptions({
+    queryKey: [...cadastrosKeys.all, 'tita', 'sincronizacao'] as const,
+    queryFn: buscarUltimaSincronizacao,
+  });
+
+export const pendenciasDaTitaOptions = () =>
+  queryOptions({
+    queryKey: [...cadastrosKeys.all, 'tita', 'pendencias'] as const,
+    queryFn: buscarPendenciasDaTita,
+  });
+
+/** A simulação não muda nada; a de verdade muda a lista de assistidos e as pendências. */
+export function useSincronizarComATita() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (simular: boolean) => sincronizarComATita(simular),
+    onSuccess: (_resumo, simular) =>
+      simular ? undefined : queryClient.invalidateQueries({ queryKey: cadastrosKeys.all }),
+  });
+}
+
+export function useLigarUnidadeDaTita() {
+  return useMutation({
+    mutationFn: ({ nomeNaTita, unidadeId }: { nomeNaTita: string; unidadeId: number | null }) =>
+      ligarUnidadeDaTita(nomeNaTita, unidadeId),
   });
 }

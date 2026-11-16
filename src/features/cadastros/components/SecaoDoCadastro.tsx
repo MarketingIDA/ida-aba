@@ -31,6 +31,8 @@ interface Props {
   vazio: { icone: LucideIcon; titulo: string; descricao: string };
   lista: ReactNode;
   gaveta: ReactNode;
+  /** O que fica acima da lista, mesmo com ela vazia (ex.: a sincronização com a Tita). */
+  topo?: ReactNode;
 }
 
 function Carregando() {
@@ -70,7 +72,7 @@ function Conteudo({ consulta, titulo, vazio, lista, botao, aoCriar }: Readonly<P
 
 /** Uma parte do cadastro: título com a ação, as abas, a lista (ou o vazio) e a gaveta. */
 export function SecaoDoCadastro(props: Readonly<Props>) {
-  const { titulo, descricao, botao, aoCriar, aviso, gaveta } = props;
+  const { titulo, descricao, botao, aoCriar, aviso, gaveta, topo } = props;
   return (
     <section className="flex flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -91,6 +93,7 @@ export function SecaoDoCadastro(props: Readonly<Props>) {
       <p role="status" className="text-sm font-bold text-ok-text">
         {aviso}
       </p>
+      {topo}
       <Conteudo {...props} />
       {gaveta}
     </section>
