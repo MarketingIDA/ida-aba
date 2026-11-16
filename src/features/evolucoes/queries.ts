@@ -10,12 +10,15 @@ import {
   salvarParte,
 } from '@/features/evolucoes/api/evolucao.api';
 import { buscarCoordenadores, buscarEvolucoesDoMes } from '@/features/evolucoes/api/evolucoes.api';
+import { buscarImportacao, gravarImportacao } from '@/features/evolucoes/api/importacao.api';
+import type { Leitura } from '@/features/evolucoes/tita/leitura';
 
 export const evolucoesKeys = {
   all: ['evolucoes'] as const,
   doMes: (mesRef: string) => [...evolucoesKeys.all, 'mes', mesRef] as const,
   coordenadores: () => [...evolucoesKeys.all, 'coordenadores'] as const,
   evolucao: (id: string) => [...evolucoesKeys.all, 'evolucao', id] as const,
+  importacao: (id: string) => [...evolucoesKeys.all, 'importacao', id] as const,
 };
 
 export const evolucoesDoMesOptions = (mesRef: string) =>
@@ -34,6 +37,22 @@ export const coordenadoresOptions = () =>
 
 export const evolucaoOptions = (id: string) =>
   queryOptions({ queryKey: evolucoesKeys.evolucao(id), queryFn: () => buscarEvolucao(id) });
+
+export const importacaoOptions = (evolucaoId: string) =>
+  queryOptions({
+    queryKey: evolucoesKeys.importacao(evolucaoId),
+    queryFn: () => buscarImportacao(evolucaoId),
+  });
+
+/** Importar o PDF do Tita: a evolução (a origem muda) e a importação voltam do banco. */
+export function useImportarTita(evolucaoId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ arquivo, leitura }: { arquivo: string; leitura: Leitura }) =>
+      gravarImportacao(evolucaoId, arquivo, leitura),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
+  });
+}
 
 /** Nova evolução: a lista do mês volta do banco com ela. */
 export function useCriarEvolucao() {

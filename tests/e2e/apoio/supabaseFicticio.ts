@@ -230,6 +230,8 @@ async function simularSupabase(page: Page, papel: Papel): Promise<void> {
       json: papel === 'coordenacao_geral' ? [...CARTEIRA, ...OUTRA_UNIDADE] : CARTEIRA,
     }),
   );
+  // Nenhuma evolução fictícia tem PDF do Tita importado.
+  await page.route(`${BASE}/rest/v1/importacoes**`, (rota) => rota.fulfill({ json: [] }));
   // O arquivo do mês da carteira fictícia ainda não foi: faltam 3 das 5 evoluções.
   await page.route(`${BASE}/rest/v1/rpc/arquivos_do_mes`, (rota) =>
     rota.fulfill({

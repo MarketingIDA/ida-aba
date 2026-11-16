@@ -8,6 +8,7 @@ import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
 import { BarraDaEvolucao } from '@/features/evolucoes/components/BarraDaEvolucao';
 import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDaEvolucao';
+import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { evolucaoOptions } from '@/features/evolucoes/queries';
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
 import { useEdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
@@ -40,6 +41,7 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   return (
     <>
       <CabecalhoDaEvolucao evolucao={evolucao} />
+      <ImportacaoDoTita evolucao={evolucao} />
       <PartesDaEvolucao evolucao={evolucao} edicao={edicao} />
       <BarraDaEvolucao
         evolucao={evolucao}
