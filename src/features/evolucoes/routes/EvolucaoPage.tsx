@@ -8,6 +8,7 @@ import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
 import { BarraDaEvolucao } from '@/features/evolucoes/components/BarraDaEvolucao';
 import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDaEvolucao';
+import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { evolucaoOptions } from '@/features/evolucoes/queries';
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
@@ -41,6 +42,11 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   return (
     <>
       <CabecalhoDaEvolucao evolucao={evolucao} />
+      <DevolucoesDaEvolucao
+        evolucao={evolucao}
+        ocupado={edicao.ocupado}
+        aoResolver={edicao.resolverDevolucao}
+      />
       <ImportacaoDoTita evolucao={evolucao} />
       <PartesDaEvolucao evolucao={evolucao} edicao={edicao} />
       <BarraDaEvolucao
@@ -58,7 +64,7 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   );
 }
 
-/** Uma evolução mensal: as 4 partes, a conferência de cada uma e concluir ou reabrir. */
+/** Uma evolução mensal: as 4 partes, a conferência de cada uma, a devolução e concluir ou reabrir. */
 export function EvolucaoPage() {
   const { id = '' } = useParams();
   const valido = z.guid().safeParse(id).success;

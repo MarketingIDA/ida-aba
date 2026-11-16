@@ -13,8 +13,8 @@ const SEM_RESPOSTA = 'Não foi possível salvar agora. Tente de novo em instante
 const mensagem = (erro: unknown) => (ehErroApp(erro) ? erro.message : SEM_RESPOSTA);
 
 /**
- * O que a tela da evolução faz: editar uma parte de cada vez, conferir, concluir e reabrir. O erro
- * da edição fica no formulário; o das outras ações, na barra de baixo.
+ * O que a tela da evolução faz: editar uma parte de cada vez, conferir, resolver a devolução,
+ * concluir e reabrir. O erro da edição fica no formulário; o das outras ações, na barra de baixo.
  */
 export function useEdicaoDaEvolucao(evolucao: Evolucao) {
   const acoes = useAlterarEvolucao(evolucao.id);
@@ -52,8 +52,14 @@ export function useEdicaoDaEvolucao(evolucao: Evolucao) {
       setErro(null);
       acoes.situacao.mutate(situacao, aoFalhar);
     },
+    resolverDevolucao: (id: number) => {
+      setErro(null);
+      acoes.resolver.mutate(id, aoFalhar);
+    },
     erro,
-    ocupado: acoes.salvar.isPending || acoes.conferir.isPending || acoes.situacao.isPending,
+    ocupado: [acoes.salvar, acoes.conferir, acoes.situacao, acoes.resolver].some(
+      (acao) => acao.isPending,
+    ),
   };
 }
 

@@ -273,6 +273,13 @@ begin
             and (c ->> 'editavel')::boolean
        from evolucao.evolucao_completa(nova) c);
   begin
+    insert into evolucao.devolucoes (evolucao_id, motivo)
+      values (nova, 'Motivo fictício da devolução.');
+    insert into resultado (teste, ok) values ('coordenador não devolve evolução (E13)', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('coordenador não devolve evolução (E13)', true);
+  end;
+  begin
     insert into evolucao.arquivos (carteira_id) select interno.carteiras_do_usuario();
     insert into resultado (teste, ok) values ('arquivo do mês não vai sem assinatura (E14)', false);
   exception when check_violation then
@@ -309,6 +316,22 @@ update cadastro.metas set situacao = 'suspensa' where texto = 'Meta fictícia do
 insert into resultado (teste, ok) select 'coordenação geral lê as metas e não altera (E23)',
   (select count(*) = 1 and bool_and(situacao = 'desenvolvimento')
      from cadastro.metas where texto = 'Meta fictícia do cadastro');
+insert into evolucao.devolucoes (evolucao_id, motivo)
+  select e.id, '  Motivo fictício da devolução.  '
+    from evolucao.evolucoes e join cadastro.assistidos a on a.id = e.assistido_id
+   where a.nome = 'Assistido Dois Teste';
+insert into resultado (teste, ok) select 'coordenação geral devolve a concluída com o motivo, e ela volta para conferência (E13)',
+  (select e.situacao = 'em_conferencia' and e.concluida_em is null
+          and jsonb_array_length(evolucao.evolucao_completa(e.id) -> 'devolucoes') = 1
+     from evolucao.evolucoes e join cadastro.assistidos a on a.id = e.assistido_id
+    where a.nome = 'Assistido Dois Teste')
+  and (select count(*) = 1
+              and bool_and(not d.resolvida and d.motivo = 'Motivo fictício da devolução.'
+                           and d.devolvida_por_nome = 'Coordenação Geral')
+         from evolucao.devolucoes d)
+  and (select bool_and(l.devolvida)
+         from evolucao.evolucoes_do_mes(date_trunc('month', now() at time zone 'America/Recife')::date) l
+        where l.nome = 'Assistido Dois Teste');
 update cadastro.planos set nome = 'Plano Teste Renomeado' where nome = 'Plano Teste';
 insert into resultado (teste, ok) select 'coordenação geral altera o cadastro',
   exists (select 1 from cadastro.planos where nome = 'Plano Teste Renomeado');
@@ -447,6 +470,31 @@ begin
   end;
 end;
 $$;
+do $$
+declare
+  dica text;
+  devolvida uuid;
+begin
+  select d.evolucao_id into devolvida from evolucao.devolucoes d where not d.resolvida;
+  begin
+    update evolucao.evolucoes set situacao = 'concluida' where id = devolvida;
+    insert into resultado (teste, ok)
+      values ('devolvida não conclui antes de o coordenador resolver (E13)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('devolvida não conclui antes de o coordenador resolver (E13)', dica = 'devolucao_aberta');
+  end;
+  update evolucao.devolucoes set resolvida = true where evolucao_id = devolvida;
+  update evolucao.evolucoes set situacao = 'concluida' where id = devolvida;
+  insert into resultado (teste, ok) select 'coordenador resolve a devolução e conclui de novo (E13)',
+    (select situacao = 'concluida' from evolucao.evolucoes where id = devolvida)
+    and (select count(*) = 1
+                and bool_and(d.resolvida and d.resolvida_em is not null
+                             and d.resolvida_por_nome = 'Coordenadora A')
+           from evolucao.devolucoes d where d.evolucao_id = devolvida);
+end;
+$$;
 reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
@@ -564,9 +612,10 @@ insert into resultado (teste, ok) select 'contas médicas lê só a versão fina
      from evolucao.versoes v join evolucao.evolucoes e on e.id = v.evolucao_id
     where e.codigo like 'TST-%')
   and (select count(*) from evolucao.partes) = 0;
-insert into resultado (teste, ok) select 'contas médicas não lê a importação do Tita nem os dias analisados',
+insert into resultado (teste, ok) select 'contas médicas não lê a importação do Tita, os dias analisados nem as devoluções',
   (select count(*) from evolucao.importacoes) = 0
-  and (select count(*) from evolucao.dias_analisados) = 0;
+  and (select count(*) from evolucao.dias_analisados) = 0
+  and (select count(*) from evolucao.devolucoes) = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê o cadastro de metas',
   (select count(*) from cadastro.metas) = 0;
 insert into resultado (teste, ok) select 'contas médicas lê a assinatura que foi no arquivo, e a imagem dela',
@@ -592,6 +641,24 @@ insert into resultado (teste, ok) select 'lista dos arquivos do mês: o recebido
          from evolucao.evolucoes_do_arquivo((
            select id from evolucao.arquivos
             where carteira_id = current_setting('teste.carteira_a')::bigint)));
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
+do $$
+declare
+  dica text;
+begin
+  insert into evolucao.devolucoes (evolucao_id, motivo)
+    select e.id, 'Motivo fictício da devolução.' from evolucao.evolucoes e
+     where e.arquivo_id is not null;
+  insert into resultado (teste, ok) values ('evolução enviada não se devolve (E13)', false);
+exception when check_violation then
+  get stacked diagnostics dica = pg_exception_hint;
+  insert into resultado (teste, ok)
+    values ('evolução enviada não se devolve (E13)', dica = 'devolucao_so_de_concluida');
+end;
+$$;
 reset role;
 
 -- Inativo e conta sem cadastro: nada.

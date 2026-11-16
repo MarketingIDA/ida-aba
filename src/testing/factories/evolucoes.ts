@@ -10,12 +10,14 @@ export const MES_DEMO = '2026-11-01';
 interface Opcoes extends Partial<Omit<LinhaDoMes, 'evolucao'>> {
   situacao?: SituacaoDaEvolucao | null;
   partesConferidas?: number;
+  devolvida?: boolean;
 }
 
 /** Linha fictícia da carteira. Nenhum nome aqui é de pessoa real. */
 export function linhaDoMes({
   situacao = null,
   partesConferidas = 0,
+  devolvida = false,
   ...sobrescrever
 }: Opcoes = {}): LinhaDoMes {
   const linha: LinhaDoMes = {
@@ -39,6 +41,7 @@ export function linhaDoMes({
       situacao,
       origem: 'tita',
       partesConferidas,
+      devolvida,
     },
   };
 }
@@ -58,6 +61,7 @@ export function linhaDaRpc(linha: LinhaDoMes) {
     situacao: linha.evolucao?.situacao ?? null,
     origem: linha.evolucao?.origem ?? null,
     partes_conferidas: linha.evolucao?.partesConferidas ?? 0,
+    devolvida: linha.evolucao?.devolvida ?? false,
   };
 }
 

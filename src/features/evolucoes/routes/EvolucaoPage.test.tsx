@@ -31,6 +31,8 @@ function evolucaoNoBanco() {
     turno: 'manha',
     coordenador: 'Carla Fictícia Coordenadora',
     editavel: true,
+    pode_devolver: false,
+    devolucoes: [] as Record<string, unknown>[],
     partes: [1, 2, 3, 4].map((numero) => ({
       numero,
       conferida_em: null as string | null,
@@ -70,15 +72,27 @@ function servirBanco(banco: Banco) {
   );
 }
 
-const abrir = () =>
+const abrir = (usuario = usuarioDemo()) =>
   renderWithProviders(
     <Routes>
       <Route path="/evolucoes/:id" element={<EvolucaoPage />} />
     </Routes>,
-    { rota: `/evolucoes/${ID}`, usuario: usuarioDemo() },
+    { rota: `/evolucoes/${ID}`, usuario },
   );
 
 const parte = (titulo: string) => within(screen.getByRole('region', { name: titulo }));
+
+const MOTIVO = 'O texto repete o do mês anterior.';
+
+/** A devolução como a RPC `evolucao_completa` devolve, em aberto. */
+const devolucaoNoBanco = () => ({
+  id: 7,
+  motivo: MOTIVO,
+  devolvida_em: '2026-11-05T12:00:00Z',
+  devolvida_por: 'Gabriela Fictícia Geral',
+  resolvida_em: null as string | null,
+  resolvida_por: null as string | null,
+});
 
 let banco: Banco;
 
@@ -149,5 +163,73 @@ describe('Evolução escrita à mão', () => {
       parte('Metas alcançadas').getByRole('button', { name: 'Marcar como conferida' }),
     );
     expect(await screen.findByRole('alert')).toHaveTextContent('Reabra antes de mudar');
+  });
+});
+
+describe('Devolução pela coordenação geral', () => {
+  it('a coordenação geral devolve a evolução concluída com o motivo', async () => {
+    Object.assign(banco, {
+      situacao: 'concluida',
+      concluida_em: '2026-11-04T15:00:00Z',
+      editavel: false,
+      pode_devolver: true,
+    });
+    let enviado: unknown = null;
+    server.use(
+      http.post(`${REST}/devolucoes`, async ({ request }) => {
+        enviado = await request.json();
+        Object.assign(banco, {
+          situacao: 'em_conferencia',
+          concluida_em: null,
+          pode_devolver: false,
+          devolucoes: [devolucaoNoBanco()],
+        });
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+    const { user } = abrir(usuarioDemo({ papel: 'coordenacao_geral' }));
+
+    await user.click(await screen.findByRole('button', { name: 'Devolver com motivo' }));
+    expect(screen.getByRole('button', { name: 'Devolver' })).toBeDisabled();
+    await user.type(screen.getByLabelText('Motivo da devolução'), MOTIVO);
+    await user.click(screen.getByRole('button', { name: 'Devolver' }));
+
+    const bloqueio = await screen.findByRole('region', {
+      name: 'Devolvida pela coordenação geral',
+    });
+    expect(bloqueio).toHaveTextContent(MOTIVO);
+    expect(
+      within(bloqueio).queryByRole('button', { name: 'Marcar como resolvida' }),
+    ).not.toBeInTheDocument();
+    expect(enviado).toEqual({ evolucao_id: ID, motivo: MOTIVO });
+  });
+
+  it('o coordenador vê o motivo como bloqueio e marca a devolução como resolvida', async () => {
+    banco.devolucoes = [devolucaoNoBanco()];
+    server.use(
+      http.patch(`${REST}/devolucoes`, () => {
+        banco.devolucoes = [
+          {
+            ...devolucaoNoBanco(),
+            resolvida_em: '2026-11-05T13:00:00Z',
+            resolvida_por: 'Carla Fictícia Coordenadora',
+          },
+        ];
+        return HttpResponse.json([{ id: 7 }]);
+      }),
+    );
+    const { user } = abrir();
+
+    const bloqueio = await screen.findByRole('region', {
+      name: 'Devolvida pela coordenação geral',
+    });
+    expect(bloqueio).toHaveTextContent(MOTIVO);
+    expect(screen.getByText(/devolução a resolver/)).toBeInTheDocument();
+    await user.click(within(bloqueio).getByRole('button', { name: 'Marcar como resolvida' }));
+
+    expect(await screen.findByText('1 devolução resolvida')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: 'Devolvida pela coordenação geral' }),
+    ).not.toBeInTheDocument();
   });
 });

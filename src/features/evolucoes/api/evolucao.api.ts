@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { esquemaDevolucao } from '@/features/evolucoes/api/devolucao.api';
 import { erroDoBanco, type MensagensDoBanco } from '@/lib/erroDoBanco';
 import { ErroApp } from '@/lib/erroApp';
 import { supabase } from '@/lib/supabase';
@@ -72,6 +73,9 @@ const esquemaEvolucao = z
     turno: z.enum(TURNOS),
     coordenador: z.string().nullable(),
     editavel: z.boolean(),
+    // Vêm com a etapa da devolução; na janela do deploy a função antiga ainda não manda.
+    pode_devolver: z.boolean().nullish(),
+    devolucoes: z.array(esquemaDevolucao).nullish(),
     partes: z.array(
       z.object({
         numero: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
@@ -96,6 +100,8 @@ const esquemaEvolucao = z
     turno: e.turno,
     coordenador: e.coordenador,
     editavel: e.editavel,
+    podeDevolver: e.pode_devolver ?? false,
+    devolucoes: e.devolucoes ?? [],
     partes: e.partes.map((p): Parte => ({
       numero: p.numero,
       conferidaEm: p.conferida_em,
@@ -121,6 +127,8 @@ const MENSAGENS: MensagensDoBanco = {
     evolucao_fechada: 'A evolução não está em conferência. Reabra antes de mudar.',
     conteudo_invalido: 'O conteúdo não pôde ser gravado. Confira os campos e tente de novo.',
     partes_a_conferir: 'Confira as 4 partes antes de concluir.',
+    devolucao_aberta:
+      'A evolução foi devolvida pela coordenação geral. Marque a devolução como resolvida antes de concluir.',
     assistido_sem_plano:
       'O assistido está sem plano de saúde no cadastro. Peça a correção à coordenação geral.',
     texto_curto: 'O texto da evolução precisa de 7 linhas ou mais.',

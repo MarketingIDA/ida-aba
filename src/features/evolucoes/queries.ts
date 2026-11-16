@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { devolverEvolucao, resolverDevolucao } from '@/features/evolucoes/api/devolucao.api';
 import {
   type ConteudoDaParte,
   buscarEvolucao,
@@ -73,8 +74,17 @@ export function useCriarEvolucao() {
   });
 }
 
+/** Devolver com o motivo (coordenação geral): a evolução volta do banco em conferência. */
+export function useDevolverEvolucao(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (motivo: string) => devolverEvolucao(id, motivo),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
+  });
+}
+
 /**
- * Gravar uma parte, conferir, concluir e reabrir. Depois de cada uma, deu certo ou não, a
+ * Gravar uma parte, conferir, resolver a devolução, concluir e reabrir. Depois de cada uma, deu certo ou não, a
  * evolução e a lista do mês voltam do banco: a tela mostra o que ficou gravado.
  */
 export function useAlterarEvolucao(id: string) {
@@ -94,5 +104,6 @@ export function useAlterarEvolucao(id: string) {
       mutationFn: (situacao: 'concluida' | 'em_conferencia') => mudarSituacao(id, situacao),
       onSettled: recarregar,
     }),
+    resolver: useMutation({ mutationFn: resolverDevolucao, onSettled: recarregar }),
   };
 }
