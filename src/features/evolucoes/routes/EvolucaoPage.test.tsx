@@ -233,3 +233,46 @@ describe('Devolução pela coordenação geral', () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe('Termos inadequados', () => {
+  it('alerta o termo da lista no texto e troca pelo substituto em um toque', async () => {
+    banco.versoes = [
+      {
+        numero: 2,
+        conteudo: {
+          abertura: 'Fez birra na chegada.',
+          programas: '',
+          comportamentos: 'Outra Birra no fim.',
+          recursos: '',
+          fechamento: '',
+        },
+        autor: 'coordenador',
+        criado_em: '2026-11-04T15:00:00Z',
+        criado_por: 'Carla',
+      },
+    ];
+    server.use(
+      http.get(`${REST}/termos_inadequados`, () =>
+        HttpResponse.json([{ termo: 'birra', substituto: 'desregulação emocional' }]),
+      ),
+    );
+    const { user } = abrir();
+
+    const alertas = await screen.findByRole('list', { name: 'Termos inadequados no texto' });
+    expect(alertas).toHaveTextContent('Termo inadequado: “birra”.');
+    await user.click(
+      within(alertas).getByRole('button', { name: 'Trocar “birra” por “desregulação emocional”' }),
+    );
+
+    expect(
+      await parte('Evolução mensal').findByText(/Fez desregulação emocional/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('list', { name: 'Termos inadequados no texto' }),
+    ).not.toBeInTheDocument();
+    expect(banco.versoes.find((v) => v.numero === 2)?.conteudo).toMatchObject({
+      abertura: 'Fez desregulação emocional na chegada.',
+      comportamentos: 'Outra Desregulação emocional no fim.',
+    });
+  });
+});

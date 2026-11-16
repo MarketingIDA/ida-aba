@@ -17,3 +17,5 @@ supabase/migrations
 
 # Cópia literal de docs/design-system/tokens.css (os dois ficam idênticos)
 src/index.css
+# Cópias de trabalho de outras sessões.
+.claude

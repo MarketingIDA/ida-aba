@@ -23,6 +23,8 @@ export default tseslint.config(
       'node_modules/**',
       'playwright-report/**',
       'test-results/**',
+      // Cópias de trabalho de outras sessões: cada uma tem o seu lint.
+      '.claude/**',
       // Fora do escopo de lint: documentos reais, protótipo e docs.
       'arquivos/**',
       'prototipo/**',

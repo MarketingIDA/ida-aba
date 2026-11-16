@@ -3,7 +3,8 @@ import { ContadorDeLinhas, ContadorDeMetas } from '@/features/evolucoes/componen
 import { Identificacao } from '@/features/evolucoes/components/Identificacao';
 import { EdicaoDasMetas, MetasDaParte } from '@/features/evolucoes/components/MetasDaParte';
 import { ParteDaEvolucao } from '@/features/evolucoes/components/ParteDaEvolucao';
-import { EdicaoDoTexto, TextoDaEvolucao } from '@/features/evolucoes/components/TextoDaEvolucao';
+import { TextoComTermos } from '@/features/evolucoes/components/TermosNoTexto';
+import { EdicaoDoTexto } from '@/features/evolucoes/components/TextoDaEvolucao';
 import { linhasDa, NUMEROS, pendenciaDaParte } from '@/features/evolucoes/conferencia';
 import type { EdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
 import { formatarDataHora } from '@/features/evolucoes/textos';
@@ -37,6 +38,10 @@ function contadorDa(evolucao: Evolucao, numero: NumeroDaParte) {
   return <ContadorDeMetas metas={metasDa(evolucao, numero).length} doMes={numero === 4} />;
 }
 
+/** Só o coordenador da carteira muda a evolução, e só em conferência. */
+const podeMudar = (evolucao: Evolucao) =>
+  evolucao.editavel && evolucao.situacao === 'em_conferencia';
+
 /** O conteúdo da parte, na leitura ou na edição. */
 function CorpoDaParte({ evolucao, edicao, numero }: Readonly<Props & { numero: NumeroDaParte }>) {
   if (numero === 1) return <Identificacao evolucao={evolucao} />;
@@ -47,7 +52,18 @@ function CorpoDaParte({ evolucao, edicao, numero }: Readonly<Props & { numero: N
   };
   if (numero === 2) {
     const trechos = evolucao.texto?.conteudo ?? null;
-    if (edicao.editando !== 2) return <TextoDaEvolucao trechos={trechos} />;
+    if (edicao.editando !== 2) {
+      return (
+        <TextoComTermos
+          trechos={trechos}
+          podeTrocar={podeMudar(evolucao) && edicao.editando === null}
+          ocupado={edicao.ocupado}
+          aoTrocar={(conteudo) => {
+            edicao.trocar({ numero: 2, conteudo });
+          }}
+        />
+      );
+    }
     return (
       <EdicaoDoTexto
         inicial={trechos}
@@ -76,7 +92,6 @@ function CorpoDaParte({ evolucao, edicao, numero }: Readonly<Props & { numero: N
 
 /** As 4 partes, cada uma com a conferência e, nas partes 2 a 4, a edição. */
 export function PartesDaEvolucao({ evolucao, edicao }: Readonly<Props>) {
-  const podeMudar = evolucao.editavel && evolucao.situacao === 'em_conferencia';
   return NUMEROS.map((numero) => {
     const parte = evolucao.partes.find((p) => p.numero === numero);
     if (parte === undefined) return null;
@@ -88,7 +103,7 @@ export function PartesDaEvolucao({ evolucao, edicao }: Readonly<Props>) {
         origem={origemDa(evolucao, numero)}
         contador={editando ? null : contadorDa(evolucao, numero)}
         pendencia={pendenciaDaParte(evolucao, numero)}
-        podeMudar={podeMudar}
+        podeMudar={podeMudar(evolucao)}
         editando={editando}
         aoEditar={
           numero === 1
