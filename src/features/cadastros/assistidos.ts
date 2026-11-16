@@ -38,7 +38,7 @@ export function montarAssistidos(
 }
 
 /** A carteira por extenso nas escolhas: `UNA · Manhã · Carla`. */
-const rotuloDaCarteira = (carteira: CarteiraNaTela) =>
+export const rotuloDaCarteira = (carteira: CarteiraNaTela) =>
   `${nomeDaCarteira(carteira)} · ${carteira.coordenador.nome}`;
 
 /** O turno com quem coordena ou, no rascunho, o que falta para ele sair do rascunho. */

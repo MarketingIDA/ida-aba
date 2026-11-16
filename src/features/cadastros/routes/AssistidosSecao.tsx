@@ -3,6 +3,8 @@ import { useState } from 'react';
 
 import {
   type AssistidoNaTela,
+  ehRascunho,
+  FILTRO_DOS_RASCUNHOS,
   filtrarAssistidos,
   type FiltroDosAssistidos,
   itemDoAssistido,
@@ -20,9 +22,11 @@ import { GavetaDoCadastro } from '@/features/cadastros/components/GavetaDoCadast
 import { ListaDoCadastro } from '@/features/cadastros/components/ListaDoCadastro';
 import { SecaoDoCadastro } from '@/features/cadastros/components/SecaoDoCadastro';
 import { useSalvarAssistido } from '@/features/cadastros/queries';
+import { PorNaCarteira } from '@/features/cadastros/routes/PorNaCarteira';
 import { SincronizacaoDaTita } from '@/features/cadastros/routes/SincronizacaoDaTita';
 import { type DadosDosAssistidos, useAssistidos } from '@/features/cadastros/routes/useAssistidos';
 import { useGaveta } from '@/features/cadastros/routes/useGaveta';
+import { marcacaoDaLista, useMarcacao } from '@/features/cadastros/routes/useMarcacao';
 
 const VAZIO = {
   icone: UserRound,
@@ -92,22 +96,40 @@ function ninguemNo({ busca, carteiraId }: FiltroDosAssistidos) {
 interface PropsDaLista {
   dados: DadosDosAssistidos | undefined;
   aoEditar: (assistido: AssistidoNaTela) => void;
+  aoAvisar: (texto: string) => void;
 }
 
-/** A busca, a lista filtrada e, sem ninguém no filtro, o aviso em vez de uma lista vazia. */
-function ListaDosAssistidos({ dados, aoEditar }: Readonly<PropsDaLista>) {
+/**
+ * A busca, a lista filtrada e, sem ninguém no filtro, o aviso em vez de uma lista vazia. Nos
+ * rascunhos, a lista ganha as caixas de marcar e a barra que os põe numa carteira em lote.
+ */
+function ListaDosAssistidos({ dados, aoEditar, aoAvisar }: Readonly<PropsDaLista>) {
   const [filtro, setFiltro] = useState<FiltroDosAssistidos>({ busca: '', carteiraId: '' });
   const todos = dados?.assistidos ?? [];
+  const marcacao = useMarcacao(todos);
   const filtrados = filtrarAssistidos(todos, filtro);
+  const emLote = filtro.carteiraId === FILTRO_DOS_RASCUNHOS && todos.some(ehRascunho);
   return (
     <div className="flex flex-col gap-3">
       <BuscaDosAssistidos
         filtro={filtro}
-        aoMudar={setFiltro}
+        aoMudar={(novo) => {
+          // A marcação vale só dentro dos rascunhos; a busca pelo nome não a desfaz.
+          if (novo.carteiraId !== filtro.carteiraId) marcacao.limpar();
+          setFiltro(novo);
+        }}
         carteiras={opcoesDoFiltroDeCarteira(dados?.carteiras ?? [])}
         mostrando={filtrados.length}
         total={todos.length}
       />
+      {emLote && (
+        <PorNaCarteira
+          lista={filtrados}
+          marcacao={marcacao}
+          carteiras={dados?.carteiras ?? []}
+          aoAvisar={aoAvisar}
+        />
+      )}
       {filtrados.length === 0 ? (
         <p className="rounded-xl border border-borda bg-superficie px-5 py-4 text-sm font-semibold text-texto-2">
           {ninguemNo(filtro)}
@@ -117,6 +139,7 @@ function ListaDosAssistidos({ dados, aoEditar }: Readonly<PropsDaLista>) {
           rotulo="Assistidos cadastrados"
           rotuloDoInativo="Desativado"
           itens={filtrados.map(itemDoAssistido)}
+          marcacao={emLote ? marcacaoDaLista(marcacao, filtrados) : undefined}
           aoEditar={(id) => {
             const assistido = filtrados.find((a) => a.id === id);
             if (assistido !== undefined) aoEditar(assistido);
@@ -157,7 +180,7 @@ export function AssistidosSecao() {
       consulta={consulta}
       vazio={VAZIO}
       topo={<SincronizacaoDaTita />}
-      lista={<ListaDosAssistidos dados={dados} aoEditar={gaveta.abrirEdicao} />}
+      lista={<ListaDosAssistidos dados={dados} aoEditar={gaveta.abrirEdicao} aoAvisar={setAviso} />}
       gaveta={<GavetaDoAssistido gaveta={gaveta} dados={dados} aoSalvar={aoSalvar} />}
     />
   );
