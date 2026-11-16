@@ -16,6 +16,8 @@ export interface EvolucaoDoMes {
   situacao: SituacaoDaEvolucao;
   origem: 'tita' | 'manual';
   partesConferidas: number;
+  /** Devolvida pela coordenação geral, à espera de o coordenador resolver (E13). */
+  devolvida: boolean;
 }
 
 /** Um assistido da carteira e a evolução dele no mês (ou `null`, ainda sem evolução). */
@@ -49,6 +51,8 @@ const esquemaLinha = z
     situacao: z.enum(['em_conferencia', 'concluida', 'enviada']).nullable(),
     origem: z.enum(['tita', 'manual']).nullable(),
     partes_conferidas: z.number().int().min(0).max(4),
+    // Vem com a etapa da devolução; na janela do deploy a função antiga ainda não manda.
+    devolvida: z.boolean().nullish(),
   })
   .transform((l): LinhaDoMes => ({
     assistidoId: l.assistido_id,
@@ -67,6 +71,7 @@ const esquemaLinha = z
             situacao: l.situacao,
             origem: l.origem,
             partesConferidas: l.partes_conferidas,
+            devolvida: l.devolvida ?? false,
           },
   }));
 

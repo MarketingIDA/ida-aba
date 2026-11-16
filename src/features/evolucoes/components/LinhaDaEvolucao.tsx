@@ -77,6 +77,7 @@ function Detalhe({ linha, visaoGeral, coordenador, nomeDoMes }: Readonly<Props>)
 export function LinhaDaEvolucao(props: Readonly<Props>) {
   const { linha, visaoGeral } = props;
   const { rotulo, tom } = SITUACAO[situacaoDe(linha)];
+  const devolvida = linha.evolucao?.devolvida === true;
   return (
     // A coluna da situação tem largura fixa no desktop: as do meio ficam alinhadas entre as linhas.
     <li className="relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:grid-cols-[auto_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)_8rem] sm:px-5 [&>:last-child]:justify-self-end">
@@ -112,7 +113,8 @@ export function LinhaDaEvolucao(props: Readonly<Props>) {
       <span className="hidden sm:block">
         <Andamento linha={linha} />
       </span>
-      <Situacao rotulo={rotulo} tom={tom} />
+      {/* Devolvida segue em conferência; a pílula avisa que há um motivo a resolver (E13). */}
+      <Situacao rotulo={devolvida ? 'Devolvida' : rotulo} tom={devolvida ? 'bloq' : tom} />
     </li>
   );
 }

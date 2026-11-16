@@ -2,12 +2,13 @@ import { FileText } from 'lucide-react';
 
 import { Situacao } from '@/components/Situacao';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
+import { devolucaoAberta } from '@/features/evolucoes/conferencia';
 import { SITUACAO } from '@/features/evolucoes/logica';
 import { iniciais } from '@/utils/iniciais';
 import { ROTULO_DO_TURNO } from '@/utils/turno';
 import { formatarData, formatarMesCurto } from '@dominio/mes.ts';
 
-/** Avatar, mês e código, nome do assistido com a situação e os dados do cadastro. */
+/** Avatar, mês e código, nome do assistido com a situação (e a devolução) e os dados do cadastro. */
 export function CabecalhoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   const { rotulo, tom } = SITUACAO[evolucao.situacao];
   const { inicio, fim } = evolucao.periodo;
@@ -34,6 +35,7 @@ export function CabecalhoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao 
         <h1 className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {evolucao.assistido}
           <Situacao rotulo={rotulo} tom={tom} />
+          {devolucaoAberta(evolucao) !== null && <Situacao rotulo="Devolvida" tom="bloq" />}
         </h1>
         <dl className="flex flex-wrap gap-x-5 gap-y-1 text-caption font-semibold text-texto-2">
           {dados.map(([nome, valor]) => (
