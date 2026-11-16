@@ -64,6 +64,8 @@ const esquemaEvolucao = z
     concluida_em: z.string().nullable(),
     periodo_inicio: z.string(),
     periodo_fim: z.string(),
+    // Vem com a etapa do cadastro de metas; na janela do deploy a função antiga ainda não manda.
+    assistido_id: z.number().int().nullish(),
     assistido: z.string(),
     plano: z.string().nullable(),
     unidade: z.string(),
@@ -87,6 +89,7 @@ const esquemaEvolucao = z
     origem: e.origem,
     concluidaEm: e.concluida_em,
     periodo: { inicio: e.periodo_inicio, fim: e.periodo_fim },
+    assistidoId: e.assistido_id ?? null,
     assistido: e.assistido,
     plano: e.plano,
     unidade: e.unidade,

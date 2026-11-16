@@ -175,6 +175,9 @@ create table config.orientacao_ia (
 -- Aprovar é a RPC config.aprovar_dica(dica_id, texto): grava a orientação e marca a dica na mesma transação.
 
 -- E23: cadastro de metas por assistido (o plano terapêutico)
+-- Feito na migração 20261116150000_cadastro_de_metas.sql como `cadastro.metas`: o programa é texto
+-- livre (ainda não há catálogo), o histórico de cada mudança fica na auditoria, e a atualização
+-- no envio do arquivo ainda não foi feita. O esboço abaixo é o desenho original.
 create table cadastro.meta (
   id            uuid primary key default gen_random_uuid(),
   assistido_id  uuid not null references cadastro.assistido,

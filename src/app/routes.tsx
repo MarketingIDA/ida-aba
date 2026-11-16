@@ -30,6 +30,12 @@ const EvolucaoPage = lazy(() =>
 const CadastrosPage = lazy(() =>
   import('@/features/cadastros').then((m) => ({ default: m.CadastrosPage })),
 );
+const MetasPage = lazy(() =>
+  import('@/features/cadastros').then((m) => ({ default: m.MetasPage })),
+);
+const MetasDoAssistidoPage = lazy(() =>
+  import('@/features/cadastros').then((m) => ({ default: m.MetasDoAssistidoPage })),
+);
 const AssinaturaPage = lazy(() =>
   import('@/features/assinatura').then((m) => ({ default: m.AssinaturaPage })),
 );
@@ -62,6 +68,22 @@ const TELAS = [
     tela: (
       <ExigePapel papeis={['coordenador', 'coordenacao_geral']}>
         <EvolucaoPage />
+      </ExigePapel>
+    ),
+  },
+  {
+    rota: '/metas',
+    tela: (
+      <ExigePapel papeis={['coordenador', 'coordenacao_geral']}>
+        <MetasPage />
+      </ExigePapel>
+    ),
+  },
+  {
+    rota: '/metas/:assistidoId',
+    tela: (
+      <ExigePapel papeis={['coordenador', 'coordenacao_geral']}>
+        <MetasDoAssistidoPage />
       </ExigePapel>
     ),
   },

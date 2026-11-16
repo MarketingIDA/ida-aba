@@ -68,6 +68,11 @@ export const handlersDeRest = [
     return HttpResponse.json(corpo.p_mes === MES_DEMO ? carteiraDemo().map(linhaDaRpc) : []);
   }),
 
+  // Sem metas no cadastro, salvo no teste que as serve.
+  http.get(`${env.SUPABASE_URL}/rest/v1/metas`, ({ request }) =>
+    request.headers.get('accept-profile') === 'cadastro' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+
   // Sem PDF do Tita importado, salvo no teste que grava um.
   http.get(`${env.SUPABASE_URL}/rest/v1/importacoes`, ({ request }) =>
     request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
