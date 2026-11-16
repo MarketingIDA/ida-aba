@@ -5,6 +5,7 @@ import {
   Inbox,
   type LucideIcon,
   Signature,
+  Target,
 } from 'lucide-react';
 
 import type { Papel } from '@/hooks/useUsuario';
@@ -21,6 +22,7 @@ const ARQUIVO: ItemDoMenu = { rota: '/arquivo', rotulo: 'Arquivo do mês', icone
 const RECEBIDOS: ItemDoMenu = { rota: '/arquivos', rotulo: 'Arquivos recebidos', icone: Inbox };
 const ENVIADOS: ItemDoMenu = { rota: '/arquivos', rotulo: 'Arquivos enviados', icone: Inbox };
 const CADASTROS: ItemDoMenu = { rota: '/cadastros', rotulo: 'Cadastros', icone: ClipboardList };
+const METAS: ItemDoMenu = { rota: '/metas', rotulo: 'Metas', icone: Target };
 const ASSINATURA: ItemDoMenu = { rota: '/assinatura', rotulo: 'Assinatura', icone: Signature };
 
 /**
@@ -28,8 +30,8 @@ const ASSINATURA: ItemDoMenu = { rota: '/assinatura', rotulo: 'Assinatura', icon
  * que cada papel lê é o RLS do banco.
  */
 export const MENU_DO_PAPEL: Record<Papel, readonly ItemDoMenu[]> = {
-  coordenador: [EVOLUCOES, ARQUIVO, ASSINATURA],
-  coordenacao_geral: [EVOLUCOES, ENVIADOS, CADASTROS],
+  coordenador: [EVOLUCOES, METAS, ARQUIVO, ASSINATURA],
+  coordenacao_geral: [EVOLUCOES, METAS, ENVIADOS, CADASTROS],
   contas_medicas: [RECEBIDOS],
 };
 

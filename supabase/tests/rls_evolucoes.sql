@@ -197,6 +197,20 @@ begin
   exception when insufficient_privilege then
     insert into resultado (teste, ok) values ('coordenador não cria evolução de outra carteira', true);
   end;
+  -- Cadastro de metas (E23): só dos assistidos da carteira de quem cadastra.
+  insert into cadastro.metas (assistido_id, programa, texto, criterio)
+    select id, 'Programa fictício', 'Meta fictícia do cadastro', 'Critério fictício'
+      from cadastro.assistidos where nome = 'Assistido Dois Teste';
+  insert into resultado (teste, ok) select 'coordenador cadastra meta do assistido da carteira (E23)',
+    (select count(*) = 1 and bool_and(situacao = 'desenvolvimento')
+       from cadastro.metas where texto = 'Meta fictícia do cadastro');
+  begin
+    insert into cadastro.metas (assistido_id, texto, criterio)
+      values (current_setting('teste.assistido_do_b')::bigint, 'Meta fictícia alheia', 'Critério fictício');
+    insert into resultado (teste, ok) values ('coordenador não cadastra meta de outra carteira (E23)', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('coordenador não cadastra meta de outra carteira (E23)', true);
+  end;
   insert into evolucao.evolucoes (assistido_id)
     select id from cadastro.assistidos where nome = 'Assistido Dois Teste'
     returning id into nova;
@@ -291,6 +305,10 @@ insert into resultado (teste, ok) select 'coordenação geral filtra a lista por
     where unidade_sigla = 'TST') = 1;
 insert into resultado (teste, ok) select 'coordenação geral lê a auditoria',
   (select count(*) from auditoria.eventos where tabela = 'assistidos') >= 3;
+update cadastro.metas set situacao = 'suspensa' where texto = 'Meta fictícia do cadastro';
+insert into resultado (teste, ok) select 'coordenação geral lê as metas e não altera (E23)',
+  (select count(*) = 1 and bool_and(situacao = 'desenvolvimento')
+     from cadastro.metas where texto = 'Meta fictícia do cadastro');
 update cadastro.planos set nome = 'Plano Teste Renomeado' where nome = 'Plano Teste';
 insert into resultado (teste, ok) select 'coordenação geral altera o cadastro',
   exists (select 1 from cadastro.planos where nome = 'Plano Teste Renomeado');
@@ -549,6 +567,8 @@ insert into resultado (teste, ok) select 'contas médicas lê só a versão fina
 insert into resultado (teste, ok) select 'contas médicas não lê a importação do Tita nem os dias analisados',
   (select count(*) from evolucao.importacoes) = 0
   and (select count(*) from evolucao.dias_analisados) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê o cadastro de metas',
+  (select count(*) from cadastro.metas) = 0;
 insert into resultado (teste, ok) select 'contas médicas lê a assinatura que foi no arquivo, e a imagem dela',
   (select count(*) from acesso.assinaturas
     where usuario_id = current_setting('teste.id_a')::bigint) = 1

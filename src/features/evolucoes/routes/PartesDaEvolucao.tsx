@@ -65,6 +65,7 @@ function CorpoDaParte({ evolucao, edicao, numero }: Readonly<Props & { numero: N
       id={`metas-${String(numero)}`}
       inicial={metas}
       doMes={numero === 4}
+      assistidoId={numero === 4 ? evolucao.assistidoId : null}
       aoSalvar={(novas) => {
         edicao.salvar({ numero, conteudo: { metas: novas } });
       }}
