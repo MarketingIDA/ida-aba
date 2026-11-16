@@ -764,6 +764,75 @@ insert into resultado (teste, ok) select 'Tita: a coordenação geral vê os ras
   and cadastro.quem_sincroniza_a_tita() is not null;
 reset role;
 
+-- Rascunhos em lote (E28): a coordenação geral põe vários numa carteira de outra unidade. Vão
+-- três rascunhos com gênero, o sem gênero e um que já tem carteira.
+insert into cadastro.carteiras (unidade_id, turno, coordenador_id)
+  select u.id, 'manha', (select id from acesso.usuarios where email = 'coord.b@exemplo.test')
+    from cadastro.unidades u where u.sigla = 'TSX';
+insert into cadastro.assistidos (nome, genero, unidade_id, carteira_id)
+  select v.n, 'feminino', u.id, null
+    from (values ('Lote Um Teste'), ('Lote Dois Teste')) v(n)
+    cross join cadastro.unidades u where u.sigla = 'TST';
+select set_config('teste.lote', (
+  select array_agg(id)::text from cadastro.assistidos
+   where nome in ('Lote Um Teste', 'Lote Dois Teste', 'Rascunho Novo Outro', 'Rascunho Novo Teste',
+                  'Manual Fulano Teste')), true);
+select set_config('teste.carteira_lote', (
+  select c.id::text from cadastro.carteiras c join cadastro.unidades u on u.id = c.unidade_id
+   where u.sigla = 'TSX' and c.ativa), true);
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
+do $$
+begin
+  perform cadastro.por_rascunhos_na_carteira(current_setting('teste.lote')::bigint[],
+                                              current_setting('teste.carteira_lote')::bigint);
+  insert into resultado (teste, ok) values ('lote: o coordenador não põe rascunho na carteira', false);
+exception when insufficient_privilege then
+  insert into resultado (teste, ok) values ('lote: o coordenador não põe rascunho na carteira', true);
+end;
+$$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
+do $$
+declare
+  dica text;
+begin
+  perform cadastro.por_rascunhos_na_carteira(current_setting('teste.lote')::bigint[],
+    (select c.id from cadastro.carteiras c join cadastro.unidades u on u.id = c.unidade_id
+      where u.sigla = 'TSX' and not c.ativa));
+  insert into resultado (teste, ok) values ('lote: carteira desativada não recebe rascunho', false);
+exception when check_violation then
+  get stacked diagnostics dica = pg_exception_hint;
+  insert into resultado (teste, ok)
+    values ('lote: carteira desativada não recebe rascunho', dica = 'carteira_desativada');
+end;
+$$;
+select set_config('teste.lote_resumo', cadastro.por_rascunhos_na_carteira(
+  current_setting('teste.lote')::bigint[], current_setting('teste.carteira_lote')::bigint)::text, true);
+insert into resultado (teste, ok) select 'lote: põe os rascunhos com gênero e conta os que ficaram de fora',
+  current_setting('teste.lote_resumo')::jsonb = '{"postos": 3, "sem_genero": 1, "com_carteira": 1}';
+insert into resultado (teste, ok) select 'lote: cada um leva a unidade da carteira e um número novo nela',
+  (select count(*) = 3 and count(distinct a.sequencia) = 3
+          and bool_and(a.carteira_id = current_setting('teste.carteira_lote')::bigint
+                       and a.unidade_id = c.unidade_id)
+     from cadastro.assistidos a join cadastro.carteiras c on c.id = a.carteira_id
+    where a.nome in ('Lote Um Teste', 'Lote Dois Teste', 'Rascunho Novo Outro'));
+insert into resultado (teste, ok) select 'lote: o sem gênero e o que já tinha carteira ficam como estavam',
+  (select carteira_id is null from cadastro.assistidos where nome = 'Rascunho Novo Teste')
+  and (select c.turno = 'tarde' from cadastro.assistidos a join cadastro.carteiras c on c.id = a.carteira_id
+        where a.nome = 'Manual Fulano Teste');
+insert into resultado (teste, ok) select 'lote: uma linha de auditoria por assistido, com quem pôs',
+  (select count(*) = 3
+          and bool_and(e.usuario_id = (select id from acesso.usuarios where email = 'geral@exemplo.test'))
+     from auditoria.eventos e
+    where e.tabela = 'assistidos' and e.operacao = 'U' and 'carteira_id' = any(e.campos_alterados)
+      and e.registro_id in (select id::text from cadastro.assistidos
+                             where nome in ('Lote Um Teste', 'Lote Dois Teste', 'Rascunho Novo Outro')));
+reset role;
+
 -- Anônimo: sem acesso a nenhum schema do sistema.
 insert into resultado (teste, ok) select 'anon sem uso dos schemas',
   not has_schema_privilege('anon', 'acesso', 'usage')

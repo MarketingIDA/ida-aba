@@ -24,12 +24,21 @@ export interface ItemDoCadastro {
   rotuloDaEdicao?: string;
 }
 
+/** A caixa de marcar de cada linha, para agir em vários de uma vez. */
+export interface MarcacaoDaLista {
+  marcado: (id: number) => boolean;
+  /** Sem poder, a caixa aparece desabilitada (o detalhe da linha diz o que falta). */
+  podeMarcar: (id: number) => boolean;
+  aoMarcar: (id: number, marcado: boolean) => void;
+}
+
 interface Props {
   rotulo: string;
   itens: readonly ItemDoCadastro[];
   /** "Desativada" ou "Desativado", pelo gênero do que a lista mostra. */
   rotuloDoInativo: string;
   aoEditar: (id: number) => void;
+  marcacao?: MarcacaoDaLista | undefined;
 }
 
 /** Os ativos primeiro, cada grupo na ordem que o banco mandou (sigla ou nome). */
@@ -59,8 +68,32 @@ function Identificacao({
   );
 }
 
-/** Lista do cadastro: sigla, nome, marcas, detalhe e "Editar". */
-export function ListaDoCadastro({ rotulo, itens, rotuloDoInativo, aoEditar }: Readonly<Props>) {
+function CaixaDeMarcar({
+  item,
+  marcacao,
+}: Readonly<{ item: ItemDoCadastro; marcacao: MarcacaoDaLista }>) {
+  return (
+    <input
+      type="checkbox"
+      aria-label={`Marcar ${item.nome}`}
+      className="size-5 shrink-0 accent-azul disabled:opacity-40"
+      checked={marcacao.marcado(item.id)}
+      disabled={!marcacao.podeMarcar(item.id)}
+      onChange={(evento) => {
+        marcacao.aoMarcar(item.id, evento.target.checked);
+      }}
+    />
+  );
+}
+
+/** Lista do cadastro: (a caixa de marcar), sigla, nome, marcas, detalhe e "Editar". */
+export function ListaDoCadastro({
+  rotulo,
+  itens,
+  rotuloDoInativo,
+  aoEditar,
+  marcacao,
+}: Readonly<Props>) {
   return (
     <ul
       aria-label={rotulo}
@@ -68,6 +101,7 @@ export function ListaDoCadastro({ rotulo, itens, rotuloDoInativo, aoEditar }: Re
     >
       {ativosPrimeiro(itens).map((item) => (
         <li key={item.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+          {marcacao !== undefined && <CaixaDeMarcar item={item} marcacao={marcacao} />}
           {item.sigla !== undefined && (
             <span className="grid h-8 min-w-12 place-items-center rounded-md bg-info-soft px-2 font-mono text-caption font-bold text-azul-escuro">
               {item.sigla}

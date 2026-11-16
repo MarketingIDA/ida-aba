@@ -87,6 +87,32 @@ export async function buscarAssistidos(): Promise<Assistido[]> {
   return z.array(esquemaAssistido).parse(data);
 }
 
+const esquemaDoLote = z
+  .object({
+    postos: z.number().int(),
+    sem_genero: z.number().int(),
+    com_carteira: z.number().int(),
+  })
+  .transform((r) => ({ postos: r.postos, semGenero: r.sem_genero, comCarteira: r.com_carteira }));
+
+/** Quantos entraram na carteira e quantos ficaram de fora, e por quê. */
+export type ResultadoDoLote = z.output<typeof esquemaDoLote>;
+
+/**
+ * Põe vários rascunhos numa carteira ativa, de uma vez, cada um com a unidade dela. O banco deixa
+ * de fora o rascunho sem gênero e quem já tem carteira, e conta os dois.
+ */
+export async function porRascunhosNaCarteira(
+  ids: readonly number[],
+  carteiraId: number,
+): Promise<ResultadoDoLote> {
+  const resposta = await supabase
+    .schema('cadastro')
+    .rpc('por_rascunhos_na_carteira', { p_assistidos: ids, p_carteira_id: carteiraId });
+  if (resposta.error !== null) throw erroDoBanco(resposta.error, MENSAGENS);
+  return esquemaDoLote.parse(resposta.data);
+}
+
 /** Cadastra (sem `id`) ou altera (com `id`); devolve o assistido como ficou no banco. */
 export async function salvarAssistido(dados: DadosDoAssistido, id?: number): Promise<Assistido> {
   const de = supabase.schema('cadastro').from('assistidos');

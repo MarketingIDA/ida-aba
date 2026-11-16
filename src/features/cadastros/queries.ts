@@ -11,6 +11,7 @@ import {
 import {
   buscarAssistidos,
   type DadosDoAssistido,
+  porRascunhosNaCarteira,
   salvarAssistido,
 } from '@/features/cadastros/api/assistidos.api';
 import {
@@ -117,6 +118,16 @@ export function useSalvarAssistido() {
   return useMutation({
     mutationFn: ({ dados, id }: { dados: DadosDoAssistido; id?: number | undefined }) =>
       salvarAssistido(dados, id),
+    onSuccess: () => queryClient.invalidateQueries(),
+  });
+}
+
+/** Vários rascunhos numa carteira de uma vez: como no cadastro de um, tudo volta do banco. */
+export function usePorRascunhosNaCarteira() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, carteiraId }: { ids: readonly number[]; carteiraId: number }) =>
+      porRascunhosNaCarteira(ids, carteiraId),
     onSuccess: () => queryClient.invalidateQueries(),
   });
 }
