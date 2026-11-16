@@ -413,8 +413,8 @@ begin
       select jsonb_agg(jsonb_build_object('tipo', 'unidade_desconhecida', 'detalhe', s.nome,
                                           'quantidade', s.quantidade) order by s.nome)
         from (select btrim(t.nome) as nome, count(*)::integer as quantidade
-                from pg_temp.favorecidos_da_tita f
-               cross join jsonb_array_elements_text(f.unidades) as t (nome)
+                from pg_temp.favorecidos_da_tita fav
+               cross join jsonb_array_elements_text(fav.unidades) as t (nome)
                where not exists (select 1 from cadastro.unidades_da_tita d
                                   where d.nome_na_tita = btrim(t.nome))
                group by btrim(t.nome)) s), '[]');
@@ -432,7 +432,7 @@ begin
        where a.ativo
          and exists (select 1 from cadastro.assistidos_da_tita t where t.assistido_id = a.id)
          and not exists (select 1 from cadastro.assistidos_da_tita t
-                           join pg_temp.favorecidos_da_tita f on f.tita_id = t.tita_id
+                           join pg_temp.favorecidos_da_tita fav on fav.tita_id = t.tita_id
                           where t.assistido_id = a.id)), '[]');
 
     -- Rascunho sem gênero: o sexo veio "Outros" (ou vazio) da Tita.
