@@ -68,6 +68,11 @@ export const handlersDeRest = [
     return HttpResponse.json(corpo.p_mes === MES_DEMO ? carteiraDemo().map(linhaDaRpc) : []);
   }),
 
+  // Sem PDF do Tita importado, salvo no teste que grava um.
+  http.get(`${env.SUPABASE_URL}/rest/v1/importacoes`, ({ request }) =>
+    request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+
   // A carteira demo no mês dos testes, pronta para enviar o arquivo.
   http.post(`${env.SUPABASE_URL}/rest/v1/rpc/arquivos_do_mes`, async ({ request }) => {
     if (request.headers.get('content-profile') !== 'evolucao') return schemaErrado();

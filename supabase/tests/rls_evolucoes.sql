@@ -187,6 +187,8 @@ do $$
 declare
   nova uuid;
   dica text;
+  inicio date := (date_trunc('month', now() at time zone 'America/Recife') - interval '1 month')::date;
+  fim date := date_trunc('month', now() at time zone 'America/Recife')::date - 1;
 begin
   begin
     insert into evolucao.evolucoes (assistido_id)
@@ -203,6 +205,32 @@ begin
             and e.origem = 'manual'
        from evolucao.evolucoes e where e.id = nova)
     and (select count(*) from evolucao.partes where evolucao_id = nova) = 4;
+  -- PDF do Tita (E03, E20): o favorecido tem de ser o assistido; os dias são só os do período.
+  begin
+    insert into evolucao.importacoes (evolucao_id, arquivo_nome, favorecido, analises) values
+      (nova, 'ficticio.pdf',
+       jsonb_build_object('nome', 'Outro Nome Teste', 'periodo_inicio', inicio, 'periodo_fim', fim,
+                          'filtro_terapia', 'ABA', 'filtro_profissional', 'Todos'),
+       jsonb_build_array(jsonb_build_object('data', inicio, 'texto', 'Análise fictícia.', 'falta', false)));
+    insert into resultado (teste, ok) values ('PDF do Tita de outro favorecido não entra (E03)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('PDF do Tita de outro favorecido não entra (E03)', dica = 'tita_outro_assistido');
+  end;
+  insert into evolucao.importacoes (evolucao_id, arquivo_nome, favorecido, analises) values
+    (nova, 'ficticio.pdf',
+     jsonb_build_object('nome', 'ASSISTIDO  DOIS teste', 'periodo_inicio', inicio, 'periodo_fim', fim,
+                        'filtro_terapia', 'ABA', 'filtro_profissional', 'Todos'),
+     jsonb_build_array(
+       jsonb_build_object('data', inicio, 'texto', 'Análise fictícia um.', 'falta', false),
+       jsonb_build_object('data', inicio, 'texto', 'Análise fictícia dois.', 'falta', false),
+       jsonb_build_object('data', inicio + 1, 'texto', 'Não compareceu.', 'falta', true),
+       jsonb_build_object('data', inicio - 1, 'texto', 'De fora do período.', 'falta', false)));
+  insert into resultado (teste, ok) select 'importa o PDF do Tita: dias analisados só do período, e a origem vira tita (E20)',
+    (select count(*) = 2 and sum(n_evolucoes) = 3 and count(*) filter (where falta) = 1
+       from evolucao.dias_analisados where evolucao_id = nova)
+    and (select origem = 'tita' from evolucao.evolucoes where id = nova);
   begin
     update evolucao.evolucoes set situacao = 'concluida' where id = nova;
     insert into resultado (teste, ok) values ('não conclui sem as 4 partes conferidas', false);
@@ -518,6 +546,9 @@ insert into resultado (teste, ok) select 'contas médicas lê só a versão fina
      from evolucao.versoes v join evolucao.evolucoes e on e.id = v.evolucao_id
     where e.codigo like 'TST-%')
   and (select count(*) from evolucao.partes) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê a importação do Tita nem os dias analisados',
+  (select count(*) from evolucao.importacoes) = 0
+  and (select count(*) from evolucao.dias_analisados) = 0;
 insert into resultado (teste, ok) select 'contas médicas lê a assinatura que foi no arquivo, e a imagem dela',
   (select count(*) from acesso.assinaturas
     where usuario_id = current_setting('teste.id_a')::bigint) = 1
