@@ -212,6 +212,10 @@ begin
       values ('não conclui sem as 4 partes conferidas', dica = 'partes_a_conferir');
   end;
   update evolucao.partes set conferida = true where evolucao_id = nova;
+  -- Um rascunho da parte 2, antes da versão final: contas médicas não pode chegar a ele.
+  insert into evolucao.versoes (evolucao_id, numero, conteudo) values
+    (nova, 2, jsonb_build_object('abertura', 'Rascunho fictício.', 'programas', '',
+                                 'comportamentos', '', 'recursos', '', 'fechamento', ''));
   insert into evolucao.versoes (evolucao_id, numero, conteudo) values
     (nova, 2, jsonb_build_object('abertura', '', 'programas', repeat('Texto fictício de teste. ', 30),
                                  'comportamentos', '', 'recursos', '', 'fechamento', '')),
@@ -415,8 +419,14 @@ insert into resultado (teste, ok) select 'contas médicas não lê assistido nem
   and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 0
   and (select count(*) from evolucao.evolucoes_do_mes('2026-11-01') where unidade_sigla = 'TST') = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê assinatura solta',
-  (select count(*) from acesso.assinaturas) = 0
-  and (select count(*) from storage.objects where bucket_id = 'assinaturas') = 0;
+  (select count(*) from acesso.assinaturas
+    where usuario_id = current_setting('teste.id_a')::bigint) = 0
+  and (select count(*) from storage.objects
+        where bucket_id = 'assinaturas' and name like current_setting('teste.id_a') || '/%') = 0;
+insert into resultado (teste, ok) select 'contas médicas não recebe a prévia do Word',
+  (select evolucao.conteudo_do_arquivo(c.id, date_trunc('month', now() at time zone 'America/Recife')::date) is null
+     from cadastro.carteiras c join cadastro.unidades u on u.id = c.unidade_id
+    where u.sigla = 'TST' and c.turno = 'tarde');
 reset role;
 
 -- Arquivo do mês (E24): vai com a carteira toda concluída, e o que foi fica só para leitura.
@@ -437,6 +447,10 @@ exception when check_violation then
     values ('arquivo do mês não vai com evolução pendente (E24)', dica = 'arquivo_com_pendencia');
 end;
 $$;
+insert into resultado (teste, ok) select 'prévia do Word antes do envio: as concluídas, sem data de envio (E14)',
+  (select c ->> 'enviado_em' is null and jsonb_array_length(c -> 'evolucoes') = 1
+          and c ->> 'assinatura' like current_setting('teste.id_a') || '/%'
+     from evolucao.conteudo_do_arquivo(current_setting('teste.carteira_a')::bigint, date_trunc('month', now() at time zone 'America/Recife')::date) c);
 reset role;
 -- Quem não teve sessão no mês sai pelo cadastro (P19): o arquivo leva só os ativos.
 update cadastro.assistidos set ativo = false
@@ -499,8 +513,25 @@ insert into resultado (teste, ok) select 'contas médicas lê o arquivo enviado,
   and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1
   and not exists (select 1 from evolucao.evolucoes where arquivo_id is null)
   and (select count(*) from cadastro.assistidos where nome like '%Teste') = 1;
-insert into resultado (teste, ok) select 'contas médicas não lê o texto nem os rascunhos da evolução',
-  (select count(*) from evolucao.versoes) = 0 and (select count(*) from evolucao.partes) = 0;
+insert into resultado (teste, ok) select 'contas médicas lê só a versão final de cada parte, sem os rascunhos',
+  (select count(*) = 3 and bool_and(v.conteudo ->> 'abertura' is distinct from 'Rascunho fictício.')
+     from evolucao.versoes v join evolucao.evolucoes e on e.id = v.evolucao_id
+    where e.codigo like 'TST-%')
+  and (select count(*) from evolucao.partes) = 0;
+insert into resultado (teste, ok) select 'contas médicas lê a assinatura que foi no arquivo, e a imagem dela',
+  (select count(*) from acesso.assinaturas
+    where usuario_id = current_setting('teste.id_a')::bigint) = 1
+  and (select count(*) from storage.objects
+        where bucket_id = 'assinaturas' and name like current_setting('teste.id_a') || '/%') = 1;
+insert into resultado (teste, ok) select 'conteúdo do Word: o arquivo enviado, com quem assinou e o texto final (E14)',
+  (select c ->> 'coordenador' = 'Coordenadora A' and c ->> 'crp' = '02/00001'
+          and c ->> 'assinatura' like current_setting('teste.id_a') || '/%'
+          and c ->> 'enviado_em' is not null
+          and jsonb_array_length(c -> 'evolucoes') = 1
+          and c #>> '{evolucoes,0,assistido}' = 'Assistido Dois Teste'
+          and c #>> '{evolucoes,0,texto,programas}' like 'Texto fictício%'
+          and jsonb_array_length(c #> '{evolucoes,0,metas_do_mes}') = 4
+     from evolucao.conteudo_do_arquivo(current_setting('teste.carteira_a')::bigint, date_trunc('month', now() at time zone 'America/Recife')::date) c);
 insert into resultado (teste, ok) select 'lista dos arquivos do mês: o recebido, com quem enviou e as evoluções',
   (select count(*) = 1
           and bool_and(arquivo_id is not null and coordenador = 'Coordenadora A' and n_evolucoes = 1)
@@ -543,7 +574,8 @@ insert into resultado (teste, ok) select 'funções de interno: anon nenhuma, au
                 and p.proname not in ('usuario_atual_id', 'usuario_ativo', 'eh_coordenacao_geral',
                                       'carteiras_do_usuario', 'assistidos_do_usuario',
                                       'cnpj_valido', 'evolucoes_do_usuario',
-                                      'eh_contas_medicas', 'andamento_da_carteira'))));
+                                      'eh_contas_medicas', 'andamento_da_carteira',
+                                      'versoes_enviadas'))));
 insert into resultado (teste, ok) select 'authenticated sem DELETE em nenhuma tabela',
   not exists (
     select 1 from information_schema.role_table_grants

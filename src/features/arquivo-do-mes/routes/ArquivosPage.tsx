@@ -95,6 +95,7 @@ function ListaDosArquivos({ carteiras, mes, aberto, geral }: Readonly<PropsDaLis
               key={carteira.carteiraId}
               carteira={carteira}
               rotuloDoEnviado={textos.enviado}
+              mes={mes}
               aberto={aberto}
               comLink={geral}
             />

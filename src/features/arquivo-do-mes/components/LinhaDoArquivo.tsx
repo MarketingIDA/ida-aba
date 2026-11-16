@@ -1,5 +1,6 @@
 import { Situacao } from '@/components/Situacao';
 import type { CarteiraDoMes } from '@/features/arquivo-do-mes/api/arquivos.api';
+import { BaixarWord } from '@/features/arquivo-do-mes/components/BaixarWord';
 import { EvolucoesDoArquivo } from '@/features/arquivo-do-mes/components/EvolucoesDoArquivo';
 import { evolucoes, nomeDaCarteira, textoDoAndamento } from '@/features/arquivo-do-mes/logica';
 import { dataEHora } from '@/utils/textos';
@@ -8,6 +9,7 @@ interface Props {
   carteira: CarteiraDoMes;
   /** "Recebido" para contas médicas; "Enviado" para a coordenação geral. */
   rotuloDoEnviado: string;
+  mes: string;
   /** Só o mês aberto ainda espera arquivo. */
   aberto: boolean;
   comLink: boolean;
@@ -50,7 +52,13 @@ export function LinhaDoArquivo(props: Readonly<Props>) {
         <Situacao rotulo={situacao.rotulo} tom={situacao.tom} />
       </div>
       {carteira.arquivo !== null && (
-        <div className="sm:pl-14">
+        <div className="flex flex-col gap-1 sm:pl-14">
+          <BaixarWord
+            carteiraId={carteira.carteiraId}
+            mes={props.mes}
+            rotulo="Baixar Word"
+            tamanho="sm"
+          />
           <EvolucoesDoArquivo
             arquivoId={carteira.arquivo.id}
             total={carteira.arquivo.evolucoes}
