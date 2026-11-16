@@ -10,6 +10,7 @@ import {
   DadosDoFavorecido,
   textoDaFrequencia,
 } from '@/features/evolucoes/components/LeituraDoTita';
+import { RascunhoDaIA } from '@/features/evolucoes/components/RascunhoDaIA';
 import {
   type LeituraPendente,
   useImportacaoDoTita,
@@ -132,6 +133,9 @@ export function ImportacaoDoTita({ evolucao }: Readonly<{ evolucao: Evolucao }>)
         <p role="alert" className="text-sm font-bold text-bloq-text">
           {tita.erro}
         </p>
+      )}
+      {podeImportar && tita.pendente === null && tita.importacao !== null && (
+        <RascunhoDaIA evolucao={evolucao} />
       )}
       {podeImportar && tita.pendente === null && (
         <EscolhaDoPdf

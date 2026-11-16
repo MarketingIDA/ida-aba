@@ -2,7 +2,7 @@
 
 Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada coordenador de unidade faz a evolução de cada assistido da sua carteira e, até o dia 10, envia a contas médicas o **arquivo do mês**, com as evoluções da carteira toda. A evolução nasce das evoluções diárias registradas no Tita: o coordenador importa o PDF do assistido e, se quiser, outros documentos (escola, outras terapias, família); uma IA escreve o rascunho no formato do modelo da clínica e o coordenador confere parte por parte e conclui. Sem o PDF, ele escreve o mês à mão e a IA aprimora o texto. Cada assistido tem ainda a evolução das metas em gráfico, a partir do nível de apoio que a IA lê nas análises.
 
-**Fase atual: importação do Tita (fatia 3).** No ar: o login dos três perfis, os cadastros, a tela Evoluções do mês, a evolução escrita à mão com a conferência das 4 partes (fatia 1) e o arquivo do mês, com a assinatura, o envio a contas médicas e o Word (fatia 2). A fatia 3 traz a importação do PDF do Tita. O rascunho com a IA vem depois; o [protótipo](#protótipo) continua como referência de telas e regras. A evolução de supervisão é outro relatório e fica para uma fase posterior.
+**Fase atual: rascunho pela IA (fatia 4).** No ar: o login dos três perfis, os cadastros, a tela Evoluções do mês, a evolução escrita à mão com a conferência das 4 partes (fatia 1), o arquivo do mês, com a assinatura, o envio a contas médicas e o Word (fatia 2), e a importação do PDF do Tita (fatia 3). A fatia 4 traz o rascunho das partes 2 a 4 pela IA. O [protótipo](#protótipo) continua como referência de telas e regras. A evolução de supervisão é outro relatório e fica para uma fase posterior.
 
 ## O que já funciona
 
@@ -10,6 +10,7 @@ Evolução mensal da intervenção ABA do Instituto do Autismo. Todo mês, cada 
 - **Coordenação de unidade e coordenação geral:** Evoluções do mês, com cards por situação que filtram a lista, busca por nome ou código, escolha do mês (o aberto e os 5 anteriores), período analisado e prazo do arquivo do mês. A coordenação geral vê todas as unidades e recorta por unidade e coordenador.
 - **Evolução escrita à mão (coordenador):** "Nova evolução mensal" cria a evolução de um assistido da carteira no mês aberto. O coordenador escreve o texto e as metas, confere as 4 partes e conclui ou reabre. Cada gravação de uma parte vira uma versão nova. A coordenação geral lê a evolução.
 - **PDF do Tita (coordenador):** na evolução em conferência, o coordenador importa o Relatório de Evoluções Diárias do assistido. O PDF é lido no navegador, com a biblioteca `pdfjs-dist`, e não é guardado: vão ao banco só os Dados do Favorecido e, de cada evolução diária, a data, a análise do atendimento e se foi falta. A tela mostra o que foi lido, bloqueia o PDF de outro assistido, de outro período, de outra terapia ou com filtro de profissional, e alerta as datas fora do período. Depois de importar, as análises ficam na evolução para consulta enquanto o coordenador escreve.
+- **Rascunho pela IA (coordenador):** com o PDF do Tita importado, "Gerar rascunho com a IA" escreve as partes 2 a 4 (o texto em 5 trechos, as metas alcançadas e as metas para o mês atual), e o coordenador confere cada parte. A Edge Function `gerar-rascunho` tira o nome do assistido das análises antes de mandar para a IA (E05), e a chave da IA fica só no servidor. Cada rascunho é uma versão nova da parte; o texto anterior fica guardado.
 - **Assinatura (coordenador):** a imagem da assinatura ou do carimbo, por arquivo ou foto, que vai no fim do arquivo do mês, acima do nome e do CRP. A imagem fica no bucket privado `assinaturas` do Storage. Trocar não apaga a anterior: o arquivo já enviado fica com a assinatura da época.
 - **Cadastros (coordenação geral):** unidades, planos de saúde, pessoas, carteiras e assistidos, com o cadastro e a alteração numa gaveta lateral. Nada se apaga: o que não vale mais fica desativado. A unidade tem CNPJ, obrigatório (numérico ou alfanumérico, com os dígitos conferidos), e endereço, opcional. A carteira junta uma unidade, um turno e quem coordena; só pode haver uma carteira ativa por unidade e turno, e passar a carteira para outra pessoa muda quem vê os assistidos e as evoluções dela. O assistido fica numa carteira ativa e leva a unidade dela; o número dele na unidade, que entra no código da evolução, o banco dá sozinho. A lista de assistidos tem busca pelo nome (sem ligar para acento) e filtro por carteira, e avisa quem está sem plano.
   - Cada pessoa tem um papel (coordenação de unidade, coordenação geral ou contas médicas) e, se coordena unidade, o CRP. Quem ainda não entrou aparece como "Sem conta".
@@ -59,7 +60,8 @@ O CI (`.github/workflows/ci.yml`) roda lint, tipos, testes com cobertura, build,
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | `.env.local` e Vercel | URL do projeto Supabase |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | `.env.local` e Vercel | chave publicável (`sb_publishable_…`). É pública por desenho: quem protege os dados é o RLS |
-| `OPENAI_API_KEY` | segredos das Edge Functions do Supabase | chave da IA; nunca vai para o navegador nem para a Vercel (usada a partir da etapa do rascunho) |
+| `OPENAI_API_KEY` | segredos das Edge Functions do Supabase | chave da IA; nunca vai para o navegador nem para a Vercel |
+| `OPENAI_MODEL` | segredos das Edge Functions do Supabase | o modelo da OpenAI que escreve o rascunho; sem ele a função recusa o pedido |
 
 A service role e a senha do banco não entram no repositório, no `.env.local` nem na Vercel.
 
@@ -78,7 +80,7 @@ Estes passos ficam com o dono do projeto e não estão no código:
 3. **URLs:** em Authentication → URL Configuration, use `https://ida-aba.vercel.app/primeiro-acesso` como Site URL, para que o convite caia direto na criação da senha. Em Redirect URLs, ponha `https://ida-aba.vercel.app/primeiro-acesso` e `http://localhost:5173/primeiro-acesso`.
 4. **Senhas:** em Authentication → Attack Protection (ou Passwords), exija no mínimo 15 caracteres, a mesma regra da tela, e ligue a proteção contra senha vazada se o plano permitir.
 5. **E-mail:** o SMTP padrão do Supabase só entrega para os membros do time do projeto. Antes de convidar os coordenadores, configure um SMTP próprio em Authentication → Emails → SMTP Settings.
-6. **Segredos das Edge Functions:** renomeie `SUBAPASE-OPENAI_API` para `OPENAI_API_KEY` e apague `SUPABASE-ULR` e `SUPABASE-ANON-PUBLIC`. O Supabase já injeta `SUPABASE_URL` e `SUPABASE_ANON_KEY` em toda função.
+6. **Segredos das Edge Functions:** renomeie `SUBAPASE-OPENAI_API` para `OPENAI_API_KEY` e apague `SUPABASE-ULR` e `SUPABASE-ANON-PUBLIC`. O Supabase já injeta `SUPABASE_URL` e `SUPABASE_ANON_KEY` em toda função. Crie também `OPENAI_MODEL`, com o nome do modelo da OpenAI que escreve o rascunho.
 
 ## Contas de acesso
 
@@ -114,7 +116,8 @@ ida-aba/
 ├── supabase/
 │   ├── migrations/              # schema, RLS, auditoria e RPC
 │   ├── tests/                   # testes de RLS em transação que se desfaz
-│   └── functions/_shared/dominio/   # domínio puro (mês, período, prazo), do app e das Edge Functions
+│   ├── functions/_shared/dominio/   # domínio puro (mês, período, prazo, troca do nome, pedido à IA)
+│   └── functions/gerar-rascunho/    # Edge Function que pede o rascunho à IA
 ├── tests/e2e/                   # Playwright com Supabase fictício
 ├── prototipo/                   # protótipo navegável, referência de telas e regras
 ├── docs/                        # domínio (regras E01–E28), stack e design system

@@ -176,6 +176,16 @@ export default tseslint.config(
     rules: { 'sonarjs/prefer-read-only-props': 'off' },
   },
 
+  // ── Edge Functions (Deno): o tsconfig do app não as cobre, então o lint é sem tipos ────────────
+  {
+    files: ['supabase/functions/**/*.ts'],
+    ignores: ['supabase/functions/_shared/dominio/**'],
+    extends: [tseslint.configs.strict],
+    languageOptions: { globals: { Deno: 'readonly' } },
+    // O log da função é o `console.error`, só com códigos e status: nunca texto de assistido.
+    rules: { 'no-console': ['error', { allow: ['error'] }] },
+  },
+
   // ── Testes: describe/it longos são normais; os limites de tamanho valem para código de produto ─
   {
     files: [

@@ -11,6 +11,7 @@ import {
 } from '@/features/evolucoes/api/evolucao.api';
 import { buscarCoordenadores, buscarEvolucoesDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { buscarImportacao, gravarImportacao } from '@/features/evolucoes/api/importacao.api';
+import { gerarRascunho } from '@/features/evolucoes/api/rascunho.api';
 import type { Leitura } from '@/features/evolucoes/tita/leitura';
 
 export const evolucoesKeys = {
@@ -50,6 +51,15 @@ export function useImportarTita(evolucaoId: string) {
   return useMutation({
     mutationFn: ({ arquivo, leitura }: { arquivo: string; leitura: Leitura }) =>
       gravarImportacao(evolucaoId, arquivo, leitura),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
+  });
+}
+
+/** Rascunho pela IA: deu certo ou não, a evolução volta do banco com o que ficou gravado. */
+export function useGerarRascunho(evolucaoId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => gerarRascunho(evolucaoId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
   });
 }

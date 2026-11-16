@@ -1,0 +1,10 @@
+# Configuração lida pela integração do Supabase com o GitHub.
+#
+# Em produção, a integração usa este arquivo só para saber quais Edge Functions e buckets publicar.
+# O resto (API, Auth, e-mail) é configurado no painel e NÃO é lido daqui: não acrescente essas
+# seções sem antes conferir a documentação de Branching, para não sobrescrever o painel.
+project_id = "ida-aba"
+
+# Rascunho da evolução pela IA. A plataforma confere o login de quem chama antes de a função rodar.
+[functions.gerar-rascunho]
+verify_jwt = true
