@@ -15,14 +15,18 @@ export type Genero = (typeof GENEROS)[number];
 export interface Assistido {
   id: number;
   nome: string;
-  /** Como o texto da evolução se refere: "a assistida" ou "o assistido". */
-  genero: Genero;
+  /**
+   * Como o texto da evolução se refere: "a assistida" ou "o assistido". Nulo só no rascunho que
+   * veio da Tita com sexo "Outros": a coordenação geral escolhe ao pôr na carteira.
+   */
+  genero: Genero | null;
   /** `AAAA-MM-DD`, ou nulo enquanto não se sabe. */
   dataNascimento: string | null;
   /** Sem plano, a evolução do mês fica bloqueada até o plano entrar. */
   planoId: number | null;
   unidadeId: number;
-  carteiraId: number;
+  /** Nulo: rascunho vindo da Tita, à espera da carteira (a Tita não diz o turno). */
+  carteiraId: number | null;
   ativo: boolean;
 }
 
@@ -35,11 +39,11 @@ const esquemaAssistido = z
   .object({
     id: z.number().int(),
     nome: z.string(),
-    genero: z.enum(GENEROS),
+    genero: z.enum(GENEROS).nullable(),
     data_nascimento: z.string().nullable(),
     plano_id: z.number().int().nullable(),
     unidade_id: z.number().int(),
-    carteira_id: z.number().int(),
+    carteira_id: z.number().int().nullable(),
     ativo: z.boolean(),
   })
   .transform((linha): Assistido => ({
@@ -59,6 +63,7 @@ const MENSAGENS = {
   sem_permissao: 'Só a coordenação geral cadastra e altera assistidos.',
   regras: {
     carteira_desativada: 'A carteira escolhida está desativada. Escolha uma carteira ativa.',
+    carteira_obrigatoria: 'O assistido com carteira não volta a ser rascunho.',
   },
 };
 

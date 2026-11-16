@@ -8,3 +8,9 @@ project_id = "ida-aba"
 # Rascunho da evolução pela IA. A plataforma confere o login de quem chama antes de a função rodar.
 [functions.gerar-rascunho]
 verify_jwt = true
+
+# Sincronização dos assistidos com a Tita (E28). Sem a checagem de JWT da plataforma porque o
+# agendamento (pg_cron) não tem login: a própria função confere o login da coordenação geral ou o
+# token do agendamento antes de qualquer coisa.
+[functions.sincronizar-tita]
+verify_jwt = false

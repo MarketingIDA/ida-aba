@@ -59,10 +59,10 @@ const CABECALHO = (
   </div>
 );
 
-/** Os assistidos ativos, em ordem alfabética. */
+/** Os assistidos ativos numa carteira (o rascunho da Tita ainda não tem), em ordem alfabética. */
 const emOrdem = (assistidos: readonly Assistido[]) =>
   assistidos
-    .filter((assistido) => assistido.ativo)
+    .filter((assistido) => assistido.ativo && assistido.carteiraId !== null)
     .toSorted((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
 /**

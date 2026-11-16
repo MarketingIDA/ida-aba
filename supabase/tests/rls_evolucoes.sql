@@ -673,6 +673,97 @@ insert into resultado (teste, ok) select 'conta do Auth sem cadastro não lê na
   (select count(*) from acesso.usuarios) = 0 and (select count(*) from cadastro.carteiras) = 0;
 reset role;
 
+-- Sincronização com a Tita (E28): rascunho sem carteira, ligação pelo nome e nascimento, matriz
+-- ignorada, pendências e simulação que não grava nada.
+insert into cadastro.unidades_da_tita (nome_na_tita, unidade_id)
+  select 'INSTITUTO DO AUTISMO - TESTE', id from cadastro.unidades where sigla = 'TST';
+insert into cadastro.unidades_da_tita (nome_na_tita, unidade_id)
+  values ('INSTITUTO DO AUTISMO - MATRIZ TESTE', null);
+insert into cadastro.assistidos (nome, genero, data_nascimento, unidade_id, carteira_id)
+  select 'Manual Fulano Teste', 'masculino', date '2018-05-05', c.unidade_id, c.id
+    from cadastro.carteiras c join cadastro.unidades u on u.id = c.unidade_id
+   where u.sigla = 'TST' and c.turno = 'tarde';
+
+select set_config('teste.tita', $json$[
+  {"tita_id": 901, "nome": "MANUAL FULANO TESTE", "genero": "masculino", "data_nascimento": "2018-05-05",
+   "data_invalida": false, "ativo": true, "unidades": ["INSTITUTO DO AUTISMO - TESTE"]},
+  {"tita_id": 902, "nome": "Rascunho Novo Teste", "genero": null, "data_nascimento": "2019-01-01",
+   "data_invalida": false, "ativo": true, "unidades": ["INSTITUTO DO AUTISMO - TESTE"]},
+  {"tita_id": 903, "nome": "Matriz Só Teste", "genero": "feminino", "data_nascimento": "2019-02-02",
+   "data_invalida": false, "ativo": true, "unidades": ["INSTITUTO DO AUTISMO - MATRIZ TESTE"]},
+  {"tita_id": 904, "nome": "Unidade Nova Teste", "genero": "feminino", "data_nascimento": "2019-03-03",
+   "data_invalida": false, "ativo": true, "unidades": ["INSTITUTO DO AUTISMO - NOVA TESTE"]},
+  {"tita_id": 905, "nome": "Rascunho Novo Outro", "genero": "masculino", "data_nascimento": "2019-01-01",
+   "data_invalida": false, "ativo": true, "unidades": ["INSTITUTO DO AUTISMO - TESTE"]},
+  {"tita_id": 906, "nome": "Semsobrenome", "genero": "feminino", "data_nascimento": null,
+   "data_invalida": true, "ativo": true, "unidades": ["INSTITUTO DO AUTISMO - TESTE"]}
+]$json$, true);
+
+insert into resultado (teste, ok) select 'Tita: a simulação dá os números e não grava nada',
+  (select r ->> 'criados' = '2' and r ->> 'ligados' = '1' and r ->> 'ignorados' = '1'
+     from (select cadastro.sincronizar_tita(current_setting('teste.tita')::jsonb, 'manual', null, true) r) s)
+  and not exists (select 1 from cadastro.assistidos where nome like 'Rascunho Novo%')
+  and not exists (select 1 from cadastro.assistidos_da_tita)
+  and not exists (select 1 from cadastro.sincronizacoes_da_tita);
+
+select set_config('teste.tita_resumo',
+  cadastro.sincronizar_tita(current_setting('teste.tita')::jsonb, 'manual', null, false)::text, true);
+insert into resultado (teste, ok) select 'Tita: cria os rascunhos, liga o cadastrado à mão e ignora a matriz',
+  (select r ->> 'criados' = '2' and r ->> 'ligados' = '1' and r ->> 'ignorados' = '1'
+     from (select current_setting('teste.tita_resumo')::jsonb r) s)
+  and (select count(*) = 1 from cadastro.sincronizacoes_da_tita where resumo is not null);
+insert into resultado (teste, ok) select 'Tita: o rascunho entra sem carteira e, com sexo Outros, sem gênero',
+  (select carteira_id is null and genero is null and unidade_id = (select id from cadastro.unidades where sigla = 'TST')
+     from cadastro.assistidos where nome = 'Rascunho Novo Teste');
+insert into resultado (teste, ok) select 'Tita: liga pelo nome e nascimento sem trocar o nome escrito aqui',
+  (select a.nome = 'Manual Fulano Teste' from cadastro.assistidos_da_tita t
+     join cadastro.assistidos a on a.id = t.assistido_id where t.tita_id = 901);
+insert into resultado (teste, ok) select 'Tita: o que não entra vira pendência',
+  (select count(*) filter (where tipo = 'unidade_desconhecida' and detalhe = 'INSTITUTO DO AUTISMO - NOVA TESTE' and quantidade = 1) = 1
+      and count(*) filter (where tipo = 'nome_incompleto' and tita_id = 906) = 1
+      and count(*) filter (where tipo = 'sem_genero') = 1
+      and count(*) filter (where tipo = 'possivel_duplicado') = 2
+     from cadastro.pendencias_da_tita);
+insert into resultado (teste, ok) select 'Tita: a segunda rodada não repete nada',
+  (select r ->> 'criados' = '0' and r ->> 'ligados' = '0' and r ->> 'atualizados' = '0'
+     from (select cadastro.sincronizar_tita(current_setting('teste.tita')::jsonb, 'manual', null, false) r) s)
+  and (select count(*) = 5 from cadastro.pendencias_da_tita);
+
+do $$
+begin
+  begin
+    update cadastro.assistidos set carteira_id = null where nome = 'Manual Fulano Teste';
+    insert into resultado (teste, ok) values ('Tita: quem tem carteira não volta a rascunho', false);
+  exception when check_violation then
+    insert into resultado (teste, ok) values ('Tita: quem tem carteira não volta a rascunho', true);
+  end;
+end;
+$$;
+
+insert into resultado (teste, ok) select 'Tita: só o servidor sincroniza',
+  not has_function_privilege('authenticated',
+    'cadastro.sincronizar_tita(jsonb, text, bigint, boolean, integer)', 'execute')
+  and not has_function_privilege('authenticated', 'cadastro.conferir_agendamento_da_tita(text)', 'execute')
+  and has_function_privilege('service_role',
+    'cadastro.sincronizar_tita(jsonb, text, bigint, boolean, integer)', 'execute')
+  and not cadastro.conferir_agendamento_da_tita(repeat('x', 40));
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
+insert into resultado (teste, ok) select 'Tita: o coordenador não vê rascunho, pendência nem sincronização',
+  not exists (select 1 from cadastro.assistidos where carteira_id is null)
+  and (select count(*) from cadastro.pendencias_da_tita) = 0
+  and (select count(*) from cadastro.sincronizacoes_da_tita) = 0
+  and cadastro.quem_sincroniza_a_tita() is null;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
+insert into resultado (teste, ok) select 'Tita: a coordenação geral vê os rascunhos e as pendências',
+  (select count(*) from cadastro.assistidos where carteira_id is null) = 2
+  and (select count(*) from cadastro.pendencias_da_tita) = 5
+  and cadastro.quem_sincroniza_a_tita() is not null;
+reset role;
+
 -- Anônimo: sem acesso a nenhum schema do sistema.
 insert into resultado (teste, ok) select 'anon sem uso dos schemas',
   not has_schema_privilege('anon', 'acesso', 'usage')

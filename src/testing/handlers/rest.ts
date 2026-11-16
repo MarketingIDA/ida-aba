@@ -68,6 +68,14 @@ export const handlersDeRest = [
     return HttpResponse.json(corpo.p_mes === MES_DEMO ? carteiraDemo().map(linhaDaRpc) : []);
   }),
 
+  // Nunca sincronizado com a Tita e sem pendências, salvo no teste que as serve.
+  http.get(`${env.SUPABASE_URL}/rest/v1/sincronizacoes_da_tita`, ({ request }) =>
+    request.headers.get('accept-profile') === 'cadastro' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+  http.get(`${env.SUPABASE_URL}/rest/v1/pendencias_da_tita`, ({ request }) =>
+    request.headers.get('accept-profile') === 'cadastro' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+
   // Sem metas no cadastro, salvo no teste que as serve.
   http.get(`${env.SUPABASE_URL}/rest/v1/metas`, ({ request }) =>
     request.headers.get('accept-profile') === 'cadastro' ? HttpResponse.json([]) : schemaErrado(),
