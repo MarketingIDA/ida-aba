@@ -339,6 +339,22 @@ update cadastro.unidades set cnpj = '87654321000198', endereco = 'Rua Fictícia,
  where sigla = 'TSX';
 insert into resultado (teste, ok) select 'coordenação geral grava CNPJ e endereço da unidade',
   exists (select 1 from cadastro.unidades where sigla = 'TSX' and cnpj = '87654321000198');
+-- Termos inadequados (P12): a coordenação geral mantém a lista, sem repetir termo ativo.
+insert into cadastro.termos_inadequados (termo, substituto)
+  values ('termo fictício de teste', 'substituto fictício');
+do $$
+begin
+  insert into cadastro.termos_inadequados (termo, substituto)
+    values ('Termo  Ficticio de TESTE', 'outro substituto');
+  insert into resultado (teste, ok)
+    values ('coordenação geral cadastra termo inadequado, sem repetir (P12)', false);
+exception when unique_violation then
+  insert into resultado (teste, ok)
+    values ('coordenação geral cadastra termo inadequado, sem repetir (P12)',
+            (select count(*) = 1 from cadastro.termos_inadequados
+              where termo = 'termo fictício de teste' and ativo));
+end;
+$$;
 
 -- Pessoas: a coordenação geral cadastra e altera; o banco segura as travas. Os testes não
 -- dependem de quantas coordenações gerais reais existem: desativar todas tem de falhar sempre.
@@ -470,6 +486,11 @@ begin
   end;
 end;
 $$;
+update cadastro.termos_inadequados set substituto = 'alterado pelo coordenador'
+ where termo = 'termo fictício de teste';
+insert into resultado (teste, ok) select 'coordenador lê os termos inadequados e não altera (P12)',
+  (select count(*) = 1 and bool_and(substituto = 'substituto fictício')
+     from cadastro.termos_inadequados where termo = 'termo fictício de teste');
 do $$
 declare
   dica text;
@@ -616,8 +637,9 @@ insert into resultado (teste, ok) select 'contas médicas não lê a importaçã
   (select count(*) from evolucao.importacoes) = 0
   and (select count(*) from evolucao.dias_analisados) = 0
   and (select count(*) from evolucao.devolucoes) = 0;
-insert into resultado (teste, ok) select 'contas médicas não lê o cadastro de metas',
-  (select count(*) from cadastro.metas) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê o cadastro de metas nem os termos inadequados',
+  (select count(*) from cadastro.metas) = 0
+  and (select count(*) from cadastro.termos_inadequados) = 0;
 insert into resultado (teste, ok) select 'contas médicas lê a assinatura que foi no arquivo, e a imagem dela',
   (select count(*) from acesso.assinaturas
     where usuario_id = current_setting('teste.id_a')::bigint) = 1
@@ -784,7 +806,7 @@ insert into resultado (teste, ok) select 'funções de interno: anon nenhuma, au
                                       'carteiras_do_usuario', 'assistidos_do_usuario',
                                       'cnpj_valido', 'evolucoes_do_usuario',
                                       'eh_contas_medicas', 'andamento_da_carteira',
-                                      'versoes_enviadas'))));
+                                      'versoes_enviadas', 'normalizar_nome'))));
 insert into resultado (teste, ok) select 'authenticated sem DELETE em nenhuma tabela',
   not exists (
     select 1 from information_schema.role_table_grants

@@ -86,6 +86,11 @@ export const handlersDeRest = [
     request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
   ),
 
+  // Sem termos inadequados na lista, salvo no teste que os serve.
+  http.get(`${env.SUPABASE_URL}/rest/v1/termos_inadequados`, ({ request }) =>
+    request.headers.get('accept-profile') === 'cadastro' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+
   // A carteira demo no mês dos testes, pronta para enviar o arquivo.
   http.post(`${env.SUPABASE_URL}/rest/v1/rpc/arquivos_do_mes`, async ({ request }) => {
     if (request.headers.get('content-profile') !== 'evolucao') return schemaErrado();

@@ -42,8 +42,13 @@ export function useEdicaoDaEvolucao(evolucao: Evolucao) {
         },
       });
     },
+    /** A troca de um termo grava uma versão nova da parte, sem abrir a edição. */
+    trocar: (parte: ConteudoDaParte) => {
+      setErro(null);
+      acoes.salvar.mutate(parte, aoFalhar);
+    },
     salvando: acoes.salvar.isPending,
-    erroDaEdicao: acoes.salvar.isError ? mensagem(acoes.salvar.error) : null,
+    erroDaEdicao: editando !== null && acoes.salvar.isError ? mensagem(acoes.salvar.error) : null,
     conferir: (numero: NumeroDaParte, conferida: boolean) => {
       setErro(null);
       acoes.conferir.mutate({ numero, conferida }, aoFalhar);

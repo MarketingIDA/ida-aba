@@ -12,6 +12,7 @@ import {
   TRECHOS,
   TRECHOS_VAZIOS,
 } from '@dominio/evolucao.ts';
+import { marcarTermos, type Termo } from '@dominio/termos.ts';
 
 /** Rótulo e dica de cada trecho, na ordem do manual. */
 const ROTULOS: Record<Trecho, { rotulo: string; dica: string }> = {
@@ -34,8 +35,34 @@ const ROTULOS: Record<Trecho, { rotulo: string; dica: string }> = {
   fechamento: { rotulo: 'Fechamento', dica: 'O resumo do mês e o foco do próximo.' },
 };
 
+/** O texto com os termos inadequados marcados onde estão (E10). */
+function ComTermosMarcados({
+  texto,
+  termos,
+}: Readonly<{ texto: string; termos: readonly Termo[] }>) {
+  let posicao = 0;
+  return marcarTermos(texto, termos).map((pedaco) => {
+    // A posição do pedaço no texto é a chave: não se repete nem muda de lugar.
+    const chave = posicao;
+    posicao += pedaco.texto.length;
+    return pedaco.marcado ? (
+      <mark key={chave} className="rounded-[3px] border-b-2 border-alerta bg-alerta-soft">
+        {pedaco.texto}
+      </mark>
+    ) : (
+      pedaco.texto
+    );
+  });
+}
+
+interface PropsDoTexto {
+  trechos: Trechos | null;
+  /** Os termos inadequados achados no texto (E10): ficam marcados onde estão. */
+  termos?: readonly Termo[];
+}
+
 /** Parte 2 na leitura: os trechos preenchidos, cada um com o seu rótulo. */
-export function TextoDaEvolucao({ trechos }: Readonly<{ trechos: Trechos | null }>) {
+export function TextoDaEvolucao({ trechos, termos = [] }: Readonly<PropsDoTexto>) {
   const preenchidos = TRECHOS.filter((t) => (trechos?.[t] ?? '').trim() !== '');
   if (trechos === null || preenchidos.length === 0) {
     return <p className="text-sm text-apagado">O texto ainda não foi escrito.</p>;
@@ -46,7 +73,7 @@ export function TextoDaEvolucao({ trechos }: Readonly<{ trechos: Trechos | null 
         <div key={t} className="flex flex-col gap-1">
           <h3 className="rotulo text-azul">{ROTULOS[t].rotulo}</h3>
           <p className="max-w-[75ch] text-sm leading-relaxed whitespace-pre-line text-texto">
-            {trechos[t].trim()}
+            <ComTermosMarcados texto={trechos[t].trim()} termos={termos} />
           </p>
         </div>
       ))}
