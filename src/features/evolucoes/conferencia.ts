@@ -1,3 +1,4 @@
+import type { Devolucao } from '@/features/evolucoes/api/devolucao.api';
 import type { Evolucao, NumeroDaParte } from '@/features/evolucoes/api/evolucao.api';
 import { plural } from '@/features/evolucoes/logica';
 import { linhasDoTexto, MINIMO_DE_LINHAS, MINIMO_DE_METAS_DO_MES } from '@dominio/evolucao.ts';
@@ -45,7 +46,16 @@ export function conferidas(evolucao: Evolucao): number {
   return evolucao.partes.filter((p) => p.conferidaEm !== null).length;
 }
 
-/** Pronta para concluir: as 4 partes conferidas e nenhuma pendência. */
+/** A devolução à espera de o coordenador resolver (E13), ou `null`. */
+export function devolucaoAberta(evolucao: Evolucao): Devolucao | null {
+  return evolucao.devolucoes.find((d) => d.resolvidaEm === null) ?? null;
+}
+
+/** Pronta para concluir: as 4 partes conferidas, nenhuma pendência e nenhuma devolução aberta. */
 export function prontaParaConcluir(evolucao: Evolucao): boolean {
-  return conferidas(evolucao) === 4 && NUMEROS.every((n) => pendenciaDaParte(evolucao, n) === null);
+  return (
+    conferidas(evolucao) === 4 &&
+    devolucaoAberta(evolucao) === null &&
+    NUMEROS.every((n) => pendenciaDaParte(evolucao, n) === null)
+  );
 }

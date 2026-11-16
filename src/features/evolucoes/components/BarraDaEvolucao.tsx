@@ -2,7 +2,8 @@ import { CircleCheck, Info, Lock, Undo2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
-import { conferidas, prontaParaConcluir } from '@/features/evolucoes/conferencia';
+import { DevolverEvolucao } from '@/features/evolucoes/components/DevolverEvolucao';
+import { conferidas, devolucaoAberta, prontaParaConcluir } from '@/features/evolucoes/conferencia';
 import { formatarDataHora } from '@/features/evolucoes/textos';
 
 interface Props {
@@ -20,6 +21,7 @@ function Resumo({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
       <span className="flex items-center gap-2">
         <Info aria-hidden="true" className="size-4 shrink-0 text-azul" />
         {n} de 4 partes conferidas
+        {devolucaoAberta(evolucao) !== null && ' · devolução a resolver'}
       </span>
     );
   }
@@ -36,7 +38,17 @@ function Resumo({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   );
 }
 
-/** Rodapé fixo da evolução: quantas partes faltam, o erro da última ação e concluir ou reabrir. */
+/** O que falta para o botão de concluir habilitar. */
+function oQueFalta(evolucao: Evolucao): string {
+  return devolucaoAberta(evolucao) === null
+    ? 'Confira as 4 partes, sem pendências, para concluir'
+    : 'Marque a devolução como resolvida para concluir';
+}
+
+/**
+ * Rodapé fixo da evolução: quantas partes faltam, o erro da última ação e concluir ou reabrir; para
+ * a coordenação geral, devolver a concluída com o motivo.
+ */
 export function BarraDaEvolucao({
   evolucao,
   ocupado,
@@ -59,7 +71,7 @@ export function BarraDaEvolucao({
             size="lg"
             onClick={aoConcluir}
             disabled={ocupado || !pronta}
-            title={pronta ? undefined : 'Confira as 4 partes, sem pendências, para concluir'}
+            title={pronta ? undefined : oQueFalta(evolucao)}
           >
             <CircleCheck aria-hidden="true" />
             Concluir evolução
@@ -71,6 +83,7 @@ export function BarraDaEvolucao({
             Reabrir
           </Button>
         )}
+        {evolucao.podeDevolver && <DevolverEvolucao evolucaoId={evolucao.id} />}
       </div>
     </div>
   );
