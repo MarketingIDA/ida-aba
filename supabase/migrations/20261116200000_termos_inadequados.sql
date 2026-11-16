@@ -23,6 +23,10 @@ create unique index termos_inadequados_termo_idx
   on cadastro.termos_inadequados (interno.normalizar_nome(termo))
   where ativo;
 
+-- O índice chama a função com o papel de quem grava o termo. Ela só mexe no texto que recebe, sem
+-- ler tabela nenhuma, como a `cnpj_valido` do check das unidades.
+grant execute on function interno.normalizar_nome(text) to authenticated, service_role;
+
 comment on table cadastro.termos_inadequados is
   'Termos que expõem o assistido e o termo técnico que os substitui na evolução (E10, P12).';
 

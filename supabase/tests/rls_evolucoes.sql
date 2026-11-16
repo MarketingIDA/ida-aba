@@ -806,7 +806,7 @@ insert into resultado (teste, ok) select 'funções de interno: anon nenhuma, au
                                       'carteiras_do_usuario', 'assistidos_do_usuario',
                                       'cnpj_valido', 'evolucoes_do_usuario',
                                       'eh_contas_medicas', 'andamento_da_carteira',
-                                      'versoes_enviadas'))));
+                                      'versoes_enviadas', 'normalizar_nome'))));
 insert into resultado (teste, ok) select 'authenticated sem DELETE em nenhuma tabela',
   not exists (
     select 1 from information_schema.role_table_grants
