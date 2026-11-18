@@ -10,6 +10,7 @@ import {
   DadosDoFavorecido,
   textoDaFrequencia,
 } from '@/features/evolucoes/components/LeituraDoTita';
+import { NivelDeApoio } from '@/features/evolucoes/components/NivelDeApoio';
 import { RascunhoDaIA } from '@/features/evolucoes/components/RascunhoDaIA';
 import {
   type LeituraPendente,
@@ -130,7 +131,10 @@ export function ImportacaoDoTita({
       </div>
       {tita.pendente !== null && <LeituraParaConferir pendente={tita.pendente} tita={tita} />}
       {tita.pendente === null && tita.importacao !== null && (
-        <ImportacaoGravada importacao={tita.importacao} evolucao={evolucao} />
+        <>
+          <ImportacaoGravada importacao={tita.importacao} evolucao={evolucao} />
+          <NivelDeApoio niveis={tita.niveis} podeLer={podeImportar} />
+        </>
       )}
       {tita.erro !== null && (
         <p role="alert" className="text-sm font-bold text-bloq-text">

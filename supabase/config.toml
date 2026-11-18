@@ -9,6 +9,11 @@ project_id = "ida-aba"
 [functions.gerar-rascunho]
 verify_jwt = true
 
+# Leitura do nível de apoio pela IA (E27), logo depois de importar o PDF do Tita. Também confere o
+# login antes de a função rodar.
+[functions.ler-niveis]
+verify_jwt = true
+
 # Sincronização dos assistidos com a Tita (E28). Sem a checagem de JWT da plataforma porque o
 # agendamento (pg_cron) não tem login: a própria função confere o login da coordenação geral ou o
 # token do agendamento antes de qualquer coisa.

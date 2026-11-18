@@ -276,6 +276,8 @@ do $$
 declare
   nova uuid;
   dica text;
+  imp bigint;
+  meta_dois bigint;
   inicio date := (date_trunc('month', now() at time zone 'America/Recife') - interval '1 month')::date;
   fim date := date_trunc('month', now() at time zone 'America/Recife')::date - 1;
 begin
@@ -334,6 +336,53 @@ begin
     (select count(*) = 2 and sum(n_evolucoes) = 3 and count(*) filter (where falta) = 1
        from evolucao.dias_analisados where evolucao_id = nova)
     and (select origem = 'tita' from evolucao.evolucoes where id = nova);
+  -- Nível de apoio (E27): só o servidor grava, e o coordenador lê o da própria carteira.
+  select max(id) into imp from evolucao.importacoes where evolucao_id = nova;
+  select id into meta_dois from cadastro.metas where texto = 'Meta fictícia do cadastro';
+  execute 'set local role service_role';
+  perform evolucao.gravar_niveis(imp, 'lida', jsonb_build_array(jsonb_build_object(
+    'meta_id', meta_dois, 'data', inicio, 'nivel', 3, 'trecho', 'Análise fictícia um.')));
+  begin
+    perform evolucao.gravar_niveis(imp, 'lida', jsonb_build_array(jsonb_build_object(
+      'meta_id', meta_dois, 'data', inicio - 1, 'nivel', 3, 'trecho', 'De fora do período.')));
+    insert into resultado (teste, ok) values ('nível de apoio de dia fora do período não entra (E27)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('nível de apoio de dia fora do período não entra (E27)', dica = 'nivel_invalido');
+  end;
+  execute 'set local role authenticated';
+  insert into resultado (teste, ok) select 'coordenador lê o nível de apoio e a leitura da própria carteira (E27)',
+    (select count(*) = 1 and bool_and(nivel = 3) from evolucao.niveis_de_apoio where evolucao_id = nova)
+    and (select situacao = 'lida' and dias = 1 and metas = 1
+           from evolucao.leituras_de_nivel where evolucao_id = nova);
+  begin
+    insert into evolucao.niveis_de_apoio (meta_id, data, evolucao_id, nivel, trecho)
+      values (meta_dois, inicio + 2, nova, 5, 'Inventado.');
+    insert into resultado (teste, ok) values ('o cliente não grava o nível de apoio (E27)', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('o cliente não grava o nível de apoio (E27)',
+      not has_function_privilege('authenticated', 'evolucao.gravar_niveis(bigint, text, jsonb)', 'execute'));
+  end;
+  -- Importar de novo apaga os níveis do PDF anterior; a leitura atrasada do anterior é recusada.
+  insert into evolucao.importacoes (evolucao_id, arquivo_nome, favorecido, analises)
+    select evolucao_id, 'ficticio-2.pdf', favorecido, analises from evolucao.importacoes where id = imp;
+  insert into resultado (teste, ok) select 'importar de novo apaga o nível de apoio do PDF anterior (E27)',
+    (select count(*) from evolucao.niveis_de_apoio where evolucao_id = nova) = 0
+    and (select count(*) from evolucao.leituras_de_nivel where evolucao_id = nova) = 0;
+  execute 'set local role service_role';
+  begin
+    perform evolucao.gravar_niveis(imp, 'lida', '[]'::jsonb);
+    insert into resultado (teste, ok) values ('leitura do PDF que já não vale é recusada (E27)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('leitura do PDF que já não vale é recusada (E27)', dica = 'leitura_desatualizada');
+  end;
+  perform evolucao.gravar_niveis((select max(id) from evolucao.importacoes where evolucao_id = nova),
+    'lida', jsonb_build_array(jsonb_build_object(
+      'meta_id', meta_dois, 'data', inicio, 'nivel', 4, 'trecho', 'Análise fictícia um.')));
+  execute 'set local role authenticated';
   begin
     update evolucao.evolucoes set situacao = 'concluida' where id = nova;
     insert into resultado (teste, ok) values ('não conclui sem as 4 partes conferidas', false);
@@ -388,6 +437,9 @@ insert into resultado (teste, ok) select 'outro coordenador não vê a carteira 
   and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1
   and (select count(distinct evolucao_id) from evolucao.partes) = 1
   and (select count(*) from evolucao.documentos) = 0;
+insert into resultado (teste, ok) select 'outro coordenador não lê o nível de apoio alheio (E27)',
+  (select count(*) from evolucao.niveis_de_apoio) = 0
+  and (select count(*) from evolucao.leituras_de_nivel) = 0;
 reset role;
 
 -- Coordenação geral: vê tudo e mantém o cadastro.
@@ -768,6 +820,9 @@ insert into resultado (teste, ok) select 'contas médicas não lê as dicas nem 
   and (select count(*) from evolucao.orientacoes_ia) = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê os outros documentos (E25)',
   (select count(*) from evolucao.documentos) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê o nível de apoio (E27)',
+  (select count(*) from evolucao.niveis_de_apoio) = 0
+  and (select count(*) from evolucao.leituras_de_nivel) = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê o cadastro de metas nem os termos inadequados',
   (select count(*) from cadastro.metas) = 0
   and (select count(*) from cadastro.termos_inadequados) = 0;

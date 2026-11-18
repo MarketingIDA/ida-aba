@@ -86,6 +86,11 @@ export const handlersDeRest = [
     request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
   ),
 
+  // Nível de apoio ainda não lido, salvo no teste que o lê.
+  http.get(`${env.SUPABASE_URL}/rest/v1/leituras_de_nivel`, ({ request }) =>
+    request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+
   // Sem outros documentos na evolução, salvo no teste que os serve.
   http.get(`${env.SUPABASE_URL}/rest/v1/documentos`, ({ request }) =>
     request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),

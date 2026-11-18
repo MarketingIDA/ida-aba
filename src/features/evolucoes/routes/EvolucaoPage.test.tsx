@@ -403,3 +403,43 @@ describe('Outros documentos', () => {
     });
   });
 });
+
+describe('Nível de apoio', () => {
+  it('o coordenador pede a leitura dos níveis e vê quantos dias e metas a IA leu', async () => {
+    const lidas: Record<string, unknown>[] = [];
+    const pedidos: unknown[] = [];
+    server.use(
+      http.get(`${REST}/importacoes`, () =>
+        HttpResponse.json({
+          arquivo_nome: 'Relatorio ficticio.pdf',
+          criado_em: '2026-11-04T15:00:00Z',
+          favorecido: {
+            nome: 'Alice Fictícia Moura',
+            periodo_inicio: '2026-10-01',
+            periodo_fim: '2026-10-31',
+          },
+          analises: [
+            { data: '2026-10-05', texto: 'Fez contato visual com dica verbal.', falta: false },
+          ],
+        }),
+      ),
+      http.get(`${REST}/leituras_de_nivel`, () => HttpResponse.json(lidas[0] ?? null)),
+      http.post(`${env.SUPABASE_URL}/functions/v1/ler-niveis`, async ({ request }) => {
+        pedidos.push(await request.json());
+        lidas.push({ situacao: 'lida', dias: 1, metas: 1, lida_em: '2026-11-04T15:01:00Z' });
+        return HttpResponse.json({ ok: true, situacao: 'lida' });
+      }),
+    );
+    const { user } = abrir();
+
+    expect(
+      await screen.findByText('O nível de apoio das metas ainda não foi lido.'),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Ler os níveis' }));
+
+    expect(
+      await screen.findByText('Nível de apoio lido: 1 dia com nível, em 1 meta.'),
+    ).toBeInTheDocument();
+    expect(pedidos).toEqual([{ evolucao_id: ID }]);
+  });
+});
