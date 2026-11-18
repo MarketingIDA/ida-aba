@@ -77,14 +77,31 @@ const linhaDo = (dados: DadosDoAssistido) => ({
   ativo: dados.ativo,
 });
 
+/** O Supabase devolve no máximo 1.000 linhas por consulta (`max_rows` da Data API). */
+const ASSISTIDOS_POR_PAGINA = 1000;
+
+/**
+ * Todos os assistidos, de página em página: só da Tita vêm mais de mil, e uma consulta só cortaria
+ * a lista sem aviso. O `id` desempata os nomes iguais, para nenhuma página repetir ou pular alguém.
+ */
 export async function buscarAssistidos(): Promise<Assistido[]> {
-  const { data, error } = await supabase
-    .schema('cadastro')
-    .from('assistidos')
-    .select(COLUNAS)
-    .order('nome');
-  if (error !== null) throw erroDoBanco(error, MENSAGENS);
-  return z.array(esquemaAssistido).parse(data);
+  const todos: Assistido[] = [];
+  let recebidos: number;
+  do {
+    const inicio = todos.length;
+    const { data, error } = await supabase
+      .schema('cadastro')
+      .from('assistidos')
+      .select(COLUNAS)
+      .order('nome')
+      .order('id')
+      .range(inicio, inicio + ASSISTIDOS_POR_PAGINA - 1);
+    if (error !== null) throw erroDoBanco(error, MENSAGENS);
+    const pagina = z.array(esquemaAssistido).parse(data);
+    todos.push(...pagina);
+    recebidos = pagina.length;
+  } while (recebidos === ASSISTIDOS_POR_PAGINA);
+  return todos;
 }
 
 /** Cadastra (sem `id`) ou altera (com `id`); devolve o assistido como ficou no banco. */

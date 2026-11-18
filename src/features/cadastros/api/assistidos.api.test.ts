@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { env } from '@/config/env';
-import { salvarAssistido } from '@/features/cadastros/api/assistidos.api';
+import { buscarAssistidos, salvarAssistido } from '@/features/cadastros/api/assistidos.api';
 import { assistidosDemo } from '@/testing/factories/cadastros';
 import { server } from '@/testing/server';
 import { tabelaEmMemoria } from '@/testing/tabelaEmMemoria';
@@ -37,6 +37,24 @@ describe('API dos assistidos', () => {
       { metodo: 'POST', corpo: linha, perfil: 'cadastro' },
       { metodo: 'PATCH', corpo: { ...linha, plano_id: 1, ativo: false }, perfil: 'cadastro' },
     ]);
+  });
+
+  it('lê de mil em mil até a última página, porque o Supabase corta em mil', async () => {
+    const [modelo] = assistidosDemo();
+    const banco = Array.from({ length: 2345 }, (_, i) => ({ ...modelo, id: i + 1 }));
+    server.use(
+      http.get(`${env.SUPABASE_URL}/rest/v1/assistidos`, ({ request }) => {
+        const url = new URL(request.url);
+        const inicio = Number(url.searchParams.get('offset') ?? 0);
+        const limite = Math.min(Number(url.searchParams.get('limit') ?? 1000), 1000);
+        return HttpResponse.json(banco.slice(inicio, inicio + limite));
+      }),
+    );
+
+    const lista = await buscarAssistidos();
+
+    expect(lista).toHaveLength(2345);
+    expect(lista.map((assistido) => assistido.id)).toEqual(banco.map((linha) => linha.id));
   });
 
   it('a carteira desativada é recusada pelo banco com o motivo', async () => {
