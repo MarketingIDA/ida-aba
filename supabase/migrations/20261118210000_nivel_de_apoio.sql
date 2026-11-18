@@ -102,10 +102,14 @@ begin
       using errcode = '23514', hint = 'nivel_invalido';
   end if;
 
-  delete from evolucao.niveis_de_apoio n where n.evolucao_id = ev.id;
-  insert into evolucao.niveis_de_apoio (meta_id, data, evolucao_id, nivel, trecho)
-    select n.meta_id, n.data, ev.id, n.nivel, btrim(n.trecho)
-      from jsonb_to_recordset(p_niveis) as n(meta_id bigint, data date, nivel smallint, trecho text);
+  -- A leitura que falhou não apaga os níveis que já valem: "Ler de novo" com a IA fora do ar
+  -- deixa a leitura anterior como está (o PDF novo já chega sem níveis, pelo trigger).
+  if p_situacao <> 'falhou' then
+    delete from evolucao.niveis_de_apoio n where n.evolucao_id = ev.id;
+    insert into evolucao.niveis_de_apoio (meta_id, data, evolucao_id, nivel, trecho)
+      select n.meta_id, n.data, ev.id, n.nivel, btrim(n.trecho)
+        from jsonb_to_recordset(p_niveis) as n(meta_id bigint, data date, nivel smallint, trecho text);
+  end if;
 
   insert into evolucao.leituras_de_nivel (evolucao_id, importacao_id, situacao, dias, metas, lida_em)
     select ev.id, p_importacao_id, p_situacao,
