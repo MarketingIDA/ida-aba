@@ -13,6 +13,7 @@ import {
 import type { OutrosDocumentos as Estado } from '@/features/evolucoes/routes/useOutrosDocumentos';
 import { plural } from '@/utils/textos';
 import { TIPOS_DE_DOCUMENTO, type TipoDeDocumento } from '@dominio/documentos.ts';
+import { hojeNaClinica } from '@dominio/mes.ts';
 
 /** Tipo e data editáveis, e tirar da lista. */
 function AcoesDoDocumento({
@@ -37,7 +38,10 @@ function AcoesDoDocumento({
         ))}
       </Seletor>
       <Input
+        // A chave refaz o campo quando a data gravada muda; o máximo evita a data no futuro.
+        key={documento.data ?? ''}
         type="date"
+        max={hojeNaClinica(new Date())}
         aria-label={`Data de ${documento.arquivo}`}
         className="sm:w-44"
         defaultValue={documento.data ?? ''}
