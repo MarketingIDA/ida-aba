@@ -2,7 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
-import { importacaoOptions, useImportarTita } from '@/features/evolucoes/queries';
+import {
+  importacaoOptions,
+  leituraDeNivelOptions,
+  useImportarTita,
+  useLerNiveis,
+} from '@/features/evolucoes/queries';
 import {
   type Conferencia,
   conferirLeitura,
@@ -37,6 +42,21 @@ async function lerEConferir(arquivo: File, evolucao: Evolucao): Promise<LeituraP
   };
 }
 
+/** A leitura do nível de apoio da importação atual (E27): a situação gravada e o pedido à IA. */
+function useNivelDeApoio(evolucaoId: string) {
+  const consulta = useQuery(leituraDeNivelOptions(evolucaoId));
+  const ler = useLerNiveis(evolucaoId);
+  return {
+    leitura: consulta.data ?? null,
+    carregando: consulta.isPending,
+    lendo: ler.isPending,
+    erro: ler.isError ? mensagemDe(ler.error, 'Não foi possível ler o nível de apoio.') : null,
+    ler: () => {
+      ler.mutate();
+    },
+  };
+}
+
 /**
  * A importação do PDF do Tita na evolução: escolher o arquivo, ler no navegador, conferir (E03) e
  * só então gravar. O PDF não sai do computador; vai ao banco só o que foi lido.
@@ -44,6 +64,7 @@ async function lerEConferir(arquivo: File, evolucao: Evolucao): Promise<LeituraP
 export function useImportacaoDoTita(evolucao: Evolucao) {
   const consulta = useQuery(importacaoOptions(evolucao.id));
   const importar = useImportarTita(evolucao.id);
+  const niveis = useNivelDeApoio(evolucao.id);
   const [pendente, setPendente] = useState<LeituraPendente | null>(null);
   const [lendo, setLendo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -68,6 +89,7 @@ export function useImportacaoDoTita(evolucao: Evolucao) {
     salvando: importar.isPending,
     erro:
       erro ?? (consulta.isError ? mensagemDe(consulta.error, 'Não foi possível carregar.') : null),
+    niveis,
     escolher: (arquivo: File) => void ler(arquivo),
     confirmar: () => {
       if (pendente === null) return;
@@ -76,6 +98,8 @@ export function useImportacaoDoTita(evolucao: Evolucao) {
         {
           onSuccess: () => {
             setPendente(null);
+            // Em segundo plano: a IA lê o nível de apoio do PDF novo (E27).
+            niveis.ler();
           },
           onError: (causa) => {
             setErro(mensagemDe(causa, 'Não foi possível gravar a importação.'));

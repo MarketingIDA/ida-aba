@@ -17,6 +17,7 @@ import {
 } from '@/features/evolucoes/api/evolucao.api';
 import { buscarCoordenadores, buscarEvolucoesDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { buscarImportacao, gravarImportacao } from '@/features/evolucoes/api/importacao.api';
+import { buscarLeituraDeNivel, lerNiveis } from '@/features/evolucoes/api/niveis.api';
 import { gerarRascunho } from '@/features/evolucoes/api/rascunho.api';
 import type { Leitura } from '@/features/evolucoes/tita/leitura';
 import type { DocumentoConferido } from '@dominio/documentos.ts';
@@ -28,6 +29,7 @@ export const evolucoesKeys = {
   evolucao: (id: string) => [...evolucoesKeys.all, 'evolucao', id] as const,
   importacao: (id: string) => [...evolucoesKeys.all, 'importacao', id] as const,
   documentos: (id: string) => [...evolucoesKeys.all, 'documentos', id] as const,
+  niveis: (id: string) => [...evolucoesKeys.all, 'niveis', id] as const,
 };
 
 export const documentosOptions = (evolucaoId: string) =>
@@ -95,6 +97,21 @@ export function useImportarTita(evolucaoId: string) {
     mutationFn: ({ arquivo, leitura }: { arquivo: string; leitura: Leitura }) =>
       gravarImportacao(evolucaoId, arquivo, leitura),
     onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
+  });
+}
+
+export const leituraDeNivelOptions = (evolucaoId: string) =>
+  queryOptions({
+    queryKey: evolucoesKeys.niveis(evolucaoId),
+    queryFn: () => buscarLeituraDeNivel(evolucaoId),
+  });
+
+/** Ler o nível de apoio pela IA (E27): deu certo ou não, a situação volta do banco. */
+export function useLerNiveis(evolucaoId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => lerNiveis(evolucaoId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.niveis(evolucaoId) }),
   });
 }
 
