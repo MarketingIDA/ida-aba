@@ -4,7 +4,9 @@ minimumReleaseAge: 10080
 minimumReleaseAgeStrict: true
 # Scripts de instalação desligados: só roda o que estiver aqui como `true`.
 # unrs-resolver: o binário nativo vem do pacote opcional da plataforma; o postinstall é só fallback.
+# tesseract.js: o postinstall só mostra o aviso do Open Collective.
 allowBuilds:
+  tesseract.js: false
   unrs-resolver: false
 # eslint-plugin-jsx-a11y 6.10.2 declara peer até o ESLint 9, mas as regras funcionam no 10.
 # Revisar quando sair uma versão com peer 10.

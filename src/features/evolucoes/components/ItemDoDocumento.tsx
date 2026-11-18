@@ -39,11 +39,20 @@ export function avisoDaData(data: string | null, mesRef: string): { tom: Tom; te
   };
 }
 
-/** A data e o tamanho do documento: "20/10/2026 · 2 páginas", "sem data · Word". */
-export function detalheDoDocumento(data: string | null, paginas: number | null): string {
+/** O que é o arquivo: as páginas do PDF, Word ou foto, pela extensão do nome. */
+function formatoDoArquivo(arquivo: string, paginas: number | null): string {
+  if (paginas !== null) return plural(paginas, 'página', 'páginas');
+  return arquivo.toLowerCase().endsWith('.docx') ? 'Word' : 'foto';
+}
+
+/** A data e o formato do documento: "20/10/2026 · 2 páginas", "sem data · Word". */
+export function detalheDoDocumento(
+  data: string | null,
+  arquivo: string,
+  paginas: number | null,
+): string {
   const quando = data === null ? 'sem data' : formatarData(data);
-  const tamanho = paginas === null ? 'Word' : plural(paginas, 'página', 'páginas');
-  return `${quando} · ${tamanho}`;
+  return `${quando} · ${formatoDoArquivo(arquivo, paginas)}`;
 }
 
 /** O cartão de um documento: nome, páginas, o aviso, o texto lido e as ações à direita. */
@@ -54,9 +63,11 @@ export function ItemDoDocumento({
   aviso,
   texto,
   acoes,
+  textoAberto = false,
 }: Readonly<{
   arquivo: string;
   detalhe: string;
+  textoAberto?: boolean;
   tom: Tom;
   aviso: string;
   texto: string;
@@ -79,7 +90,7 @@ export function ItemDoDocumento({
             {aviso}
           </span>
         </span>
-        <details className="text-sm text-texto-2">
+        <details open={textoAberto} className="text-sm text-texto-2">
           <summary className="w-fit cursor-pointer rounded-md font-bold text-azul foco-anel">
             Ver o que foi lido
           </summary>

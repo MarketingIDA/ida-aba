@@ -10,6 +10,7 @@ describe('conferência dos outros documentos (E25)', () => {
       {
         arquivo: 'Relatorio escolar.pdf',
         paginas: 2,
+        imagem: false,
         texto:
           'Relatório escolar  \n\n\n\nMaria Clara Souza nasceu em 03/04/2019.\nNa sala de aula, Maria participa.\nRecife, 15 de outubro de 2026. Próxima reunião: 10/12/2026.',
       },
@@ -28,11 +29,11 @@ describe('conferência dos outros documentos (E25)', () => {
 
   it('sem o nome nem data, o documento pede confirmação e entra como contexto', () => {
     const conferido = conferirDocumento(
-      { arquivo: 'bilhete.docx', paginas: null, texto: 'Ele dormiu mal na semana.' },
+      { arquivo: 'bilhete.docx', paginas: null, texto: 'Ele dormiu mal na semana.', imagem: true },
       ASSISTIDA,
       '2026-11-18',
     );
-    expect(conferido.trocas).toBe(0);
+    expect(conferido).toMatchObject({ trocas: 0, imagem: true });
     expect(conferido.dataSugerida).toBeNull();
     expect(situacaoDaData(conferido.dataSugerida, '2026-11-01')).toBe('sem_data');
     expect(situacaoDaData('2026-10-31', '2026-11-01')).toBe('no_periodo');

@@ -38,6 +38,8 @@ export interface DocumentoConferido {
   /** `AAAA-MM-DD`: a data mais recente do texto que não está no futuro. */
   dataSugerida: string | null;
   tipoSugerido: TipoDeDocumento;
+  /** O texto veio de foto, por OCR: o nome pode ter sido mal lido, então sempre se confere. */
+  imagem: boolean;
 }
 
 const MESES = [
@@ -109,7 +111,7 @@ function arrumar(texto: string): string {
  * e sugere a data (a mais recente até hoje) e o tipo.
  */
 export function conferirDocumento(
-  lido: { arquivo: string; paginas: number | null; texto: string },
+  lido: { arquivo: string; paginas: number | null; texto: string; imagem: boolean },
   assistido: { nome: string; genero: Genero },
   hoje: string,
 ): DocumentoConferido {
@@ -124,6 +126,7 @@ export function conferirDocumento(
     cortado: texto.length > MAXIMO_DO_DOCUMENTO,
     dataSugerida: datas.toSorted((a, b) => a.localeCompare(b)).at(-1) ?? null,
     tipoSugerido: tipoDoTexto(arrumado),
+    imagem: lido.imagem,
   };
 }
 

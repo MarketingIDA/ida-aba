@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { z } from 'zod';
 
 const SUPABASE = '.supabase.co';
@@ -33,8 +34,33 @@ function cabecalhosDaVercel(supabaseUrl: string | undefined): Record<string, str
   return saida;
 }
 
+/** Onde o OCR busca o português: o tesseract.js pede `<langPath>/por.traineddata.gz`. */
+const IDIOMA_DO_OCR = 'ocr/por.traineddata.gz';
+
+/**
+ * O modelo do português para o OCR das fotos (E25), servido pelo próprio site: nada vem de CDN. O
+ * nome do arquivo é fixo, porque o tesseract.js monta o endereço a partir da pasta.
+ */
+function idiomaDoOcr(): Plugin {
+  const origem = createRequire(import.meta.url).resolve(
+    '@tesseract.js-data/por/4.0.0_best_int/por.traineddata.gz',
+  );
+  return {
+    name: 'idioma-do-ocr',
+    configureServer(servidor) {
+      servidor.middlewares.use(`/${IDIOMA_DO_OCR}`, (_pedido, resposta) => {
+        resposta.setHeader('Content-Type', 'application/octet-stream');
+        resposta.end(readFileSync(origem));
+      });
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: IDIOMA_DO_OCR, source: readFileSync(origem) });
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), idiomaDoOcr()],
   // Os aliases `@/` e `@dominio/` vêm do tsconfig.json: uma fonte só.
   resolve: { tsconfigPaths: true },
   server: { port: 5173, strictPort: true },

@@ -12,11 +12,11 @@ import { hojeNaClinica } from '@dominio/mes.ts';
 const mensagemDe = (erro: unknown, padrao: string) => (ehErroApp(erro) ? erro.message : padrao);
 
 const BLOQUEIO =
-  'Há documento sem o nome do assistido esperando a sua confirmação. Confirme ou tire da lista para gerar o rascunho.';
+  'Há documento esperando a sua confirmação. Confirme ou tire da lista para gerar o rascunho.';
 
 /**
  * Lê e confere os arquivos um por um: com o nome do assistido no texto, o documento é gravado na
- * hora; sem o nome, vai para os pendentes. O erro de um arquivo não para os outros.
+ * hora; sem o nome, ou lido de foto, vai para os pendentes. O erro de um arquivo não para os outros.
  */
 async function lerArquivos(
   arquivos: File[],
@@ -31,7 +31,8 @@ async function lerArquivos(
   for (const arquivo of arquivos) {
     try {
       const conferido = conferirDocumento(await lerDocumento(arquivo), assistido, hoje);
-      if (conferido.trocas === 0) acoes.pendente(conferido);
+      // Sem o nome no texto, ou lido de foto (o OCR pode ter errado o nome), o coordenador confere.
+      if (conferido.trocas === 0 || conferido.imagem) acoes.pendente(conferido);
       else await acoes.gravar(conferido);
     } catch (causa) {
       acoes.erro(mensagemDe(causa, `${arquivo.name}: não foi possível juntar o documento.`));

@@ -9,15 +9,22 @@ import { usuarioDemo } from '@/testing/factories/usuario';
 import { renderWithProviders } from '@/testing/renderWithProviders';
 import { server } from '@/testing/server';
 
-// O PDF e o Word são lidos pelo pdf.js e pelo mammoth; aqui a leitura devolve um texto pronto.
+// O PDF, o Word e a foto são lidos pelo pdf.js, pelo mammoth e pelo OCR; aqui a leitura devolve
+// um texto pronto. A foto traz o nome da assistida, que sai do texto.
 vi.mock('@/features/evolucoes/documentos/lerDocumento', () => ({
-  ACEITOS: '.pdf,.docx',
-  lerDocumento: (arquivo: File) =>
-    Promise.resolve({
+  ACEITOS: '.pdf,.docx,.jpg',
+  ACEITOS_DA_FOTO: '.jpg',
+  lerDocumento: (arquivo: File) => {
+    const imagem = arquivo.name.endsWith('.jpg');
+    return Promise.resolve({
       arquivo: arquivo.name,
-      paginas: 1,
-      texto: 'Relatório da escola de 20/10/2026. A criança participa da roda.',
-    }),
+      paginas: imagem ? null : 1,
+      texto: imagem
+        ? 'Bilhete da família de 20/10/2026. Alice dormiu bem.'
+        : 'Relatório da escola de 20/10/2026. A criança participa da roda.',
+      imagem,
+    });
+  },
 }));
 
 const ID = '00000000-0000-4000-8000-000000000001';
@@ -370,5 +377,29 @@ describe('Outros documentos', () => {
     expect(
       screen.getByText(/Do período analisado. Confirmado como do assistido./),
     ).toBeInTheDocument();
+  });
+  it('a foto passa pela conferência mesmo com o nome trocado, com o texto lido aberto', async () => {
+    Object.assign(banco, { genero: 'feminino' });
+    const gravados: Record<string, unknown>[] = [];
+    server.use(
+      http.post(`${REST}/documentos`, async ({ request }) => {
+        gravados.push((await request.json()) as Record<string, unknown>);
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+    const { user } = abrir();
+
+    await user.upload(
+      await screen.findByLabelText('Foto do documento'),
+      new File(['x'], 'Bilhete.jpg', { type: 'image/jpeg' }),
+    );
+
+    expect(await screen.findByText(/Texto lido da foto/)).toBeInTheDocument();
+    expect(screen.getByText(/a assistida dormiu bem/)).toBeVisible();
+    expect(screen.getByText('20/10/2026 · foto')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Conferi: é de Alice' }));
+    await vi.waitFor(() => {
+      expect(gravados).toEqual([expect.objectContaining({ trocas: 1, confirmado: true })]);
+    });
   });
 });
