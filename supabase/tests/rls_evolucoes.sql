@@ -199,9 +199,11 @@ insert into resultado (teste, ok) select 'coordenador dá a dica para a IA, com 
                        and texto_original = 'Meta fictícia da IA' || chr(10) || 'Outra meta fictícia da IA')
           and count(*) filter (where dica = 'Dica fictícia para a IA.') = 1
      from evolucao.dicas_ia where dica like 'Dica fictícia%');
+-- A variável é `pista`, não `dica`: `dica` também é coluna de dicas_ia, e o PL/pgSQL recusa o nome
+-- ambíguo.
 do $$
 declare
-  dica text;
+  pista text;
 begin
   begin
     insert into evolucao.dicas_ia (evolucao_id, campo, dica)
@@ -209,9 +211,9 @@ begin
         from evolucao.evolucoes e where e.codigo like 'TST-%';
     insert into resultado (teste, ok) values ('sem texto da IA no bloco, não há dica (E21)', false);
   exception when check_violation then
-    get stacked diagnostics dica = pg_exception_hint;
+    get stacked diagnostics pista = pg_exception_hint;
     insert into resultado (teste, ok)
-      values ('sem texto da IA no bloco, não há dica (E21)', dica = 'dica_sem_texto_da_ia');
+      values ('sem texto da IA no bloco, não há dica (E21)', pista = 'dica_sem_texto_da_ia');
   end;
   begin
     insert into evolucao.orientacoes_ia (dica_id, texto)
@@ -415,16 +417,16 @@ update evolucao.dicas_ia set situacao = 'descartada', motivo = ' Motivo fictíci
  where dica = 'Dica fictícia a descartar.';
 do $$
 declare
-  dica text;
+  pista text;
 begin
   update evolucao.dicas_ia set situacao = 'descartada' where dica = 'Dica fictícia para a IA.';
   insert into resultado (teste, ok)
     values ('coordenação geral descarta a dica com o motivo, e a decidida não muda (E22)', false);
 exception when check_violation then
-  get stacked diagnostics dica = pg_exception_hint;
+  get stacked diagnostics pista = pg_exception_hint;
   insert into resultado (teste, ok)
     values ('coordenação geral descarta a dica com o motivo, e a decidida não muda (E22)',
-            dica = 'dica_ja_decidida'
+            pista = 'dica_ja_decidida'
             and (select situacao = 'descartada' and motivo = 'Motivo fictício do descarte.'
                    from evolucao.dicas_ia where dica = 'Dica fictícia a descartar.'));
 end;
