@@ -2,6 +2,11 @@ import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query
 
 import { devolverEvolucao, resolverDevolucao } from '@/features/evolucoes/api/devolucao.api';
 import {
+  alterarDocumento,
+  buscarDocumentos,
+  juntarDocumento,
+} from '@/features/evolucoes/api/documentos.api';
+import {
   type ConteudoDaParte,
   buscarEvolucao,
   conferirParte,
@@ -14,6 +19,7 @@ import { buscarCoordenadores, buscarEvolucoesDoMes } from '@/features/evolucoes/
 import { buscarImportacao, gravarImportacao } from '@/features/evolucoes/api/importacao.api';
 import { gerarRascunho } from '@/features/evolucoes/api/rascunho.api';
 import type { Leitura } from '@/features/evolucoes/tita/leitura';
+import type { DocumentoConferido } from '@dominio/documentos.ts';
 
 export const evolucoesKeys = {
   all: ['evolucoes'] as const,
@@ -21,7 +27,43 @@ export const evolucoesKeys = {
   coordenadores: () => [...evolucoesKeys.all, 'coordenadores'] as const,
   evolucao: (id: string) => [...evolucoesKeys.all, 'evolucao', id] as const,
   importacao: (id: string) => [...evolucoesKeys.all, 'importacao', id] as const,
+  documentos: (id: string) => [...evolucoesKeys.all, 'documentos', id] as const,
 };
+
+export const documentosOptions = (evolucaoId: string) =>
+  queryOptions({
+    queryKey: evolucoesKeys.documentos(evolucaoId),
+    queryFn: () => buscarDocumentos(evolucaoId),
+  });
+
+/** Juntar, mudar e tirar documentos: deu certo ou não, a lista volta do banco. */
+export function useAlterarDocumentos(evolucaoId: string) {
+  const queryClient = useQueryClient();
+  const recarregar = () =>
+    queryClient.invalidateQueries({ queryKey: evolucoesKeys.documentos(evolucaoId) });
+  return {
+    juntar: useMutation({
+      mutationFn: ({
+        documento,
+        confirmado,
+      }: {
+        documento: DocumentoConferido;
+        confirmado: boolean;
+      }) => juntarDocumento(evolucaoId, documento, confirmado),
+      onSettled: recarregar,
+    }),
+    alterar: useMutation({
+      mutationFn: ({
+        id,
+        mudanca,
+      }: {
+        id: number;
+        mudanca: Parameters<typeof alterarDocumento>[1];
+      }) => alterarDocumento(id, mudanca),
+      onSettled: recarregar,
+    }),
+  };
+}
 
 export const evolucoesDoMesOptions = (mesRef: string) =>
   queryOptions({

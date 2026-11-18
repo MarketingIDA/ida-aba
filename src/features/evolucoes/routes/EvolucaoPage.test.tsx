@@ -1,13 +1,24 @@
 import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { env } from '@/config/env';
 import { EvolucaoPage } from '@/features/evolucoes';
 import { usuarioDemo } from '@/testing/factories/usuario';
 import { renderWithProviders } from '@/testing/renderWithProviders';
 import { server } from '@/testing/server';
+
+// O PDF e o Word são lidos pelo pdf.js e pelo mammoth; aqui a leitura devolve um texto pronto.
+vi.mock('@/features/evolucoes/documentos/lerDocumento', () => ({
+  ACEITOS: '.pdf,.docx',
+  lerDocumento: (arquivo: File) =>
+    Promise.resolve({
+      arquivo: arquivo.name,
+      paginas: 1,
+      texto: 'Relatório da escola de 20/10/2026. A criança participa da roda.',
+    }),
+}));
 
 const ID = '00000000-0000-4000-8000-000000000001';
 const REST = `${env.SUPABASE_URL}/rest/v1`;
@@ -317,5 +328,47 @@ describe('Dica para a IA', () => {
     expect(
       screen.queryByRole('button', { name: 'Dica para a IA sobre Metas para o mês atual' }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('Outros documentos', () => {
+  it('sem o nome no texto, o documento espera a confirmação e só então é gravado', async () => {
+    const gravados: Record<string, unknown>[] = [];
+    server.use(
+      http.get(`${REST}/documentos`, () =>
+        HttpResponse.json(gravados.map((d, i) => ({ id: i + 1, ...d }))),
+      ),
+      http.post(`${REST}/documentos`, async ({ request }) => {
+        gravados.push((await request.json()) as Record<string, unknown>);
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+    const { user } = abrir();
+
+    await user.upload(
+      await screen.findByLabelText('Outros documentos'),
+      new File(['x'], 'Relatorio ficticio.pdf', { type: 'application/pdf' }),
+    );
+
+    expect(
+      await screen.findByText(/O nome de Alice Fictícia Moura não aparece/),
+    ).toBeInTheDocument();
+    expect(gravados).toHaveLength(0);
+    await user.click(screen.getByRole('button', { name: 'É de Alice' }));
+
+    expect(await screen.findByLabelText('Tipo de Relatorio ficticio.pdf')).toHaveValue('escola');
+    expect(gravados).toEqual([
+      expect.objectContaining({
+        evolucao_id: ID,
+        arquivo_nome: 'Relatorio ficticio.pdf',
+        tipo: 'escola',
+        data_documento: '2026-10-20',
+        trocas: 0,
+        confirmado: true,
+      }),
+    ]);
+    expect(
+      screen.getByText(/Do período analisado. Confirmado como do assistido./),
+    ).toBeInTheDocument();
   });
 });

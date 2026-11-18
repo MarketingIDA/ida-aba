@@ -86,6 +86,11 @@ export const handlersDeRest = [
     request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
   ),
 
+  // Sem outros documentos na evolução, salvo no teste que os serve.
+  http.get(`${env.SUPABASE_URL}/rest/v1/documentos`, ({ request }) =>
+    request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+
   // Sem dicas para a IA nem orientações, salvo no teste que as serve.
   http.get(`${env.SUPABASE_URL}/rest/v1/dicas_ia`, ({ request }) =>
     request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),

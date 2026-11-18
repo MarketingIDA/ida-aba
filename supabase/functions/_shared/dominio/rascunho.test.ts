@@ -21,6 +21,7 @@ const PEDIDO = {
   mesRef: '2026-11-01',
   tratamento: 'a assistida',
   orientacoes: [],
+  documentos: [],
   analises: [
     { data: '2026-10-05', texto: 'A assistida seguiu a rotina com dica verbal.', falta: false },
     { data: '2026-10-07', texto: 'A assistida não compareceu.', falta: true },
@@ -52,6 +53,20 @@ describe('pedido do rascunho à IA', () => {
         '[07/10, falta] A assistida não compareceu.',
       ].join('\n'),
     );
+    const comDocumentos = conteudoDoPedido({
+      ...PEDIDO,
+      documentos: [
+        { tipo: 'escola', data: '2026-10-20', texto: 'A assistida participa da roda.' },
+        { tipo: 'avaliacao', data: '2026-03-02', texto: 'Avaliação fictícia.' },
+        { tipo: 'outro', data: null, texto: 'Bilhete fictício.' },
+      ],
+    });
+    expect(comDocumentos.split('\n').slice(-4)).toEqual([
+      'Outros documentos:',
+      '[Relatório escolar, 20/10/2026] A assistida participa da roda.',
+      '[Avaliação, 02/03/2026, contexto] Avaliação fictícia.',
+      '[Outro, sem data, contexto] Bilhete fictício.',
+    ]);
     expect(montarPedido('modelo-ficticio', PEDIDO)).toEqual({
       model: 'modelo-ficticio',
       messages: [

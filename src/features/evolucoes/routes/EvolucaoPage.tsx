@@ -10,9 +10,11 @@ import { BarraDaEvolucao } from '@/features/evolucoes/components/BarraDaEvolucao
 import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDaEvolucao';
 import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
+import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
 import { evolucaoOptions } from '@/features/evolucoes/queries';
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
 import { useEdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
+import { useOutrosDocumentos } from '@/features/evolucoes/routes/useOutrosDocumentos';
 import { ehErroApp } from '@/lib/erroApp';
 
 const SEM_FORMATO =
@@ -39,6 +41,7 @@ function Carregando() {
 
 function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   const edicao = useEdicaoDaEvolucao(evolucao);
+  const documentos = useOutrosDocumentos(evolucao);
   return (
     <>
       <CabecalhoDaEvolucao evolucao={evolucao} />
@@ -47,7 +50,8 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
         ocupado={edicao.ocupado}
         aoResolver={edicao.resolverDevolucao}
       />
-      <ImportacaoDoTita evolucao={evolucao} />
+      <ImportacaoDoTita evolucao={evolucao} bloqueioDoRascunho={documentos.bloqueio} />
+      <OutrosDocumentos evolucao={evolucao} estado={documentos} />
       <PartesDaEvolucao evolucao={evolucao} edicao={edicao} />
       <BarraDaEvolucao
         evolucao={evolucao}

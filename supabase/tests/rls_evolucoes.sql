@@ -226,6 +226,51 @@ begin
 end;
 $$;
 
+-- Outros documentos (E25): o texto já sem o nome; sem o nome no texto, só com a confirmação.
+insert into evolucao.documentos (evolucao_id, arquivo_nome, tipo, data_documento, paginas, texto, trocas, confirmado)
+  select e.id, v.arq, v.tp::evolucao.tipo_de_documento, date '2026-10-20', 1, v.txt, v.n, v.conf
+    from evolucao.evolucoes e,
+         (values ('Relatorio escolar ficticio.pdf', 'escola', 'A assistida participa das atividades fictícias.', 2, false),
+                 ('Bilhete ficticio.docx', 'familia', 'Bilhete fictício sem o nome.', 0, true)) v(arq, tp, txt, n, conf)
+   where e.codigo like 'TST-%';
+insert into resultado (teste, ok) select 'coordenador junta outros documentos à evolução (E25)',
+  (select count(*) = 2 and bool_and(ativo and criado_por is not null)
+     from evolucao.documentos where arquivo_nome like '%ficticio%');
+do $$
+declare
+  pista text;
+begin
+  begin
+    insert into evolucao.documentos (evolucao_id, arquivo_nome, texto, trocas)
+      select e.id, 'Sem nome ficticio.pdf', 'Texto fictício sem o nome.', 0
+        from evolucao.evolucoes e where e.codigo like 'TST-%';
+    insert into resultado (teste, ok) values ('sem o nome no texto, só entra com a confirmação (E25)', false);
+  exception when check_violation then
+    insert into resultado (teste, ok) values ('sem o nome no texto, só entra com a confirmação (E25)', true);
+  end;
+  begin
+    insert into evolucao.documentos (evolucao_id, arquivo_nome, data_documento, texto, trocas)
+      select e.id, 'Futuro ficticio.pdf', current_date + 10, 'A assistida, texto fictício.', 1
+        from evolucao.evolucoes e where e.codigo like 'TST-%';
+    insert into resultado (teste, ok) values ('documento com data no futuro não entra (E25)', false);
+  exception when check_violation then
+    get stacked diagnostics pista = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('documento com data no futuro não entra (E25)', pista = 'documento_data_futura');
+  end;
+  begin
+    update evolucao.documentos set texto = 'Texto trocado.' where arquivo_nome like '%ficticio%';
+    insert into resultado (teste, ok) values ('o texto lido do documento não muda depois (E25)', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('o texto lido do documento não muda depois (E25)', true);
+  end;
+end;
+$$;
+update evolucao.documentos set ativo = false, tipo = 'outro' where arquivo_nome = 'Bilhete ficticio.docx';
+insert into resultado (teste, ok) select 'coordenador tira o documento da lista sem apagar (E25)',
+  (select count(*) = 2 and count(*) filter (where not ativo and tipo = 'outro' and atualizado_em is not null) = 1
+     from evolucao.documentos where arquivo_nome like '%ficticio%');
+
 -- Evolução escrita à mão: cria no mês aberto, não conclui sem conferir, conclui com tudo.
 do $$
 declare
@@ -341,7 +386,8 @@ set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000002","r
 insert into resultado (teste, ok) select 'outro coordenador não vê a carteira alheia',
   (select count(*) from cadastro.assistidos where nome like '%Teste') = 1
   and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1
-  and (select count(distinct evolucao_id) from evolucao.partes) = 1;
+  and (select count(distinct evolucao_id) from evolucao.partes) = 1
+  and (select count(*) from evolucao.documentos) = 0;
 reset role;
 
 -- Coordenação geral: vê tudo e mantém o cadastro.
@@ -720,6 +766,8 @@ insert into resultado (teste, ok) select 'contas médicas não lê a importaçã
 insert into resultado (teste, ok) select 'contas médicas não lê as dicas nem as orientações da IA',
   (select count(*) from evolucao.dicas_ia) = 0
   and (select count(*) from evolucao.orientacoes_ia) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê os outros documentos (E25)',
+  (select count(*) from evolucao.documentos) = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê o cadastro de metas nem os termos inadequados',
   (select count(*) from cadastro.metas) = 0
   and (select count(*) from cadastro.termos_inadequados) = 0;
