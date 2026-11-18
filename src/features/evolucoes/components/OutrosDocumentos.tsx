@@ -1,18 +1,28 @@
-import { FileUp } from 'lucide-react';
-import { useId, useRef } from 'react';
+import { useId } from 'react';
 
 import { Button } from '@/components/ui/button';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
 import { DocumentoGravado } from '@/features/evolucoes/components/DocumentoGravado';
+import { EscolhaDosDocumentos } from '@/features/evolucoes/components/EscolhaDosDocumentos';
 import {
   detalheDoDocumento,
   ItemDoDocumento,
 } from '@/features/evolucoes/components/ItemDoDocumento';
-import { ACEITOS } from '@/features/evolucoes/documentos/lerDocumento';
 import type { OutrosDocumentos as Estado } from '@/features/evolucoes/routes/useOutrosDocumentos';
 import type { DocumentoConferido } from '@dominio/documentos.ts';
 
-/** Um documento sem o nome do assistido: espera a confirmação ou sai da lista (E25). */
+/** O que o coordenador confere: o nome que falta no texto ou, na foto, o texto que o OCR leu. */
+function avisoDoPendente(pendente: DocumentoConferido, assistido: string): string {
+  if (!pendente.imagem) {
+    return `O nome de ${assistido} não aparece no texto. Se o documento é de outro assistido, tire da lista: ele não vai para a IA.`;
+  }
+  return `Texto lido da foto: confira abaixo se o documento é de ${assistido} e se nenhum nome ficou no texto (a leitura da foto pode errar o nome). Se ficou, tire da lista e junte em PDF ou Word.`;
+}
+
+/**
+ * Um documento sem o nome do assistido, ou lido de foto: espera a confirmação ou sai da lista
+ * (E25). Na foto, o texto lido já aparece aberto.
+ */
 function DocumentoPendente({
   pendente,
   evolucao,
@@ -21,10 +31,11 @@ function DocumentoPendente({
   return (
     <ItemDoDocumento
       arquivo={pendente.arquivo}
-      detalhe={detalheDoDocumento(pendente.dataSugerida, pendente.paginas)}
+      detalhe={detalheDoDocumento(pendente.dataSugerida, pendente.arquivo, pendente.paginas)}
       tom="bloqueio"
-      aviso={`O nome de ${evolucao.assistido} não aparece no texto. Se o documento é de outro assistido, tire da lista: ele não vai para a IA.`}
+      aviso={avisoDoPendente(pendente, evolucao.assistido)}
       texto={pendente.texto}
+      textoAberto={pendente.imagem}
       acoes={
         <>
           <Button
@@ -34,7 +45,7 @@ function DocumentoPendente({
               estado.confirmar(pendente);
             }}
           >
-            É de {evolucao.assistido.split(' ', 1).join('')}
+            {pendente.imagem ? 'Conferi: é de' : 'É de'} {evolucao.assistido.split(' ', 1).join('')}
           </Button>
           <Button
             size="lg"
@@ -81,42 +92,6 @@ function ListaDeDocumentos({
   );
 }
 
-/** O botão que abre a escolha dos arquivos; o `input` fica fora da tela, com rótulo para leitores. */
-function EscolhaDosArquivos({ estado }: Readonly<{ estado: Estado }>) {
-  const entrada = useRef<HTMLInputElement>(null);
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Button
-        variant="secondary"
-        size="lg"
-        className="w-fit"
-        disabled={estado.ocupado}
-        onClick={() => {
-          entrada.current?.click();
-        }}
-      >
-        <FileUp aria-hidden="true" />
-        {estado.lendo ? 'Lendo os documentos…' : 'Juntar documentos'}
-      </Button>
-      <input
-        ref={entrada}
-        type="file"
-        multiple
-        accept={ACEITOS}
-        aria-label="Outros documentos"
-        tabIndex={-1}
-        className="sr-only"
-        onChange={(evento) => {
-          const arquivos = [...(evento.target.files ?? [])];
-          evento.target.value = '';
-          if (arquivos.length > 0) estado.escolher(arquivos);
-        }}
-      />
-      <p className="text-sm text-apagado">PDF ou Word (.docx), vários de uma vez.</p>
-    </div>
-  );
-}
-
 /**
  * Os outros documentos da evolução (E25): relatório da escola, de outra terapia, registro da
  * família, avaliação, PEI. A IA lê todos junto com as análises do Tita. O arquivo é lido neste
@@ -152,7 +127,7 @@ export function OutrosDocumentos({
           {erro}
         </p>
       ))}
-      {podeMudar && <EscolhaDosArquivos estado={estado} />}
+      {podeMudar && <EscolhaDosDocumentos estado={estado} />}
     </section>
   );
 }

@@ -81,7 +81,7 @@ export function DocumentoGravado({
   return (
     <ItemDoDocumento
       arquivo={documento.arquivo}
-      detalhe={detalheDoDocumento(documento.data, documento.paginas)}
+      detalhe={detalheDoDocumento(documento.data, documento.arquivo, documento.paginas)}
       tom={data.tom}
       aviso={`${data.texto} ${nome}`}
       texto={documento.texto}
