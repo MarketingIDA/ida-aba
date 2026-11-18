@@ -5,14 +5,22 @@ import {
   conteudoDoPedido,
   FORMATO_DO_RASCUNHO,
   INSTRUCOES_DO_RASCUNHO,
+  instrucoesDoRascunho,
+  lerOrientacoes,
   lerRascunho,
   lerRespostaDaIA,
   montarPedido,
 } from './rascunho.ts';
 
+const ORIENTACOES = [
+  { campo: 'programas', texto: 'Cite o nível de ajuda de cada programa.' },
+  { campo: 'metas_do_mes', texto: 'Escreva cada meta com o verbo no infinitivo.' },
+] as const;
+
 const PEDIDO = {
   mesRef: '2026-11-01',
   tratamento: 'a assistida',
+  orientacoes: [],
   analises: [
     { data: '2026-10-05', texto: 'A assistida seguiu a rotina com dica verbal.', falta: false },
     { data: '2026-10-07', texto: 'A assistida não compareceu.', falta: true },
@@ -94,5 +102,34 @@ describe('leitura do rascunho da IA', () => {
     ]) {
       expect(lerRespostaDaIA(semRascunho)).toBeNull();
     }
+  });
+});
+
+describe('orientações da IA (E22)', () => {
+  it('sem orientação, as instruções são só as fixas', () => {
+    expect(instrucoesDoRascunho([])).toBe(INSTRUCOES_DO_RASCUNHO);
+  });
+
+  it('as orientações ativas entram depois das instruções fixas, cada uma com o campo', () => {
+    const instrucoes = instrucoesDoRascunho(ORIENTACOES);
+    expect(instrucoes.startsWith(INSTRUCOES_DO_RASCUNHO)).toBe(true);
+    expect(instrucoes).toContain('- programas: Cite o nível de ajuda de cada programa.');
+    expect(instrucoes).toContain('- metas_do_mes: Escreva cada meta com o verbo no infinitivo.');
+    expect(
+      montarPedido('modelo-ficticio', { ...PEDIDO, orientacoes: ORIENTACOES }).messages[0],
+    ).toEqual({ role: 'system', content: instrucoes });
+  });
+
+  it('lê as orientações do banco e deixa de fora a linha fora do formato', () => {
+    expect(
+      lerOrientacoes([
+        { campo: 'programas', texto: '  Cite o nível de ajuda.  ' },
+        { campo: 'campo_que_nao_existe', texto: 'Texto fictício.' },
+        { campo: 'abertura', texto: '   ' },
+        { campo: 'abertura', texto: 7 },
+        'linha solta',
+      ]),
+    ).toEqual([{ campo: 'programas', texto: 'Cite o nível de ajuda.' }]);
+    expect(lerOrientacoes(null)).toEqual([]);
   });
 });

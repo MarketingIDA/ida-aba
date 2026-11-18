@@ -5,6 +5,7 @@ import {
   Inbox,
   type LucideIcon,
   Signature,
+  Sparkles,
   Target,
 } from 'lucide-react';
 
@@ -24,6 +25,12 @@ const ENVIADOS: ItemDoMenu = { rota: '/arquivos', rotulo: 'Arquivos enviados', i
 const CADASTROS: ItemDoMenu = { rota: '/cadastros', rotulo: 'Cadastros', icone: ClipboardList };
 const METAS: ItemDoMenu = { rota: '/metas', rotulo: 'Metas', icone: Target };
 const ASSINATURA: ItemDoMenu = { rota: '/assinatura', rotulo: 'Assinatura', icone: Signature };
+// A curadoria das dicas dos coordenadores e as orientações que a IA lê (E22).
+const ORIENTACOES: ItemDoMenu = {
+  rota: '/orientacoes',
+  rotulo: 'Orientações da IA',
+  icone: Sparkles,
+};
 
 /**
  * O menu de cada papel mostra só as telas que já existem. Esconder um item é só UX: quem decide o
@@ -31,7 +38,7 @@ const ASSINATURA: ItemDoMenu = { rota: '/assinatura', rotulo: 'Assinatura', icon
  */
 export const MENU_DO_PAPEL: Record<Papel, readonly ItemDoMenu[]> = {
   coordenador: [EVOLUCOES, METAS, ARQUIVO, ASSINATURA],
-  coordenacao_geral: [EVOLUCOES, METAS, ENVIADOS, CADASTROS],
+  coordenacao_geral: [EVOLUCOES, METAS, ENVIADOS, CADASTROS, ORIENTACOES],
   contas_medicas: [RECEBIDOS],
 };
 

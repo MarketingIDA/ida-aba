@@ -45,6 +45,9 @@ const ArquivoDoMesPage = lazy(() =>
 const ArquivosPage = lazy(() =>
   import('@/features/arquivo-do-mes').then((m) => ({ default: m.ArquivosPage })),
 );
+const OrientacoesPage = lazy(() =>
+  import('@/features/orientacoes').then((m) => ({ default: m.OrientacoesPage })),
+);
 
 /** Telas sem login: entrar, criar a senha pelo link do e-mail e pedir um link novo. */
 const PUBLICAS = [
@@ -117,6 +120,14 @@ const TELAS = [
     tela: (
       <ExigePapel papeis={['contas_medicas', 'coordenacao_geral']}>
         <ArquivosPage />
+      </ExigePapel>
+    ),
+  },
+  {
+    rota: '/orientacoes',
+    tela: (
+      <ExigePapel papeis={['coordenacao_geral']}>
+        <OrientacoesPage />
       </ExigePapel>
     ),
   },

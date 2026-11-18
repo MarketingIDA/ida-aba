@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -59,10 +59,12 @@ interface PropsDoTexto {
   trechos: Trechos | null;
   /** Os termos inadequados achados no texto (E10): ficam marcados onde estão. */
   termos?: readonly Termo[];
+  /** O que vem logo depois de cada trecho (a dica para a IA, E21). */
+  depoisDoTrecho?: ((trecho: Trecho) => ReactNode) | undefined;
 }
 
 /** Parte 2 na leitura: os trechos preenchidos, cada um com o seu rótulo. */
-export function TextoDaEvolucao({ trechos, termos = [] }: Readonly<PropsDoTexto>) {
+export function TextoDaEvolucao({ trechos, termos = [], depoisDoTrecho }: Readonly<PropsDoTexto>) {
   const preenchidos = TRECHOS.filter((t) => (trechos?.[t] ?? '').trim() !== '');
   if (trechos === null || preenchidos.length === 0) {
     return <p className="text-sm text-apagado">O texto ainda não foi escrito.</p>;
@@ -75,6 +77,7 @@ export function TextoDaEvolucao({ trechos, termos = [] }: Readonly<PropsDoTexto>
           <p className="max-w-[75ch] text-sm leading-relaxed whitespace-pre-line text-texto">
             <ComTermosMarcados texto={trechos[t].trim()} termos={termos} />
           </p>
+          {depoisDoTrecho?.(t)}
         </div>
       ))}
     </div>

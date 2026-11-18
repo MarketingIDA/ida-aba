@@ -276,3 +276,46 @@ describe('Termos inadequados', () => {
     });
   });
 });
+
+describe('Dica para a IA', () => {
+  it('o coordenador deixa a dica num bloco da IA, sem o nome do assistido', async () => {
+    Object.assign(banco, { genero: 'feminino', partes_da_ia: [3] });
+    banco.versoes = [
+      {
+        numero: 3,
+        conteudo: { metas: ['Meta fictícia da IA'] },
+        autor: 'ia',
+        criado_em: '2026-11-04T15:00:00Z',
+        criado_por: null,
+      },
+    ];
+    let enviado: unknown = null;
+    server.use(
+      http.post(`${REST}/dicas_ia`, async ({ request }) => {
+        enviado = await request.json();
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+    const { user } = abrir();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Dica para a IA sobre Metas alcançadas' }),
+    );
+    await user.type(
+      screen.getByLabelText(/O que a IA deve fazer diferente/),
+      'A meta da Alice precisa do critério.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Enviar dica' }));
+
+    expect(await screen.findByText('Dica enviada à coordenação geral.')).toBeInTheDocument();
+    expect(enviado).toEqual({
+      evolucao_id: ID,
+      campo: 'metas_alcancadas',
+      dica: 'A meta da a assistida precisa do critério.',
+    });
+    // Só a parte que tem texto da IA ganha a dica.
+    expect(
+      screen.queryByRole('button', { name: 'Dica para a IA sobre Metas para o mês atual' }),
+    ).not.toBeInTheDocument();
+  });
+});
