@@ -6,12 +6,13 @@ import {
   TRECHOS_VAZIOS,
   type Trechos,
 } from './evolucao.ts';
+import { situacaoDaData, TIPOS_DE_DOCUMENTO, type TipoDeDocumento } from './documentos.ts';
 import { formatarData, formatarMesLongo, periodoAnalisado } from './mes.ts';
 
 /**
  * O rascunho da evolução mensal pela IA (E06): o que a IA recebe e como a resposta é lida. A IA
- * recebe só as análises do período, já sem o nome do assistido (E05), e devolve os 5 trechos do
- * texto e as duas listas de metas. O que as análises não trazem não é inventado.
+ * recebe as análises do período e os outros documentos (E25), já sem o nome do assistido (E05),
+ * e devolve os 5 trechos do texto e as duas listas de metas. O que não tem base não é inventado.
  *
  * Domínio puro: a Edge Function só junta as peças e fala com a rede.
  */
@@ -33,6 +34,14 @@ export interface Orientacao {
   texto: string;
 }
 
+/** Um outro documento da evolução (E25): o tipo, a data e o texto já sem o nome. Sem o arquivo. */
+export interface DocumentoDoPedido {
+  tipo: TipoDeDocumento;
+  /** `AAAA-MM-DD`, ou `null` se o documento não tem data. */
+  data: string | null;
+  texto: string;
+}
+
 export interface PedidoDeRascunho {
   mesRef: string;
   /** "o assistido" ou "a assistida". */
@@ -40,6 +49,8 @@ export interface PedidoDeRascunho {
   analises: readonly AnaliseDoPeriodo[];
   /** As orientações ativas da coordenação geral, que a IA lê antes das análises (E22). */
   orientacoes: readonly Orientacao[];
+  /** Os outros documentos ativos (E25); os de fora do período ou sem data vão como contexto. */
+  documentos: readonly DocumentoDoPedido[];
 }
 
 export interface Rascunho {
@@ -49,12 +60,13 @@ export interface Rascunho {
 }
 
 export const INSTRUCOES_DO_RASCUNHO = [
-  'Você redige a evolução mensal de um assistido em intervenção ABA (Análise do Comportamento Aplicada), a partir das análises do atendimento de cada sessão do período.',
+  'Você redige a evolução mensal de um assistido em intervenção ABA (Análise do Comportamento Aplicada), a partir das análises do atendimento de cada sessão do período e, quando houver, de outros documentos (relatório da escola, de outra terapia, registro da família, avaliação, PEI).',
   '',
   'Regras de redação:',
   '- Português do Brasil, terceira pessoa, linguagem técnica e objetiva.',
   '- Refira-se à criança só pelo tratamento informado ("o assistido" ou "a assistida"). Nunca use nome próprio, nem de profissionais ou familiares.',
-  '- Use somente o que está nas análises. Não invente fatos, programas, números nem datas. Se as análises não dão base para um trecho, devolva esse trecho vazio.',
+  '- Use somente o que está nas análises e nos outros documentos. Não invente fatos, programas, números nem datas. Se não há base para um trecho, devolva esse trecho vazio.',
+  '- As análises são a base do texto. Os outros documentos complementam. O documento marcado como contexto é de fora do período ou sem data: use para entender o assistido, não como fato do período.',
   '- Não cite a data de cada sessão.',
   '',
   'O texto tem 5 trechos, nesta ordem:',
@@ -107,8 +119,24 @@ export const FORMATO_DO_RASCUNHO = {
   },
 } as const;
 
-/** O que vai para a IA sobre o período: o mês, a frequência (E04) e as análises, uma por sessão. */
-export function conteudoDoPedido({ mesRef, tratamento, analises }: PedidoDeRascunho): string {
+/** Um documento como vai para a IA: tipo, data, a marca de contexto e o texto. */
+function linhaDoDocumento(documento: DocumentoDoPedido, mesRef: string): string {
+  const situacao = situacaoDaData(documento.data, mesRef);
+  const data = documento.data === null ? 'sem data' : formatarData(documento.data);
+  const contexto = situacao === 'no_periodo' ? '' : ', contexto';
+  return `[${TIPOS_DE_DOCUMENTO[documento.tipo]}, ${data}${contexto}] ${documento.texto}`;
+}
+
+/**
+ * O que vai para a IA sobre o período: o mês, a frequência (E04), as análises, uma por sessão, e
+ * os outros documentos, se houver (E25).
+ */
+export function conteudoDoPedido({
+  mesRef,
+  tratamento,
+  analises,
+  documentos,
+}: PedidoDeRascunho): string {
   const { inicio, fim } = periodoAnalisado(mesRef);
   const sessoes = analises.filter((a) => !a.falta).length;
   const frequencia = Math.round((sessoes / analises.length) * 100);
@@ -119,6 +147,9 @@ export function conteudoDoPedido({ mesRef, tratamento, analises }: PedidoDeRascu
     '',
     'Análises do atendimento:',
     ...analises.map((a) => `[${formatarData(a.data, true)}${a.falta ? ', falta' : ''}] ${a.texto}`),
+    ...(documentos.length === 0
+      ? []
+      : ['', 'Outros documentos:', ...documentos.map((d) => linhaDoDocumento(d, mesRef))]),
   ].join('\n');
 }
 

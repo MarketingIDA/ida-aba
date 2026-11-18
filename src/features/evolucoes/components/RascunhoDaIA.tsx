@@ -63,7 +63,10 @@ function Andamento({ gerar }: Readonly<{ gerar: ReturnType<typeof useGerarRascun
  * coordenador confere cada uma. Se já há texto, o botão pede confirmação: o rascunho novo passa a
  * valer, e o texto anterior fica guardado como versão (E07).
  */
-export function RascunhoDaIA({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
+export function RascunhoDaIA({
+  evolucao,
+  bloqueio = null,
+}: Readonly<{ evolucao: Evolucao; bloqueio?: string | null }>) {
   const gerar = useGerarRascunho(evolucao.id);
   const [confirmando, setConfirmando] = useState(false);
   const temTexto =
@@ -77,9 +80,14 @@ export function RascunhoDaIA({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   return (
     <div className="flex flex-col items-start gap-2 border-t border-borda pt-4">
       <p className="max-w-[72ch] text-sm text-texto-2">
-        A IA recebe só as análises do período, sem o nome do assistido, e escreve as partes 2 a 4
-        para você conferir.
+        A IA recebe as análises do período e os outros documentos, sem o nome do assistido, e
+        escreve as partes 2 a 4 para você conferir.
       </p>
+      {bloqueio !== null && (
+        <p role="alert" className="text-sm font-bold text-bloq-text">
+          {bloqueio}
+        </p>
+      )}
       {confirmando ? (
         <Confirmacao
           aoGerar={pedir}
@@ -90,7 +98,7 @@ export function RascunhoDaIA({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
       ) : (
         <Button
           size="lg"
-          disabled={gerar.isPending}
+          disabled={gerar.isPending || bloqueio !== null}
           onClick={() => {
             if (temTexto) setConfirmando(true);
             else pedir();

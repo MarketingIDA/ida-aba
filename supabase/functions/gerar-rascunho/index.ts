@@ -1,8 +1,8 @@
 // Rascunho da evolução mensal pela IA (E05, E06). Chamada pelo coordenador, com o login dele.
 //
 // A função lê, com as permissões de quem chama (RLS), a evolução em conferência, a importação do
-// Tita e as orientações ativas da coordenação geral (E22); tira o nome do assistido das análises do
-// período (E05); pede o rascunho à API da OpenAI, com as orientações antes das análises; e grava as
+// Tita, os outros documentos ativos (E25) e as orientações ativas da coordenação geral (E22); tira o
+// nome do assistido das análises do período e dos documentos (E05); pede o rascunho à API da OpenAI, com as orientações antes das análises; e grava as
 // partes 2 a 4 como versões da IA. Nome, plano e CRP não vão para a IA, e nenhum texto de
 // assistido vai para o log.
 //
@@ -13,6 +13,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { type Genero, tratamentoDe, trocarNome } from '../_shared/dominio/pseudonimo.ts';
 import {
   type AnaliseDoPeriodo,
+  type DocumentoDoPedido,
   lerOrientacoes,
   lerRespostaDaIA,
   montarPedido,
@@ -107,6 +108,16 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
   if (analises.length === 0) {
     throw new Recusa(422, 'sem_importacao', 'Importe o PDF do Tita antes de gerar o rascunho.');
   }
+  const documentos = await usuario
+    .schema('evolucao')
+    .from('documentos')
+    .select('tipo, data_documento, texto')
+    .eq('evolucao_id', evolucaoId)
+    .eq('ativo', true)
+    .order('id');
+  if (documentos.error !== null) {
+    throw new Recusa(502, 'indisponivel', 'Não foi possível ler os outros documentos.');
+  }
   // As orientações são reforço: se a leitura falhar, o rascunho sai sem elas, e o log diz por quê.
   const orientacoes = await usuario
     .schema('evolucao')
@@ -124,6 +135,11 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
     nome: assistido.data.nome as string,
     genero: assistido.data.genero as Genero,
     analises,
+    documentos: documentos.data.map((d): DocumentoDoPedido => ({
+      tipo: d.tipo,
+      data: d.data_documento,
+      texto: d.texto,
+    })),
   };
 }
 
@@ -181,12 +197,18 @@ async function gerar(pedido: Request): Promise<Response> {
     ...orientacao,
     texto: trocarNome(orientacao.texto, lido.nome, lido.genero).texto,
   }));
+  // O texto do documento já foi gravado sem o nome; a troca de novo é a segunda trava (E05).
+  const documentos = lido.documentos.map((documento) => ({
+    ...documento,
+    texto: trocarNome(documento.texto, lido.nome, lido.genero).texto,
+  }));
   const rascunho = await pedirRascunho(
     montarPedido(modelo, {
       mesRef: lido.mesRef,
       tratamento: tratamentoDe(lido.genero),
       analises,
       orientacoes,
+      documentos,
     }),
   );
 

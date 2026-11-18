@@ -107,7 +107,10 @@ function ImportacaoGravada({
  * o que o sistema leu e consulta as análises do atendimento enquanto escreve. Quem só lê a
  * evolução vê a importação, se houver.
  */
-export function ImportacaoDoTita({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
+export function ImportacaoDoTita({
+  evolucao,
+  bloqueioDoRascunho = null,
+}: Readonly<{ evolucao: Evolucao; bloqueioDoRascunho?: string | null }>) {
   const tita = useImportacaoDoTita(evolucao);
   const titulo = useId();
   const podeImportar = evolucao.editavel && evolucao.situacao === 'em_conferencia';
@@ -135,7 +138,7 @@ export function ImportacaoDoTita({ evolucao }: Readonly<{ evolucao: Evolucao }>)
         </p>
       )}
       {podeImportar && tita.pendente === null && tita.importacao !== null && (
-        <RascunhoDaIA evolucao={evolucao} />
+        <RascunhoDaIA evolucao={evolucao} bloqueio={bloqueioDoRascunho} />
       )}
       {podeImportar && tita.pendente === null && (
         <EscolhaDoPdf
