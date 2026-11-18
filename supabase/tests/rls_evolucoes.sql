@@ -67,6 +67,11 @@ update evolucao.partes pt set conferida = pt.numero <= 2
   from evolucao.evolucoes e
   join cadastro.assistidos a on a.id = e.assistido_id and a.nome = 'Assistida Um Teste'
  where pt.evolucao_id = e.id;
+-- Um rascunho da IA na parte 3 da Um Teste (só o servidor grava `autor = 'ia'`): a dica parte dele.
+insert into evolucao.versoes (evolucao_id, numero, conteudo, autor)
+  select e.id, 3, '{"metas": ["Meta fictícia da IA", "Outra meta fictícia da IA"]}', 'ia'
+    from evolucao.evolucoes e join cadastro.assistidos a on a.id = e.assistido_id
+   where a.nome = 'Assistida Um Teste';
 
 insert into resultado (teste, ok) select 'código da evolução UNI-AAMM-NNN-EV (E16)',
   (select e.codigo = 'TST-2611-' || lpad(a.sequencia::text, 3, '0') || '-EV'
@@ -178,6 +183,43 @@ begin
     insert into resultado (teste, ok) values ('coordenador não cadastra pessoa', false);
   exception when insufficient_privilege then
     insert into resultado (teste, ok) values ('coordenador não cadastra pessoa', true);
+  end;
+end;
+$$;
+
+-- Dica para a IA (E21): parte do texto que a IA escreveu naquele bloco, e nasce pendente.
+insert into evolucao.dicas_ia (evolucao_id, campo, dica)
+  select e.id, 'metas_alcancadas', d.dica
+    from evolucao.evolucoes e,
+         (values ('  Dica fictícia para a IA.  '), ('Dica fictícia a descartar.')) d(dica)
+   where e.codigo like 'TST-%';
+insert into resultado (teste, ok) select 'coordenador dá a dica para a IA, com o texto original da IA (E21)',
+  (select count(*) = 2
+          and bool_and(situacao = 'pendente' and criado_por_nome = 'Coordenadora A'
+                       and texto_original = 'Meta fictícia da IA' || chr(10) || 'Outra meta fictícia da IA')
+          and count(*) filter (where dica = 'Dica fictícia para a IA.') = 1
+     from evolucao.dicas_ia where dica like 'Dica fictícia%');
+do $$
+declare
+  dica text;
+begin
+  begin
+    insert into evolucao.dicas_ia (evolucao_id, campo, dica)
+      select e.id, 'abertura', 'Dica fictícia sem texto da IA.'
+        from evolucao.evolucoes e where e.codigo like 'TST-%';
+    insert into resultado (teste, ok) values ('sem texto da IA no bloco, não há dica (E21)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('sem texto da IA no bloco, não há dica (E21)', dica = 'dica_sem_texto_da_ia');
+  end;
+  begin
+    insert into evolucao.orientacoes_ia (dica_id, texto)
+      select id, 'Orientação fictícia indevida.' from evolucao.dicas_ia
+       where dica = 'Dica fictícia para a IA.';
+    insert into resultado (teste, ok) values ('coordenador não aprova dica (E22)', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('coordenador não aprova dica (E22)', true);
   end;
 end;
 $$;
@@ -355,6 +397,42 @@ exception when unique_violation then
               where termo = 'termo fictício de teste' and ativo));
 end;
 $$;
+
+-- Curadoria (E22): aprovar grava a orientação e decide a dica; descartar leva o motivo; a
+-- orientação se retira.
+insert into evolucao.orientacoes_ia (dica_id, texto)
+  select id, '  Orientação fictícia para a IA.  ' from evolucao.dicas_ia
+   where dica = 'Dica fictícia para a IA.';
+insert into resultado (teste, ok) select 'coordenação geral aprova a dica, que vira orientação (E22)',
+  (select count(*) = 1
+          and bool_and(o.campo = 'metas_alcancadas' and o.ativa
+                       and o.texto = 'Orientação fictícia para a IA.'
+                       and d.situacao = 'aprovada' and d.decidida_em is not null
+                       and d.decidida_por_nome = 'Coordenação Geral')
+     from evolucao.orientacoes_ia o join evolucao.dicas_ia d on d.id = o.dica_id
+    where d.dica like 'Dica fictícia%');
+update evolucao.dicas_ia set situacao = 'descartada', motivo = ' Motivo fictício do descarte. '
+ where dica = 'Dica fictícia a descartar.';
+do $$
+declare
+  dica text;
+begin
+  update evolucao.dicas_ia set situacao = 'descartada' where dica = 'Dica fictícia para a IA.';
+  insert into resultado (teste, ok)
+    values ('coordenação geral descarta a dica com o motivo, e a decidida não muda (E22)', false);
+exception when check_violation then
+  get stacked diagnostics dica = pg_exception_hint;
+  insert into resultado (teste, ok)
+    values ('coordenação geral descarta a dica com o motivo, e a decidida não muda (E22)',
+            dica = 'dica_ja_decidida'
+            and (select situacao = 'descartada' and motivo = 'Motivo fictício do descarte.'
+                   from evolucao.dicas_ia where dica = 'Dica fictícia a descartar.'));
+end;
+$$;
+update evolucao.orientacoes_ia set ativa = false where texto = 'Orientação fictícia para a IA.';
+insert into resultado (teste, ok) select 'coordenação geral retira a orientação (E22)',
+  (select count(*) = 1 and bool_and(not ativa and atualizado_em is not null)
+     from evolucao.orientacoes_ia where texto = 'Orientação fictícia para a IA.');
 
 -- Pessoas: a coordenação geral cadastra e altera; o banco segura as travas. Os testes não
 -- dependem de quantas coordenações gerais reais existem: desativar todas tem de falhar sempre.
@@ -637,6 +715,9 @@ insert into resultado (teste, ok) select 'contas médicas não lê a importaçã
   (select count(*) from evolucao.importacoes) = 0
   and (select count(*) from evolucao.dias_analisados) = 0
   and (select count(*) from evolucao.devolucoes) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê as dicas nem as orientações da IA',
+  (select count(*) from evolucao.dicas_ia) = 0
+  and (select count(*) from evolucao.orientacoes_ia) = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê o cadastro de metas nem os termos inadequados',
   (select count(*) from cadastro.metas) = 0
   and (select count(*) from cadastro.termos_inadequados) = 0;

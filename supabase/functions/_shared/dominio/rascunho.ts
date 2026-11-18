@@ -22,11 +22,24 @@ export interface AnaliseDoPeriodo {
   falta: boolean;
 }
 
+/** Os blocos que a IA escreve: os 5 trechos do texto e as duas listas de metas. */
+export const CAMPOS_DA_IA = [...TRECHOS, 'metas_alcancadas', 'metas_do_mes'] as const;
+
+export type CampoDaIA = (typeof CAMPOS_DA_IA)[number];
+
+/** Uma dica aprovada na curadoria (E22): vale para um campo, em todas as evoluções. */
+export interface Orientacao {
+  campo: CampoDaIA;
+  texto: string;
+}
+
 export interface PedidoDeRascunho {
   mesRef: string;
   /** "o assistido" ou "a assistida". */
   tratamento: string;
   analises: readonly AnaliseDoPeriodo[];
+  /** As orientações ativas da coordenação geral, que a IA lê antes das análises (E22). */
+  orientacoes: readonly Orientacao[];
 }
 
 export interface Rascunho {
@@ -56,6 +69,17 @@ export const INSTRUCOES_DO_RASCUNHO = [
   '- metas_alcancadas: as habilidades que as análises mostram como alcançadas no período, uma por item, em frase curta. Se não houver, devolva a lista vazia.',
   '- metas_do_mes: 4 ou mais metas para o mês seguinte, que deem continuidade ao que foi trabalhado e ainda não foi alcançado, uma por item. Não repita uma meta alcançada.',
 ].join('\n');
+
+/** As instruções fixas e, depois delas, as orientações ativas, cada uma com o seu campo (E22). */
+export function instrucoesDoRascunho(orientacoes: readonly Orientacao[]): string {
+  if (orientacoes.length === 0) return INSTRUCOES_DO_RASCUNHO;
+  return [
+    INSTRUCOES_DO_RASCUNHO,
+    '',
+    'Orientações da coordenação geral, que valem para todas as evoluções. Siga cada uma no campo indicado:',
+    ...orientacoes.map((o) => `- ${o.campo}: ${o.texto}`),
+  ].join('\n');
+}
 
 const TEXTO = { type: 'string' } as const;
 const LISTA = { type: 'array', items: TEXTO } as const;
@@ -103,7 +127,7 @@ export function montarPedido(modelo: string, pedido: PedidoDeRascunho) {
   return {
     model: modelo,
     messages: [
-      { role: 'system', content: INSTRUCOES_DO_RASCUNHO },
+      { role: 'system', content: instrucoesDoRascunho(pedido.orientacoes) },
       { role: 'user', content: conteudoDoPedido(pedido) },
     ],
     response_format: FORMATO_DO_RASCUNHO,
@@ -112,6 +136,17 @@ export function montarPedido(modelo: string, pedido: PedidoDeRascunho) {
 
 function ehObjeto(valor: unknown): valor is Record<string, unknown> {
   return typeof valor === 'object' && valor !== null;
+}
+
+/** As orientações como vêm do banco; a linha fora do formato fica de fora. */
+export function lerOrientacoes(linhas: unknown): Orientacao[] {
+  if (!Array.isArray(linhas)) return [];
+  return linhas.flatMap((linha: unknown) => {
+    if (!ehObjeto(linha) || typeof linha.texto !== 'string') return [];
+    const campo = CAMPOS_DA_IA.find((c) => c === linha.campo);
+    const texto = linha.texto.trim();
+    return campo === undefined || texto === '' ? [] : [{ campo, texto }];
+  });
 }
 
 /** As metas preenchidas, aparadas e dentro dos limites do banco; `null` se não é uma lista. */

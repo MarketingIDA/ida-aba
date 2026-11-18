@@ -68,6 +68,9 @@ const esquemaEvolucao = z
     // Vem com a etapa do cadastro de metas; na janela do deploy a função antiga ainda não manda.
     assistido_id: z.number().int().nullish(),
     assistido: z.string(),
+    // Vêm com a etapa das dicas para a IA; na janela do deploy a função antiga ainda não manda.
+    genero: z.enum(['feminino', 'masculino']).nullish(),
+    partes_da_ia: z.array(z.number().int()).nullish(),
     plano: z.string().nullable(),
     unidade: z.string(),
     turno: z.enum(TURNOS),
@@ -95,6 +98,8 @@ const esquemaEvolucao = z
     periodo: { inicio: e.periodo_inicio, fim: e.periodo_fim },
     assistidoId: e.assistido_id ?? null,
     assistido: e.assistido,
+    genero: e.genero ?? null,
+    partesDaIA: e.partes_da_ia ?? [],
     plano: e.plano,
     unidade: e.unidade,
     turno: e.turno,

@@ -1,8 +1,9 @@
 // Rascunho da evolução mensal pela IA (E05, E06). Chamada pelo coordenador, com o login dele.
 //
-// A função lê, com as permissões de quem chama (RLS), a evolução em conferência e a importação do
-// Tita; tira o nome do assistido das análises do período (E05); pede o rascunho à API da OpenAI; e
-// grava as partes 2 a 4 como versões da IA. Nome, plano e CRP não vão para a IA, e nenhum texto de
+// A função lê, com as permissões de quem chama (RLS), a evolução em conferência, a importação do
+// Tita e as orientações ativas da coordenação geral (E22); tira o nome do assistido das análises do
+// período (E05); pede o rascunho à API da OpenAI, com as orientações antes das análises; e grava as
+// partes 2 a 4 como versões da IA. Nome, plano e CRP não vão para a IA, e nenhum texto de
 // assistido vai para o log.
 //
 // Segredos (Edge Functions → Secrets): OPENAI_API_KEY e OPENAI_MODEL. A plataforma confere o JWT
@@ -12,6 +13,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { type Genero, tratamentoDe, trocarNome } from '../_shared/dominio/pseudonimo.ts';
 import {
   type AnaliseDoPeriodo,
+  lerOrientacoes,
   lerRespostaDaIA,
   montarPedido,
 } from '../_shared/dominio/rascunho.ts';
@@ -105,8 +107,19 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
   if (analises.length === 0) {
     throw new Recusa(422, 'sem_importacao', 'Importe o PDF do Tita antes de gerar o rascunho.');
   }
+  // As orientações são reforço: se a leitura falhar, o rascunho sai sem elas, e o log diz por quê.
+  const orientacoes = await usuario
+    .schema('evolucao')
+    .from('orientacoes_ia')
+    .select('campo, texto')
+    .eq('ativa', true)
+    .order('id');
+  if (orientacoes.error !== null) {
+    console.error('gerar-rascunho: orientações não lidas', orientacoes.error.code);
+  }
   return {
     url,
+    orientacoes: lerOrientacoes(orientacoes.data),
     mesRef: evolucao.data.mes_ref as string,
     nome: assistido.data.nome as string,
     genero: assistido.data.genero as Genero,
@@ -162,8 +175,19 @@ async function gerar(pedido: Request): Promise<Response> {
     ...analise,
     texto: trocarNome(analise.texto, lido.nome, lido.genero).texto,
   }));
+  // A orientação vale para todas as evoluções e não deve citar assistido; se citar o desta, o
+  // nome sai aqui também.
+  const orientacoes = lido.orientacoes.map((orientacao) => ({
+    ...orientacao,
+    texto: trocarNome(orientacao.texto, lido.nome, lido.genero).texto,
+  }));
   const rascunho = await pedirRascunho(
-    montarPedido(modelo, { mesRef: lido.mesRef, tratamento: tratamentoDe(lido.genero), analises }),
+    montarPedido(modelo, {
+      mesRef: lido.mesRef,
+      tratamento: tratamentoDe(lido.genero),
+      analises,
+      orientacoes,
+    }),
   );
 
   // As versões da IA não têm autor humano: só a chave de serviço grava `autor = 'ia'`. Os triggers

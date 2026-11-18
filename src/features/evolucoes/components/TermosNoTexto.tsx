@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Replace, TriangleAlert } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { termosAtivosOptions } from '@/features/evolucoes/api/termos.api';
 import { TextoDaEvolucao } from '@/features/evolucoes/components/TextoDaEvolucao';
-import { textoDaEvolucao, type Trechos } from '@dominio/evolucao.ts';
+import { textoDaEvolucao, type Trecho, type Trechos } from '@dominio/evolucao.ts';
 import { type Termo, termosNoTexto, trocarNosTrechos } from '@dominio/termos.ts';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
   ocupado: boolean;
   /** A troca grava uma versão nova do texto, já sem o termo. */
   aoTrocar: (trechos: Trechos) => void;
+  /** O que vem logo depois de cada trecho (a dica para a IA, E21). */
+  depoisDoTrecho?: ((trecho: Trecho) => ReactNode) | undefined;
 }
 
 interface PropsDoAlerta {
@@ -54,12 +57,18 @@ function Alerta({ termo, ocupado, aoTrocar }: Readonly<PropsDoAlerta>) {
  * marcado no texto e vira um alerta, com a troca pelo termo técnico em um toque. É alerta, não
  * bloqueio. Sem a lista (ela não carregou), o texto aparece sem marca.
  */
-export function TextoComTermos({ trechos, podeTrocar, ocupado, aoTrocar }: Readonly<Props>) {
+export function TextoComTermos({
+  trechos,
+  podeTrocar,
+  ocupado,
+  aoTrocar,
+  depoisDoTrecho,
+}: Readonly<Props>) {
   const termos = useQuery(termosAtivosOptions()).data ?? [];
   const achados = trechos === null ? [] : termosNoTexto(textoDaEvolucao(trechos), termos);
   return (
     <div className="flex flex-col gap-4">
-      <TextoDaEvolucao trechos={trechos} termos={achados} />
+      <TextoDaEvolucao trechos={trechos} termos={achados} depoisDoTrecho={depoisDoTrecho} />
       {trechos !== null && achados.length > 0 && (
         <ul aria-label="Termos inadequados no texto" className="flex flex-col gap-2">
           {achados.map((termo) => (

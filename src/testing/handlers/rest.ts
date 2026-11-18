@@ -86,6 +86,14 @@ export const handlersDeRest = [
     request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
   ),
 
+  // Sem dicas para a IA nem orientações, salvo no teste que as serve.
+  http.get(`${env.SUPABASE_URL}/rest/v1/dicas_ia`, ({ request }) =>
+    request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+  http.get(`${env.SUPABASE_URL}/rest/v1/orientacoes_ia`, ({ request }) =>
+    request.headers.get('accept-profile') === 'evolucao' ? HttpResponse.json([]) : schemaErrado(),
+  ),
+
   // Sem termos inadequados na lista, salvo no teste que os serve.
   http.get(`${env.SUPABASE_URL}/rest/v1/termos_inadequados`, ({ request }) =>
     request.headers.get('accept-profile') === 'cadastro' ? HttpResponse.json([]) : schemaErrado(),
