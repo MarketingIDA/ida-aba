@@ -2,7 +2,8 @@ import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router';
 
-import { focoNoAzul, MenuLateral } from '@/app/layouts/MenuLateral';
+import { botaoNoAzul, focoNoAzul } from '@/app/layouts/estilosDoMenu';
+import { LogoDoInstituto, MenuLateral } from '@/app/layouts/MenuLateral';
 import flor from '@/assets/marca/flower.png';
 import { Sheet, SheetClose, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -13,9 +14,6 @@ import { cn } from '@/lib/utils';
  * barra do topo, que traz a onda embaixo.
  */
 const MENU_FIXO = '(min-width: 75rem)';
-
-const botaoNoAzul =
-  'grid cursor-pointer place-items-center rounded-md bg-white/14 hover:bg-white/20 active:scale-[0.94]';
 
 /** Fecha a gaveta quando a tela cresce e o menu volta a ficar fixo. */
 function useFecharAoFixarMenu(fechar: () => void) {
@@ -54,7 +52,7 @@ function MenuFixo() {
 function BarraDoTopo({ aoAbrirMenu }: Readonly<{ aoAbrirMenu: () => void }>) {
   return (
     <header className="sticky top-0 z-20 bg-azul text-white">
-      <div className="mx-auto flex h-[68px] max-w-[var(--conteudo-max)] items-center gap-3 px-4 sm:px-6 menu:h-[26px]">
+      <div className="mx-auto flex h-[68px] max-w-[var(--conteudo-max)] items-center gap-3 px-4 min-[861px]:gap-4 min-[861px]:px-6">
         <button
           type="button"
           aria-label="Abrir menu"
@@ -63,7 +61,13 @@ function BarraDoTopo({ aoAbrirMenu }: Readonly<{ aoAbrirMenu: () => void }>) {
         >
           <Menu aria-hidden="true" className="size-5" strokeWidth={1.8} />
         </button>
-        <span className="font-display text-lg font-bold menu:hidden">Evolução ABA</span>
+        <span className="flex items-center gap-3 menu:hidden">
+          <LogoDoInstituto pequeno />
+          <span aria-hidden="true" className="hidden h-7 w-px bg-white/35 min-[861px]:block" />
+          <span className="hidden font-display text-[1.06rem] font-bold min-[861px]:inline">
+            Evolução ABA
+          </span>
+        </span>
       </div>
       <svg
         aria-hidden="true"
@@ -134,7 +138,7 @@ export function AppLayout() {
       <main
         id="conteudo"
         tabIndex={-1}
-        className="mx-auto w-full max-w-[var(--conteudo-max)] px-4 pt-12 pb-16 outline-none sm:px-6 menu:pt-14"
+        className="mx-auto w-full max-w-[var(--conteudo-max)] px-4 pt-9 pb-[150px] outline-none min-[861px]:px-6 min-[861px]:pt-10 min-[861px]:pb-[140px]"
       >
         <Outlet />
       </main>

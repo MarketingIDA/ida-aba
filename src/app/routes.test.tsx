@@ -49,7 +49,8 @@ describe('Rotas e AppLayout', () => {
       '/evolucoes',
     );
     expect(screen.getByText('Sessões de 01/10 a 31/10')).toBeInTheDocument();
-    expect(screen.getByText('Arquivo do mês até 10/11')).toBeInTheDocument();
+    expect(await screen.findByRole('meter', { name: 'no arquivo enviado' })).toBeInTheDocument();
+    expect(screen.getByText('1 de 5 no arquivo enviado · prazo 10/11')).toBeInTheDocument();
     expect(screen.getByText('Carla Fictícia Coordenadora')).toBeInTheDocument();
     expect(screen.getByText('Coordenação de unidade')).toBeInTheDocument();
     await screen.findByRole('list', { name: 'Evoluções de novembro' });

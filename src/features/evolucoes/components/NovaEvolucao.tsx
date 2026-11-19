@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, CircleCheck, Lock, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -117,9 +117,25 @@ function Escolha({ mesAberto }: Readonly<{ mesAberto: string }>) {
   );
 }
 
+/** Aberta pelo botão da tela ou pelo do menu, que chega com `?nova=1`; fechar tira o pedido da URL. */
+function useAberta(): [boolean, (aberta: boolean) => void] {
+  const [estado, setEstado] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const pedida = params.get('nova') === '1';
+  const mudar = (aberta: boolean) => {
+    setEstado(aberta);
+    if (!aberta && pedida) {
+      const sem = new URLSearchParams(params);
+      sem.delete('nova');
+      setParams(sem, { replace: true });
+    }
+  };
+  return [estado || pedida, mudar];
+}
+
 /** "Nova evolução mensal": o coordenador escolhe um assistido da carteira sem evolução (E01). */
 export function NovaEvolucao({ mesAberto }: Readonly<{ mesAberto: string }>) {
-  const [aberta, setAberta] = useState(false);
+  const [aberta, setAberta] = useAberta();
   const { inicio, fim } = periodoAnalisado(mesAberto);
   return (
     <>

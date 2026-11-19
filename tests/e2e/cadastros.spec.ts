@@ -32,7 +32,7 @@ async function esperarAGaveta(page: Page) {
 test.describe('Cadastros', () => {
   test('a coordenação geral cadastra e desativa uma unidade', async ({ page }) => {
     await entrar(page, 'coordenacao_geral');
-    await irPeloMenu(page, 'Cadastros');
+    await irPeloMenu(page, 'Unidades e pessoas');
 
     await expect(page).toHaveURL(/\/cadastros\/unidades$/);
     const lista = page.getByRole('list', { name: 'Unidades cadastradas' });
@@ -78,7 +78,7 @@ test.describe('Cadastros', () => {
   test('a coordenação geral cadastra uma pessoa com papel e CRP', async ({ page }) => {
     await entrar(page, 'coordenacao_geral');
     await page.goto('/cadastros/unidades');
-    await page.getByRole('link', { name: 'Pessoas' }).click();
+    await page.getByRole('link', { name: 'Pessoas', exact: true }).click();
 
     await expect(page).toHaveURL(/\/cadastros\/pessoas$/);
     const lista = page.getByRole('list', { name: 'Pessoas cadastradas' });
@@ -110,7 +110,7 @@ test.describe('Cadastros', () => {
     await entrar(page);
     const menu = await abrirMenu(page);
     await expect(menu.getByRole('link', { name: 'Evoluções' })).toBeVisible();
-    await expect(menu.getByRole('link', { name: 'Cadastros' })).toHaveCount(0);
+    await expect(menu.getByRole('link', { name: 'Unidades e pessoas' })).toHaveCount(0);
 
     await page.goto('/cadastros/unidades');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
