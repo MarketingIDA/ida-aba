@@ -60,14 +60,16 @@ function evolucaoNoBanco() {
   };
 }
 
-/** As lacunas como a RPC `lacunas` devolve (E10). */
+/** As lacunas como a RPC `lacunas` devolve (E10), e as fontes como `fontes_da_evolucao` (E06). */
 let lacunasNoBanco: Record<string, unknown>[] = [];
+let fontesNoBanco: Record<string, unknown>[] = [];
 
 /** O banco em memória: versão nova desfaz a conferência da parte, como o trigger. */
 function servirBanco(banco: Banco) {
   server.use(
     http.post(`${REST}/rpc/evolucao_completa`, () => HttpResponse.json(banco)),
     http.post(`${REST}/rpc/lacunas`, () => HttpResponse.json(lacunasNoBanco)),
+    http.post(`${REST}/rpc/fontes_da_evolucao`, () => HttpResponse.json(fontesNoBanco)),
     http.post(`${REST}/versoes`, async ({ request }) => {
       const { numero, conteudo } = (await request.json()) as { numero: number; conteudo: unknown };
       const versao = { numero, conteudo, autor: 'coordenador', criado_em: '2026-11-04T15:00:00Z' };
@@ -121,6 +123,7 @@ let banco: Banco;
 beforeEach(() => {
   banco = evolucaoNoBanco();
   lacunasNoBanco = [];
+  fontesNoBanco = [];
   servirBanco(banco);
 });
 
@@ -491,5 +494,33 @@ describe('Lacunas da evolução mensal (E10)', () => {
         /O programa Programa fictício não foi aplicado no período\.$/,
       );
     });
+  });
+});
+
+describe('Fontes do rascunho (E06, E25)', () => {
+  it('mostra de que sessões e documentos saiu cada frase, e avisa a frase sem fonte', async () => {
+    const fonte = {
+      numero: 2,
+      campo: 'programas',
+      versao_atual: true,
+      criado_em: '2026-11-04T15:00:00Z',
+    };
+    fontesNoBanco = [
+      {
+        ...fonte,
+        ordem: 0,
+        frase: 'A assistida pareou figuras com dica verbal.',
+        datas: ['2026-10-05'],
+        documentos: [{ id: 3, tipo: 'escola', data: '2026-10-20', arquivo: 'escola.pdf' }],
+      },
+      { ...fonte, ordem: 1, frase: 'Frase fictícia sem base.', datas: [], documentos: [] },
+    ];
+    const { user } = abrir();
+    await screen.findByRole('heading', { level: 1 });
+    await user.click(await parte('Evolução mensal').findByText('Fontes do rascunho da IA (2)'));
+    expect(parte('Evolução mensal').getByText('sessão de 05/10')).toBeVisible();
+    expect(parte('Evolução mensal').getByText('Relatório escolar, 20/10/2026')).toBeVisible();
+    expect(parte('Evolução mensal').getByText('sem fonte indicada')).toBeVisible();
+    expect(parte('Metas alcançadas').queryByText(/Fontes do rascunho/)).not.toBeInTheDocument();
   });
 });

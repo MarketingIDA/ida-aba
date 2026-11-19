@@ -1,12 +1,6 @@
-import {
-  MAXIMO_DA_META,
-  MAXIMO_DE_METAS,
-  MAXIMO_DO_TRECHO,
-  TRECHOS,
-  TRECHOS_VAZIOS,
-  type Trechos,
-} from './evolucao.ts';
+import { TRECHOS, type Trechos } from './evolucao.ts';
 import { situacaoDaData, TIPOS_DE_DOCUMENTO, type TipoDeDocumento } from './documentos.ts';
+import type { FraseDoCampo } from './fontes.ts';
 import { formatarData, formatarMesLongo, periodoAnalisado } from './mes.ts';
 
 /**
@@ -64,6 +58,8 @@ export interface Rascunho {
   texto: Trechos;
   metasAlcancadas: string[];
   metasDoMes: string[];
+  /** Cada frase e cada meta com os números das sessões e dos documentos de onde saiu (E06). */
+  frases: FraseDoCampo[];
 }
 
 export const INSTRUCOES_DO_RASCUNHO = [
@@ -75,6 +71,8 @@ export const INSTRUCOES_DO_RASCUNHO = [
   '- Use somente o que está nas análises e nos outros documentos. Não invente fatos, programas, números nem datas. Se não há base para um trecho, devolva esse trecho vazio.',
   '- As análises são a base do texto. Os outros documentos complementam. O documento marcado como contexto é de fora do período ou sem data: use para entender o assistido, não como fato do período.',
   '- Não cite a data de cada sessão.',
+  '',
+  'Fontes: cada análise tem um número de sessão (S1, S2, …) e cada outro documento um número (D1, D2, …). Escreva cada trecho como uma lista de frases e, em cada frase e em cada meta, informe em "sessoes" os números das sessões e em "documentos" os números dos documentos que a sustentam (só o número, sem a letra). Não indique fonte que não sustenta a frase.',
   '',
   'O texto tem 5 trechos, nesta ordem:',
   '- abertura: visão geral do período e da participação nas sessões. Se a frequência informada for menor que 75%, cite a frequência.',
@@ -101,7 +99,17 @@ export function instrucoesDoRascunho(orientacoes: readonly Orientacao[]): string
 }
 
 const TEXTO = { type: 'string' } as const;
-const LISTA = { type: 'array', items: TEXTO } as const;
+const NUMEROS = { type: 'array', items: { type: 'integer' } } as const;
+/** Uma lista de frases, cada uma com as sessões e os documentos de onde saiu (E06). */
+const FRASES = {
+  type: 'array',
+  items: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['texto', 'sessoes', 'documentos'],
+    properties: { texto: TEXTO, sessoes: NUMEROS, documentos: NUMEROS },
+  },
+} as const;
 
 /** A saída estruturada pedida à IA: as chaves dos 5 trechos e as duas listas de metas. */
 export const FORMATO_DO_RASCUNHO = {
@@ -114,24 +122,24 @@ export const FORMATO_DO_RASCUNHO = {
       additionalProperties: false,
       required: [...TRECHOS, 'metas_alcancadas', 'metas_do_mes'],
       properties: {
-        abertura: TEXTO,
-        programas: TEXTO,
-        comportamentos: TEXTO,
-        recursos: TEXTO,
-        fechamento: TEXTO,
-        metas_alcancadas: LISTA,
-        metas_do_mes: LISTA,
+        abertura: FRASES,
+        programas: FRASES,
+        comportamentos: FRASES,
+        recursos: FRASES,
+        fechamento: FRASES,
+        metas_alcancadas: FRASES,
+        metas_do_mes: FRASES,
       },
     },
   },
 } as const;
 
 /** Um documento como vai para a IA: tipo, data, a marca de contexto e o texto. */
-function linhaDoDocumento(documento: DocumentoDoPedido, mesRef: string): string {
+function linhaDoDocumento(documento: DocumentoDoPedido, mesRef: string, indice: number): string {
   const situacao = situacaoDaData(documento.data, mesRef);
   const data = documento.data === null ? 'sem data' : formatarData(documento.data);
   const contexto = situacao === 'no_periodo' ? '' : ', contexto';
-  return `[${TIPOS_DE_DOCUMENTO[documento.tipo]}, ${data}${contexto}] ${documento.texto}`;
+  return `[D${String(indice + 1)}, ${TIPOS_DE_DOCUMENTO[documento.tipo]}, ${data}${contexto}] ${documento.texto}`;
 }
 
 /** O plano terapêutico, quando há metas no cadastro (E23). */
@@ -165,10 +173,13 @@ export function conteudoDoPedido({
     `Frequência: ${String(sessoes)} sessões realizadas em ${String(analises.length)} evoluções diárias (${String(frequencia)}%).`,
     '',
     'Análises do atendimento:',
-    ...analises.map((a) => `[${formatarData(a.data, true)}${a.falta ? ', falta' : ''}] ${a.texto}`),
+    ...analises.map(
+      (a, i) =>
+        `[S${String(i + 1)}, ${formatarData(a.data, true)}${a.falta ? ', falta' : ''}] ${a.texto}`,
+    ),
     ...(documentos.length === 0
       ? []
-      : ['', 'Outros documentos:', ...documentos.map((d) => linhaDoDocumento(d, mesRef))]),
+      : ['', 'Outros documentos:', ...documentos.map((d, i) => linhaDoDocumento(d, mesRef, i))]),
     ...linhasDoPlano(metas),
   ].join('\n');
 }
@@ -200,42 +211,4 @@ export function lerOrientacoes(linhas: unknown): Orientacao[] {
   });
 }
 
-/** As metas preenchidas, aparadas e dentro dos limites do banco; `null` se não é uma lista. */
-function metasDe(valor: unknown): string[] | null {
-  if (!Array.isArray(valor)) return null;
-  return valor
-    .filter((meta): meta is string => typeof meta === 'string')
-    .map((meta) => meta.trim().slice(0, MAXIMO_DA_META))
-    .filter((meta) => meta !== '')
-    .slice(0, MAXIMO_DE_METAS);
-}
-
-/** Confere o formato do rascunho e o deixa como o banco aceita; `null` se não serve. */
-export function lerRascunho(valor: unknown): Rascunho | null {
-  if (!ehObjeto(valor)) return null;
-  const metasAlcancadas = metasDe(valor.metas_alcancadas);
-  const metasDoMes = metasDe(valor.metas_do_mes);
-  if (metasAlcancadas === null || metasDoMes === null) return null;
-  const texto: Trechos = { ...TRECHOS_VAZIOS };
-  for (const trecho of TRECHOS) {
-    const escrito = valor[trecho];
-    if (typeof escrito !== 'string') return null;
-    texto[trecho] = escrito.trim().slice(0, MAXIMO_DO_TRECHO);
-  }
-  if (TRECHOS.every((trecho) => texto[trecho] === '')) return null;
-  return { texto, metasAlcancadas, metasDoMes };
-}
-
-/** O rascunho dentro da resposta da API: o JSON em `choices[0].message.content`. */
-export function lerRespostaDaIA(resposta: unknown): Rascunho | null {
-  const escolha: unknown =
-    ehObjeto(resposta) && Array.isArray(resposta.choices) ? resposta.choices[0] : null;
-  const mensagem = ehObjeto(escolha) ? escolha.message : null;
-  const conteudo = ehObjeto(mensagem) ? mensagem.content : null;
-  if (typeof conteudo !== 'string') return null;
-  try {
-    return lerRascunho(JSON.parse(conteudo));
-  } catch {
-    return null;
-  }
-}
+export { lerRascunho, lerRespostaDaIA } from './leituraDoRascunho.ts';

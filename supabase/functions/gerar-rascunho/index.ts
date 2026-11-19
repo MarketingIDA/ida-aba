@@ -10,6 +10,7 @@
 // de quem chama antes de a função rodar (verify_jwt, o padrão).
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 
+import { type Fonte, fontesDasFrases } from '../_shared/dominio/fontes.ts';
 import { type Genero, tratamentoDe, trocarNome } from '../_shared/dominio/pseudonimo.ts';
 import {
   type AnaliseDoPeriodo,
@@ -111,7 +112,7 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
   const documentos = await usuario
     .schema('evolucao')
     .from('documentos')
-    .select('tipo, data_documento, texto')
+    .select('id, tipo, data_documento, texto')
     .eq('evolucao_id', evolucaoId)
     .eq('ativo', true)
     .order('id');
@@ -151,6 +152,7 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
       data: d.data_documento,
       texto: d.texto,
     })),
+    idsDosDocumentos: documentos.data.map((d) => d.id as number),
     metas: metas.data as { texto: string; situacao: string }[],
   };
 }
@@ -182,6 +184,39 @@ async function pedirRascunho(corpo: unknown) {
     );
   }
   return rascunho;
+}
+
+/** A parte de cada bloco: os 5 trechos são a parte 2; as listas de metas, as partes 3 e 4. */
+const PARTE_DAS_METAS: Record<string, number> = { metas_alcancadas: 3, metas_do_mes: 4 };
+const parteDoCampo = (campo: string) => PARTE_DAS_METAS[campo] ?? 2;
+
+/**
+ * As fontes de cada frase (E06), ligadas à versão da IA de cada parte. São um apoio à conferência:
+ * se a gravação falhar, o rascunho fica, e o log diz por quê.
+ */
+async function gravarFontes(
+  servico: ReturnType<typeof createClient>,
+  versoes: readonly { id: number; numero: number }[],
+  fontes: readonly Fonte[],
+) {
+  const linhas = fontes.flatMap((f) => {
+    const versao = versoes.find((v) => v.numero === parteDoCampo(f.campo));
+    return versao === undefined
+      ? []
+      : [
+          {
+            versao_id: versao.id,
+            campo: f.campo,
+            ordem: f.ordem,
+            frase: f.frase,
+            datas: f.datas,
+            documentos: f.documentos,
+          },
+        ];
+  });
+  if (linhas.length === 0) return;
+  const { error } = await servico.schema('evolucao').from('fontes').insert(linhas);
+  if (error !== null) console.error('gerar-rascunho: fontes não gravadas', error.code);
 }
 
 async function gerar(pedido: Request): Promise<Response> {
@@ -253,11 +288,18 @@ async function gerar(pedido: Request): Promise<Response> {
         autor: 'ia',
       },
       { evolucao_id: evolucaoId, numero: 4, conteudo: { metas: rascunho.metasDoMes }, autor: 'ia' },
-    ]);
+    ])
+    .select('id, numero');
   if (gravacao.error !== null) {
     console.error('gerar-rascunho: falha ao gravar', gravacao.error.code);
     throw new Recusa(502, 'indisponivel', 'Não foi possível gravar o rascunho. Tente de novo.');
   }
+  const fontes = fontesDasFrases(
+    rascunho.frases,
+    lido.analises.map((a) => a.data),
+    lido.idsDosDocumentos,
+  );
+  await gravarFontes(servico, gravacao.data as { id: number; numero: number }[], fontes);
   return responder(200, { ok: true });
 }
 

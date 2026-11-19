@@ -51,6 +51,7 @@ Entre com a conta da coordenadora pelo link do convite e crie a senha (no mínim
 - [ ] 2.10 **Rascunho pela IA.** "Gerar rascunho com a IA" escreve as partes 2 a 4. Confira:
   - o texto não traz o nome da criança onde não deveria;
   - as metas batem com o cadastro;
+  - em cada parte, "Fontes do rascunho da IA" mostra, frase a frase, as sessões e os documentos de onde saiu; confira 3 ou 4 frases no PDF do Tita;
   - o tempo de resposta (anote).
 - [ ] 2.11 **Termo inadequado.** Escreva no texto o termo do item 1.7. Ele fica marcado e vira alerta. Troque pelo substituto com um toque.
 - [ ] 2.12 **Dica para a IA.** Num bloco escrito pela IA, use "Dica para a IA" e escreva o que ela deve fazer diferente. O texto da evolução não muda.
