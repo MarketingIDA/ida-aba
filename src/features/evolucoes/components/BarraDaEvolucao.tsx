@@ -12,6 +12,8 @@ interface Props {
   erro: string | null;
   aoConcluir: () => void;
   aoReabrir: () => void;
+  /** As metas do cadastro já alcançadas ou em manutenção (E12). */
+  jaAlcancadas: readonly string[];
 }
 
 function Resumo({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
@@ -55,8 +57,9 @@ export function BarraDaEvolucao({
   erro,
   aoConcluir,
   aoReabrir,
+  jaAlcancadas,
 }: Readonly<Props>) {
-  const pronta = prontaParaConcluir(evolucao);
+  const pronta = prontaParaConcluir(evolucao, jaAlcancadas);
   return (
     <div className="sticky bottom-4 z-10 flex flex-col gap-2 rounded-xl border border-borda bg-superficie px-4 py-3 text-sm font-bold text-texto-2 shadow-lg">
       {erro !== null && (

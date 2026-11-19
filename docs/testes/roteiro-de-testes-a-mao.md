@@ -55,6 +55,7 @@ Entre com a conta da coordenadora pelo link do convite e crie a senha (no mínim
 - [ ] 2.11 **Termo inadequado.** Escreva no texto o termo do item 1.7. Ele fica marcado e vira alerta. Troque pelo substituto com um toque.
 - [ ] 2.12 **Dica para a IA.** Num bloco escrito pela IA, use "Dica para a IA" e escreva o que ela deve fazer diferente. O texto da evolução não muda.
 - [ ] 2.13 **Trazer metas.** Na parte 4, "Trazer do cadastro de metas" acrescenta as metas em desenvolvimento.
+- [ ] 2.13b **Meta já alcançada.** Na parte 4, escreva uma meta que está na parte 3 ou que já está alcançada no cadastro. A conclusão fica bloqueada com o nome da meta. Com menos de 4 metas na parte 3, aparece só um aviso.
 - [ ] 2.14 **Conferir e concluir.** "Marcar como conferida" nas 4 partes, e depois "Concluir evolução". Teste "Reabrir" e conclua de novo.
 - [ ] 2.15 **Evolução escrita à mão.** No outro assistido, crie a evolução sem o PDF, escreva as 4 partes, confira e conclua.
 
@@ -77,8 +78,8 @@ Entre com a conta da coordenadora pelo link do convite e crie a senha (no mínim
   - use "Copiar o link";
   - o registro da janela mostra as três ações, com o nome e a hora;
   - no computador, "Enviar o PDF" pode baixar o arquivo para anexar, e isso fica registrado como "Baixou o PDF para enviar".
-- [ ] 4.4 **Arquivo do mês.** Em Arquivo do mês, confira o que falta: evoluções sem concluir e a assinatura. Use "Baixar a prévia": o Word sai marcado como prévia. Com tudo concluído, "Enviar o arquivo". ⚠️ Não tem volta (ver os cuidados do item 0).
-- [ ] 4.5 **Depois do envio.** As evoluções ficam só para leitura, e a carteira não abre outra evolução no mês.
+- [ ] 4.4 **Arquivo do mês.** Em Arquivo do mês, confira o que falta: evoluções sem concluir e a assinatura. Use "Baixar a prévia": o Word sai marcado como prévia. Com tudo concluído, "Enviar o arquivo". A confirmação lista o que muda no cadastro de metas: alcançadas, em manutenção, novas (sem programa e com o critério a definir) e as linhas da parte 3 que não acharam meta. ⚠️ Não tem volta (ver os cuidados do item 0).
+- [ ] 4.5 **Depois do envio.** As evoluções ficam só para leitura, e a carteira não abre outra evolução no mês. Em Metas, as situações mudaram como a confirmação mostrou; complete o programa e o critério das metas novas.
 
 ## 5. Contas médicas
 

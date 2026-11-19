@@ -6,13 +6,20 @@ import { EdicaoDasMetas, MetasDaParte } from '@/features/evolucoes/components/Me
 import { ParteDaEvolucao } from '@/features/evolucoes/components/ParteDaEvolucao';
 import { TextoComTermos } from '@/features/evolucoes/components/TermosNoTexto';
 import { EdicaoDoTexto } from '@/features/evolucoes/components/TextoDaEvolucao';
-import { linhasDa, NUMEROS, pendenciaDaParte } from '@/features/evolucoes/conferencia';
+import {
+  avisoDaParte,
+  linhasDa,
+  NUMEROS,
+  pendenciaDaParte,
+} from '@/features/evolucoes/conferencia';
 import type { EdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
 import { formatarDataHora } from '@/features/evolucoes/textos';
 
 interface Props {
   evolucao: Evolucao;
   edicao: EdicaoDaEvolucao;
+  /** As metas do cadastro já alcançadas ou em manutenção (E12). */
+  jaAlcancadas: readonly string[];
 }
 
 function versaoDa(evolucao: Evolucao, numero: NumeroDaParte): Versao<unknown> | null {
@@ -48,7 +55,7 @@ const cabeDica = (evolucao: Evolucao, numero: NumeroDaParte) =>
   evolucao.editavel && evolucao.partesDaIA.includes(numero);
 
 /** Parte 2 na leitura: o texto, os termos inadequados (E10) e a dica para a IA (E21). */
-function LeituraDoTexto({ evolucao, edicao }: Readonly<Props>) {
+function LeituraDoTexto({ evolucao, edicao }: Readonly<Omit<Props, 'jaAlcancadas'>>) {
   return (
     <TextoComTermos
       trechos={evolucao.texto?.conteudo ?? null}
@@ -82,7 +89,11 @@ function LeituraDasMetas({ evolucao, numero }: Readonly<{ evolucao: Evolucao; nu
 }
 
 /** O conteúdo da parte, na leitura ou na edição. */
-function CorpoDaParte({ evolucao, edicao, numero }: Readonly<Props & { numero: NumeroDaParte }>) {
+function CorpoDaParte({
+  evolucao,
+  edicao,
+  numero,
+}: Readonly<Omit<Props, 'jaAlcancadas'> & { numero: NumeroDaParte }>) {
   if (numero === 1) return <Identificacao evolucao={evolucao} />;
   const comum = {
     salvando: edicao.salvando,
@@ -117,7 +128,7 @@ function CorpoDaParte({ evolucao, edicao, numero }: Readonly<Props & { numero: N
 }
 
 /** As 4 partes, cada uma com a conferência e, nas partes 2 a 4, a edição. */
-export function PartesDaEvolucao({ evolucao, edicao }: Readonly<Props>) {
+export function PartesDaEvolucao({ evolucao, edicao, jaAlcancadas }: Readonly<Props>) {
   return NUMEROS.map((numero) => {
     const parte = evolucao.partes.find((p) => p.numero === numero);
     if (parte === undefined) return null;
@@ -128,7 +139,8 @@ export function PartesDaEvolucao({ evolucao, edicao }: Readonly<Props>) {
         parte={parte}
         origem={origemDa(evolucao, numero)}
         contador={editando ? null : contadorDa(evolucao, numero)}
-        pendencia={pendenciaDaParte(evolucao, numero)}
+        pendencia={pendenciaDaParte(evolucao, numero, jaAlcancadas)}
+        aviso={avisoDaParte(evolucao, numero)}
         podeMudar={podeMudar(evolucao)}
         editando={editando}
         aoEditar={

@@ -1,4 +1,4 @@
-import { Check, CircleCheck, Clock, OctagonX, Pencil, Undo2 } from 'lucide-react';
+import { Check, CircleCheck, Clock, OctagonX, Pencil, TriangleAlert, Undo2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ interface Props {
   contador?: ReactNode;
   /** O que impede conferir, ou `null`. */
   pendencia: string | null;
+  /** O que olhar sem impedir a conferência (alerta), ou `null`. */
+  aviso?: string | null;
   /** O coordenador da carteira, com a evolução em conferência. */
   podeMudar: boolean;
   editando: boolean;
@@ -120,7 +122,15 @@ export function ParteDaEvolucao(props: Readonly<Props>) {
         </div>
         {contador}
       </header>
-      <div className="px-5 py-4">{children}</div>
+      <div className="flex flex-col gap-3 px-5 py-4">
+        {props.aviso != null && (
+          <p className="flex items-start gap-2 rounded-lg border border-alerta-border bg-alerta-soft px-3 py-2 text-caption font-semibold text-alerta-text">
+            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            {props.aviso}
+          </p>
+        )}
+        {children}
+      </div>
       {rodape && (
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-borda px-5 py-3 text-caption font-bold text-texto-2">
           <Situacao {...props} />

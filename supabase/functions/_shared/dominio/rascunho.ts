@@ -51,6 +51,13 @@ export interface PedidoDeRascunho {
   orientacoes: readonly Orientacao[];
   /** Os outros documentos ativos (E25); os de fora do período ou sem data vão como contexto. */
   documentos: readonly DocumentoDoPedido[];
+  /** O plano terapêutico (E23): as metas em desenvolvimento e as já alcançadas, sem o nome. */
+  metas?: MetasDoPlano;
+}
+
+export interface MetasDoPlano {
+  emDesenvolvimento: readonly string[];
+  jaAlcancadas: readonly string[];
 }
 
 export interface Rascunho {
@@ -78,8 +85,8 @@ export const INSTRUCOES_DO_RASCUNHO = [
   'Somados, os trechos devem passar de 700 caracteres, quando as análises derem base para isso.',
   '',
   'Metas:',
-  '- metas_alcancadas: as habilidades que as análises mostram como alcançadas no período, uma por item, em frase curta. Se não houver, devolva a lista vazia.',
-  '- metas_do_mes: 4 ou mais metas para o mês seguinte, que deem continuidade ao que foi trabalhado e ainda não foi alcançado, uma por item. Não repita uma meta alcançada.',
+  '- metas_alcancadas: as habilidades que as análises mostram como alcançadas no período, uma por item, em frase curta. Quando for uma meta do plano terapêutico, copie o texto da meta como está no plano. Se não houver, devolva a lista vazia.',
+  '- metas_do_mes: 4 ou mais metas para o mês seguinte, uma por item. Comece pelas metas do plano terapêutico em desenvolvimento, com o texto como está no plano, tirando as que alcançou neste período; acrescente meta nova só para dar continuidade ao que foi trabalhado. Nunca repita uma meta alcançada, nem as já alcançadas do plano.',
 ].join('\n');
 
 /** As instruções fixas e, depois delas, as orientações ativas, cada uma com o seu campo (E22). */
@@ -127,6 +134,17 @@ function linhaDoDocumento(documento: DocumentoDoPedido, mesRef: string): string 
   return `[${TIPOS_DE_DOCUMENTO[documento.tipo]}, ${data}${contexto}] ${documento.texto}`;
 }
 
+/** O plano terapêutico, quando há metas no cadastro (E23). */
+function linhasDoPlano(metas: MetasDoPlano | undefined): string[] {
+  if (metas === undefined) return [];
+  const lista = (titulo: string, itens: readonly string[]) =>
+    itens.length === 0 ? [] : ['', titulo, ...itens.map((m) => `- ${m}`)];
+  return [
+    ...lista('Plano terapêutico, metas em desenvolvimento:', metas.emDesenvolvimento),
+    ...lista('Plano terapêutico, metas já alcançadas:', metas.jaAlcancadas),
+  ];
+}
+
 /**
  * O que vai para a IA sobre o período: o mês, a frequência (E04), as análises, uma por sessão, e
  * os outros documentos, se houver (E25).
@@ -136,6 +154,7 @@ export function conteudoDoPedido({
   tratamento,
   analises,
   documentos,
+  metas,
 }: PedidoDeRascunho): string {
   const { inicio, fim } = periodoAnalisado(mesRef);
   const sessoes = analises.filter((a) => !a.falta).length;
@@ -150,6 +169,7 @@ export function conteudoDoPedido({
     ...(documentos.length === 0
       ? []
       : ['', 'Outros documentos:', ...documentos.map((d) => linhaDoDocumento(d, mesRef))]),
+    ...linhasDoPlano(metas),
   ].join('\n');
 }
 

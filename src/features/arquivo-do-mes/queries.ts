@@ -3,6 +3,7 @@ import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query
 import {
   buscarArquivosDoMes,
   buscarEvolucoesDoArquivo,
+  buscarPlanoDasMetas,
   enviarArquivo,
 } from '@/features/arquivo-do-mes/api/arquivos.api';
 
@@ -10,12 +11,22 @@ export const arquivosKeys = {
   all: ['arquivos'] as const,
   doMes: (mesRef: string) => [...arquivosKeys.all, 'mes', mesRef] as const,
   evolucoes: (arquivoId: number) => [...arquivosKeys.all, 'evolucoes', arquivoId] as const,
+  planoDasMetas: (carteiraId: number, mesRef: string) =>
+    [...arquivosKeys.all, 'plano-das-metas', carteiraId, mesRef] as const,
 };
 
 export const arquivosDoMesOptions = (mesRef: string) =>
   queryOptions({
     queryKey: arquivosKeys.doMes(mesRef),
     queryFn: () => buscarArquivosDoMes(mesRef),
+  });
+
+/** O que o envio muda no cadastro de metas: lido de novo a cada confirmação. */
+export const planoDasMetasOptions = (carteiraId: number, mesRef: string) =>
+  queryOptions({
+    queryKey: arquivosKeys.planoDasMetas(carteiraId, mesRef),
+    queryFn: () => buscarPlanoDasMetas(carteiraId, mesRef),
+    staleTime: 0,
   });
 
 /** O arquivo enviado não muda mais: a lista de evoluções dele vale por 5 minutos. */
