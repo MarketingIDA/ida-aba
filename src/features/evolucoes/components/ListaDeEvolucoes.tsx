@@ -12,6 +12,7 @@ interface Props {
   /** Nome curto de cada coordenador, pelo id (só na visão geral). */
   coordenadores: ReadonlyMap<number, string>;
   nomeDoMes: string;
+  noMesAberto: boolean;
   situacao: Situacao | null;
   temBusca: boolean;
   aoTirarFiltros: () => void;
@@ -50,7 +51,7 @@ export function ListaDeEvolucoes({ linhas, coordenadores, ...props }: Readonly<P
   return (
     <ul
       aria-label={`Evoluções de ${props.nomeDoMes}`}
-      className="divide-y divide-borda overflow-hidden rounded-xl border border-borda bg-superficie shadow-sm"
+      className="divide-y divide-borda overflow-hidden rounded-xl border border-borda bg-superficie shadow-md"
     >
       {linhas.map((linha) => (
         <LinhaDaEvolucao
@@ -59,6 +60,7 @@ export function ListaDeEvolucoes({ linhas, coordenadores, ...props }: Readonly<P
           visaoGeral={props.visaoGeral}
           coordenador={coordenadores.get(linha.coordenadorId) ?? null}
           nomeDoMes={props.nomeDoMes}
+          noMesAberto={props.noMesAberto}
         />
       ))}
     </ul>

@@ -9,9 +9,10 @@ test.describe('Evoluções do mês', () => {
 
     await expect(lista.getByRole('listitem')).toHaveCount(5);
     await expect(page.getByText('turno da manhã. Sessões de 01/10 a 31/10/2026')).toBeVisible();
+    // No celular a barra inferior mostra só as ações, como no protótipo: o texto fica na página.
     await expect(
       page.getByText('Faltam 3 evoluções para o arquivo do mês · prazo 10/11, faltam 6 dias'),
-    ).toBeVisible();
+    ).toBeAttached();
 
     await page.getByRole('button', { name: /^Em conferência 1/ }).click();
     await expect(lista.getByRole('listitem')).toHaveCount(1);

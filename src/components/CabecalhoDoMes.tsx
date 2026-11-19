@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { Seletor } from '@/components/Seletor';
+import { SeletorCompacto } from '@/components/Seletor';
 import { formatarMesCurto } from '@dominio/mes.ts';
 
 interface Props {
@@ -23,9 +23,9 @@ interface Props {
 export function CabecalhoDoMes(props: Readonly<Props>) {
   const { icone: Icone, mes, mesAberto, meses, aoMudarMes } = props;
   return (
-    <header className="flex flex-wrap items-end justify-between gap-4">
-      <div className="flex max-w-[72ch] flex-col gap-1.5">
-        <p className="flex items-center gap-2 rotulo text-azul">
+    <header className="mt-1 mb-[2px] flex flex-wrap items-end justify-between gap-4">
+      <div className="flex min-w-0 flex-[1_1_420px] flex-col">
+        <p className="mb-1.5 flex items-center gap-2 text-xs font-extrabold tracking-[0.1em] text-info-text uppercase">
           <Icone aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
           {props.sobretitulo}
         </p>
@@ -35,17 +35,16 @@ export function CabecalhoDoMes(props: Readonly<Props>) {
             {formatarMesCurto(mes)}
           </span>
         </h1>
-        <p className="text-sm font-semibold text-texto-2">{props.subtitulo}</p>
+        <p className="mt-1 text-sm font-semibold text-apagado">{props.subtitulo}</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-sm font-bold text-texto-2">
+        <label className="flex items-center gap-2 text-[0.84rem] font-bold text-texto-2">
           Mês
-          <Seletor
+          <SeletorCompacto
             value={mes}
             onChange={(evento) => {
               aoMudarMes(evento.target.value);
             }}
-            className="w-auto"
           >
             {meses.map((m) => (
               <option key={m} value={m}>
@@ -53,7 +52,7 @@ export function CabecalhoDoMes(props: Readonly<Props>) {
                 {m === mesAberto ? ' · aberta' : ''}
               </option>
             ))}
-          </Seletor>
+          </SeletorCompacto>
         </label>
         {props.acao}
       </div>

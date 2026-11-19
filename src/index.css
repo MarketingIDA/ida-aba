@@ -335,7 +335,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply min-h-dvh bg-background font-sans text-base font-medium text-foreground antialiased;
+    @apply min-h-dvh bg-background font-sans text-[0.90625rem] leading-normal font-medium text-foreground antialiased;
     background-image: var(--gradiente-fundo);
     background-attachment: fixed;
   }
@@ -345,7 +345,7 @@
     @apply m-0 font-display text-marinho;
   }
   h1 {
-    @apply text-3xl font-extrabold tracking-[-0.01em];
+    @apply text-[1.875rem] leading-[1.1] font-extrabold tracking-[-0.01em];
   }
   h2 {
     @apply text-xl font-bold;
