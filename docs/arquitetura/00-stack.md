@@ -137,8 +137,10 @@ create table evolucao.niveis_de_apoio (
 );
 -- evolucao.leituras_de_nivel: a situação da leitura da importação atual (lida, sem_metas, falhou).
 -- Só a RPC evolucao.gravar_niveis grava (service_role, pela Edge Function ler-niveis); importar de
--- novo apaga os níveis e a leitura por trigger. A tela de evolução das metas (f2) lê essas tabelas;
--- os indicadores vêm do domínio puro, o mesmo código no navegador e nos testes.
+-- novo apaga os níveis e a leitura por trigger. A tela de evolução das metas (f2a) lê essas tabelas
+-- direto, nas 3 últimas evoluções do assistido, sem view; os indicadores vêm do domínio puro
+-- (dominio/progresso.ts), o mesmo código no navegador e nos testes. A mediana da carteira (f2b)
+-- virá de uma RPC que devolve uma linha por meta, sem expor os níveis dos outros assistidos.
 
 -- E28: quem baixou, enviou ou copiou o link do relatório de metas, e quando
 create table auditoria.relatorio_metas (
