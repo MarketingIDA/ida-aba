@@ -16,7 +16,12 @@ import {
   SITUACAO_DA_DICA,
 } from '@/features/orientacoes/components/DicaDaCuradoria';
 import { OrientacoesEmUso } from '@/features/orientacoes/components/OrientacoesEmUso';
-import { dicasOptions, orientacoesOptions, useCuradoria } from '@/features/orientacoes/queries';
+import {
+  type Curadoria as CuradoriaApi,
+  dicasOptions,
+  orientacoesOptions,
+  useCuradoria,
+} from '@/features/orientacoes/queries';
 import { ehErroApp } from '@/lib/erroApp';
 
 const SEM_FORMATO =
@@ -26,17 +31,57 @@ const mensagem = (erro: unknown) => (ehErroApp(erro) ? erro.message : SEM_FORMAT
 
 const CABECALHO = (
   <div className="flex max-w-[72ch] flex-col gap-1.5">
-    <p className="flex items-center gap-2 rotulo text-azul">
+    <p className="flex items-center gap-1.5 text-xs font-extrabold tracking-[0.1em] text-info-text uppercase">
       <Sparkles aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
       Configurações
     </p>
     <h1>Orientações da IA</h1>
-    <p className="text-sm font-semibold text-texto-2">
+    <p className="text-apagado">
       Os coordenadores deixam dicas nos blocos que a IA escreve. A dica aprovada aqui vira uma
       orientação, que a IA lê antes de gerar cada rascunho.
     </p>
   </div>
 );
+
+const LEGENDA: Record<SituacaoDaDica, string> = {
+  pendente: 'aguardando curadoria',
+  aprovada: 'viraram orientação',
+  descartada: 'não vão para a IA',
+};
+
+/** O card das dicas, com o título e a lista (ou o convite, quando o filtro não tem nenhuma). */
+function CardDasDicas({
+  lista,
+  filtro,
+  curadoria,
+}: Readonly<{ lista: readonly Dica[]; filtro: SituacaoDaDica | null; curadoria: CuradoriaApi }>) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-borda bg-superficie shadow-md">
+      <div className="border-b border-borda px-5 py-[18px] min-[861px]:px-[22px]">
+        <h2>Dicas para a IA</h2>
+        <p className="mt-0.5 text-[0.8125rem] text-texto-2">
+          Quem deu a dica, o bloco, o texto que a IA tinha escrito e a dica. Aprovada, vira
+          orientação; descartada, fica só no registro.
+        </p>
+      </div>
+      {lista.length === 0 ? (
+        <div className="p-5">
+          <EmptyState
+            icone={Lightbulb}
+            titulo={filtro === 'pendente' ? 'Nenhuma dica à espera' : 'Nenhuma dica aqui'}
+            descricao="As dicas chegam quando um coordenador usa “Dica para a IA” num bloco do rascunho."
+          />
+        </div>
+      ) : (
+        <ul aria-label="Dicas para a IA">
+          {lista.map((dica) => (
+            <DicaDaCuradoria key={dica.id} dica={dica} curadoria={curadoria} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 interface PropsDaCuradoria {
   dicas: readonly Dica[];
@@ -60,6 +105,7 @@ function Curadoria({ dicas, orientacoes }: Readonly<PropsDaCuradoria>) {
           rotulo: SITUACAO_DA_DICA[valor].plural,
           total: dicas.filter((d) => d.situacao === valor).length,
           tom: SITUACAO_DA_DICA[valor].tom,
+          legenda: LEGENDA[valor],
         }))}
       />
       {erro !== null && (
@@ -67,22 +113,7 @@ function Curadoria({ dicas, orientacoes }: Readonly<PropsDaCuradoria>) {
           {mensagem(erro)}
         </p>
       )}
-      {lista.length === 0 ? (
-        <EmptyState
-          icone={Lightbulb}
-          titulo={filtro === 'pendente' ? 'Nenhuma dica à espera' : 'Nenhuma dica aqui'}
-          descricao="As dicas chegam quando um coordenador usa “Dica para a IA” num bloco do rascunho."
-        />
-      ) : (
-        <ul
-          aria-label="Dicas para a IA"
-          className="divide-y divide-borda overflow-hidden rounded-xl border border-borda bg-superficie shadow-sm"
-        >
-          {lista.map((dica) => (
-            <DicaDaCuradoria key={dica.id} dica={dica} curadoria={curadoria} />
-          ))}
-        </ul>
-      )}
+      <CardDasDicas lista={lista} filtro={filtro} curadoria={curadoria} />
       <OrientacoesEmUso orientacoes={orientacoes} curadoria={curadoria} />
     </>
   );

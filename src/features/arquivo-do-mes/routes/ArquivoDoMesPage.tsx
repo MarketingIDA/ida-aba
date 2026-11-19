@@ -30,7 +30,7 @@ export function ArquivoDoMesPage() {
         mes={mes}
         mesAberto={mesAberto}
         meses={meses}
-        subtitulo={`Vai a contas médicas o arquivo inteiro da carteira, não cada evolução. ${prazo}`}
+        subtitulo={`O arquivo de cada carteira para contas médicas. ${prazo}`}
         aoMudarMes={mudar}
       />
       {consulta.isPending && (

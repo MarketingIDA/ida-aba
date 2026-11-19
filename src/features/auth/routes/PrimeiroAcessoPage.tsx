@@ -91,7 +91,7 @@ export function PrimeiroAcessoPage() {
         <CampoDeSenha id="senha" rotulo="Senha nova" />
         <CampoDeSenha id="repetir" rotulo="Repita a senha" />
         {erro !== null && <ErroDeAcesso>{erro}</ErroDeAcesso>}
-        <Button type="submit" size="lg" disabled={enviando} className="mt-2 font-display">
+        <Button type="submit" size="lg" disabled={enviando} className="mt-2">
           {enviando ? 'Salvando…' : 'Salvar senha e entrar'}
         </Button>
       </form>

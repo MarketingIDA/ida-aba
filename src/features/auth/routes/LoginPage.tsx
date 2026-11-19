@@ -32,7 +32,7 @@ export function LoginPage() {
         <Campo id="email" rotulo="E-mail" tipo="email" autoComplete="username" />
         <Campo id="senha" rotulo="Senha" tipo="password" autoComplete="current-password" />
         {erro !== null && <ErroDeAcesso>{erro}</ErroDeAcesso>}
-        <Button type="submit" size="lg" disabled={enviando} className="mt-2 font-display">
+        <Button type="submit" size="lg" disabled={enviando} className="mt-2">
           {enviando ? 'Entrando…' : 'Entrar'}
         </Button>
         <Link

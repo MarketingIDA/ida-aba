@@ -85,18 +85,7 @@ function Botoes({
   aoAbrir,
 }: Readonly<{ dica: Dica; ocupado: boolean; aoAbrir: (passo: Passo) => void }>) {
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button
-        size="sm"
-        disabled={ocupado}
-        aria-label={`Aprovar a dica ${String(dica.id)}`}
-        onClick={() => {
-          aoAbrir('aprovar');
-        }}
-      >
-        <Check aria-hidden="true" />
-        Aprovar
-      </Button>
+    <div className="flex flex-wrap justify-end gap-2">
       <Button
         size="sm"
         variant="secondary"
@@ -108,6 +97,17 @@ function Botoes({
       >
         <X aria-hidden="true" />
         Descartar
+      </Button>
+      <Button
+        size="sm"
+        disabled={ocupado}
+        aria-label={`Aprovar a dica ${String(dica.id)}`}
+        onClick={() => {
+          aoAbrir('aprovar');
+        }}
+      >
+        <Check aria-hidden="true" />
+        Aprovar
       </Button>
     </div>
   );

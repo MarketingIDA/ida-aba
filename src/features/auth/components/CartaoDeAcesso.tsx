@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import logo from '@/assets/marca/logo-instituto-autismo.png';
+
 /*
  * Direção visual (skill frontend-design + design system IDA): um ponto de ousadia só, a faixa
  * com as quatro cores da marca no alto do cartão; título em Baloo 2, o resto em Nunito; conteúdo
@@ -15,6 +17,9 @@ export function CartaoDeAcesso({
       <section className="animate-entrar-tela overflow-hidden rounded-2xl bg-superficie shadow-lg motion-reduce:animate-none">
         <div aria-hidden="true" className="h-2 bg-gradiente-marca" />
         <div className="p-6 sm:p-8">
+          <span className="mb-5 inline-flex items-center rounded-[14px] bg-white px-[11px] py-[7px] shadow-[0_3px_0_var(--ida-azul-3d),0_0_0_1px_var(--borda)]">
+            <img src={logo} alt="Instituto do Autismo" className="block h-[30px] w-auto" />
+          </span>
           <h1 className="text-[2.25rem] leading-none">{titulo}</h1>
           <p className="mt-2 max-w-[36ch] text-sm text-texto-2">{descricao}</p>
           {children}

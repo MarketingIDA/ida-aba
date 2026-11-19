@@ -44,14 +44,16 @@ function Identificacao({
   return (
     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
       <span className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
-        <b className="truncate text-[0.90625rem] text-marinho">{item.nome}</b>
+        <b className="truncate text-[0.90625rem] font-extrabold text-marinho">{item.nome}</b>
         {item.marcas?.map((marca) => (
-          <Situacao key={marca.rotulo} {...marca} />
+          <Situacao key={marca.rotulo} {...marca} pequena />
         ))}
-        {!item.ativo && <Situacao rotulo={item.rotuloDoInativo ?? rotuloDoInativo} tom="neutro" />}
+        {!item.ativo && (
+          <Situacao rotulo={item.rotuloDoInativo ?? rotuloDoInativo} tom="neutro" pequena />
+        )}
       </span>
       {item.detalhe !== undefined && (
-        <span className="text-xs font-semibold [overflow-wrap:anywhere] text-apagado">
+        <span className="text-[0.78rem] font-semibold [overflow-wrap:anywhere] text-apagado">
           {item.detalhe}
         </span>
       )}
@@ -64,18 +66,21 @@ export function ListaDoCadastro({ rotulo, itens, rotuloDoInativo, aoEditar }: Re
   return (
     <ul
       aria-label={rotulo}
-      className="divide-y divide-borda overflow-hidden rounded-xl border border-borda bg-superficie shadow-sm"
+      className="overflow-hidden rounded-xl border border-borda bg-superficie shadow-md"
     >
       {ativosPrimeiro(itens).map((item) => (
-        <li key={item.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+        <li
+          key={item.id}
+          className="flex items-center gap-3.5 border-b border-borda px-4 py-[13px] transition-colors duration-150 last:border-b-0 hover:bg-superficie-2 min-[861px]:px-[22px]"
+        >
           {item.sigla !== undefined && (
-            <span className="grid h-8 min-w-12 place-items-center rounded-md bg-info-soft px-2 font-mono text-caption font-bold text-azul-escuro">
+            <span className="grid h-8 min-w-12 place-items-center rounded-full bg-info-soft px-2.5 text-[0.78rem] font-extrabold text-azul-escuro">
               {item.sigla}
             </span>
           )}
           <Identificacao item={item} rotuloDoInativo={rotuloDoInativo} />
           <Button
-            variant="secondary"
+            variant="ghost"
             size="sm"
             aria-label={item.rotuloDaEdicao ?? `Editar ${item.nome}`}
             onClick={() => {
