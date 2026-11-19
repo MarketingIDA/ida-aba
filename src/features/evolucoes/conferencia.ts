@@ -1,8 +1,16 @@
 import type { Devolucao } from '@/features/evolucoes/api/devolucao.api';
 import type { Evolucao, NumeroDaParte } from '@/features/evolucoes/api/evolucao.api';
+import type { TextoAnterior } from '@/features/evolucoes/api/anterior.api';
 import type { Lacuna } from '@/features/evolucoes/api/lacunas.api';
 import { plural } from '@/features/evolucoes/logica';
-import { linhasDoTexto, MINIMO_DE_LINHAS, MINIMO_DE_METAS_DO_MES } from '@dominio/evolucao.ts';
+import {
+  linhasDoTexto,
+  MINIMO_DE_LINHAS,
+  MINIMO_DE_METAS_DO_MES,
+  textoDaEvolucao,
+} from '@dominio/evolucao.ts';
+import { nomeDoMes } from '@dominio/mes.ts';
+import { LIMITE_DE_SEMELHANCA, semelhanca } from '@dominio/semelhanca.ts';
 import { metaJaAlcancada } from '@dominio/metas.ts';
 
 /** E11: menos de 4 metas alcançadas no mês é alerta, não bloqueio. */
@@ -24,6 +32,8 @@ export interface ContextoDaConferencia {
   jaAlcancadas?: readonly string[];
   /** Os programas do plano que não aparecem nas análises (E10). */
   lacunas?: readonly Lacuna[];
+  /** O texto da evolução do mês anterior (P7). */
+  anterior?: TextoAnterior | null;
 }
 
 export function linhasDa(evolucao: Evolucao): number {
@@ -83,12 +93,22 @@ export function avisoDaParte(
   numero: NumeroDaParte,
   contexto: ContextoDaConferencia = {},
 ): string | null {
+  if (numero === 2) return avisoDoTexto(evolucao, contexto.anterior ?? null);
   if (numero === 4) return avisoDasMetasDoMes(evolucao, contexto.lacunas ?? []);
   if (numero !== 3) return null;
   const alcancadas = evolucao.metasAlcancadas?.conteudo.metas.length ?? 0;
   return alcancadas < MINIMO_DE_ALCANCADAS
     ? `${plural(alcancadas, 'meta alcançada', 'metas alcançadas')} no mês; o esperado é ${String(MINIMO_DE_ALCANCADAS)} ou mais. Não impede a conclusão.`
     : null;
+}
+
+/** P7: o texto 60% ou mais parecido com o da evolução do mês anterior. */
+function avisoDoTexto(evolucao: Evolucao, anterior: TextoAnterior | null): string | null {
+  if (anterior === null || evolucao.texto === null) return null;
+  const parecido = semelhanca(textoDaEvolucao(evolucao.texto.conteudo), anterior.texto);
+  return parecido < LIMITE_DE_SEMELHANCA
+    ? null
+    : `O texto está ${String(parecido)}% parecido com o da evolução de ${nomeDoMes(anterior.mesRef)}. Conte o que mudou neste mês. Não impede a conclusão.`;
 }
 
 /** E12: meta de um programa cuja lacuna foi ignorada, que continua nas metas para o mês atual. */
