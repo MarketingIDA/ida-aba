@@ -36,6 +36,25 @@ function servirBanco() {
     http.post(`${REST}/rpc/arquivos_do_mes`, () =>
       HttpResponse.json(carteiras().map(carteiraDaRpc)),
     ),
+    // O que o envio muda no cadastro de metas (E23): só textos fictícios.
+    http.post(`${REST}/rpc/plano_das_metas`, () =>
+      HttpResponse.json([
+        {
+          assistido_id: 1,
+          assistido_nome: 'Ana Fictícia',
+          acao: 'alcancada',
+          meta_id: 7,
+          texto: 'Parear figuras',
+        },
+        {
+          assistido_id: 1,
+          assistido_nome: 'Ana Fictícia',
+          acao: 'nova',
+          meta_id: null,
+          texto: 'Nomear cores',
+        },
+      ]),
+    ),
     http.post(`${REST}/arquivos`, async ({ request }) => {
       const { carteira_id } = (await request.json()) as { carteira_id: number };
       banco.enviadas.push(carteira_id);
@@ -82,6 +101,8 @@ describe('Arquivo do mês, coordenador', () => {
     expect(pronta.getByRole('group', { name: 'Confirmar o envio' })).toHaveTextContent(
       'Enviar o arquivo de novembro com 3 evoluções?',
     );
+    expect(await pronta.findByText('Parear figuras')).toBeInTheDocument();
+    expect(pronta.getByText(/Entra no cadastro, sem programa/)).toBeInTheDocument();
     expect(banco.enviadas).toEqual([]);
     await user.click(pronta.getByRole('button', { name: 'Enviar o arquivo' }));
 

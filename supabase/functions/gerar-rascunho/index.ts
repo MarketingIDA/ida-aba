@@ -118,6 +118,17 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
   if (documentos.error !== null) {
     throw new Recusa(502, 'indisponivel', 'Não foi possível ler os outros documentos.');
   }
+  // O plano terapêutico (E23): o ponto de partida das metas para o mês atual. A suspensa fica fora.
+  const metas = await usuario
+    .schema('cadastro')
+    .from('metas')
+    .select('texto, situacao')
+    .eq('assistido_id', evolucao.data.assistido_id)
+    .neq('situacao', 'suspensa')
+    .order('id');
+  if (metas.error !== null) {
+    throw new Recusa(502, 'indisponivel', 'Não foi possível ler o cadastro de metas.');
+  }
   // As orientações são reforço: se a leitura falhar, o rascunho sai sem elas, e o log diz por quê.
   const orientacoes = await usuario
     .schema('evolucao')
@@ -140,6 +151,7 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
       data: d.data_documento,
       texto: d.texto,
     })),
+    metas: metas.data as { texto: string; situacao: string }[],
   };
 }
 
@@ -202,6 +214,16 @@ async function gerar(pedido: Request): Promise<Response> {
     ...documento,
     texto: trocarNome(documento.texto, lido.nome, lido.genero).texto,
   }));
+  // A meta do plano não deve citar o assistido; se citar, o nome sai aqui (E05).
+  const semNome = (texto: string) => trocarNome(texto, lido.nome, lido.genero).texto;
+  const plano = {
+    emDesenvolvimento: lido.metas
+      .filter((m) => m.situacao === 'desenvolvimento')
+      .map((m) => semNome(m.texto)),
+    jaAlcancadas: lido.metas
+      .filter((m) => m.situacao !== 'desenvolvimento')
+      .map((m) => semNome(m.texto)),
+  };
   const rascunho = await pedirRascunho(
     montarPedido(modelo, {
       mesRef: lido.mesRef,
@@ -209,6 +231,7 @@ async function gerar(pedido: Request): Promise<Response> {
       analises,
       orientacoes,
       documentos,
+      metas: plano,
     }),
   );
 

@@ -11,6 +11,7 @@ import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDa
 import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
+import { metasJaAlcancadasOptions } from '@/features/evolucoes/api/metasDoCadastro.api';
 import { evolucaoOptions } from '@/features/evolucoes/queries';
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
 import { useEdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
@@ -39,9 +40,19 @@ function Carregando() {
   );
 }
 
+/** As metas já alcançadas do cadastro: enquanto não chegam, a tela não bloqueia; o banco confere. */
+function useJaAlcancadas(assistidoId: number | null): readonly string[] {
+  const consulta = useQuery({
+    ...metasJaAlcancadasOptions(assistidoId ?? 0),
+    enabled: assistidoId !== null,
+  });
+  return consulta.data ?? [];
+}
+
 function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   const edicao = useEdicaoDaEvolucao(evolucao);
   const documentos = useOutrosDocumentos(evolucao);
+  const jaAlcancadas = useJaAlcancadas(evolucao.assistidoId);
   return (
     <>
       <CabecalhoDaEvolucao evolucao={evolucao} />
@@ -52,11 +63,12 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
       />
       <ImportacaoDoTita evolucao={evolucao} bloqueioDoRascunho={documentos.bloqueio} />
       <OutrosDocumentos evolucao={evolucao} estado={documentos} />
-      <PartesDaEvolucao evolucao={evolucao} edicao={edicao} />
+      <PartesDaEvolucao evolucao={evolucao} edicao={edicao} jaAlcancadas={jaAlcancadas} />
       <BarraDaEvolucao
         evolucao={evolucao}
         ocupado={edicao.ocupado || edicao.editando !== null}
         erro={edicao.erro}
+        jaAlcancadas={jaAlcancadas}
         aoConcluir={() => {
           edicao.mudarSituacao('concluida');
         }}

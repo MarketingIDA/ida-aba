@@ -67,6 +67,15 @@ describe('pedido do rascunho à IA', () => {
       '[Avaliação, 02/03/2026, contexto] Avaliação fictícia.',
       '[Outro, sem data, contexto] Bilhete fictício.',
     ]);
+    const comPlano = conteudoDoPedido({
+      ...PEDIDO,
+      metas: { emDesenvolvimento: ['Nomear cores fictícias'], jaAlcancadas: [] },
+    });
+    expect(comPlano.split('\n').slice(-3)).toEqual([
+      '',
+      'Plano terapêutico, metas em desenvolvimento:',
+      '- Nomear cores fictícias',
+    ]);
     expect(montarPedido('modelo-ficticio', PEDIDO)).toEqual({
       model: 'modelo-ficticio',
       messages: [

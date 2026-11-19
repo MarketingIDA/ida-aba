@@ -135,3 +135,42 @@ export async function enviarArquivo(carteiraId: number): Promise<void> {
     .insert({ carteira_id: carteiraId });
   if (error !== null) throw erroDoBanco(error, MENSAGENS);
 }
+
+/** O que o envio faz com uma meta do cadastro (E23). */
+export type AcaoNaMeta = 'alcancada' | 'manutencao' | 'nova' | 'nao_encontrada';
+
+export interface MudancaNaMeta {
+  assistidoId: number;
+  assistido: string;
+  acao: AcaoNaMeta;
+  texto: string;
+}
+
+const esquemaMudanca = z
+  .object({
+    assistido_id: z.number().int(),
+    assistido_nome: z.string(),
+    acao: z.enum(['alcancada', 'manutencao', 'nova', 'nao_encontrada']),
+    texto: z.string(),
+  })
+  .transform((m): MudancaNaMeta => ({
+    assistidoId: m.assistido_id,
+    assistido: m.assistido_nome,
+    acao: m.acao,
+    texto: m.texto,
+  }));
+
+/**
+ * O que o envio vai mudar no cadastro de metas de cada assistido da carteira: o mesmo plano que o
+ * banco aplica ao enviar.
+ */
+export async function buscarPlanoDasMetas(
+  carteiraId: number,
+  mesRef: string,
+): Promise<MudancaNaMeta[]> {
+  const resposta = await supabase
+    .schema('evolucao')
+    .rpc('plano_das_metas', { p_carteira: carteiraId, p_mes: mesRef });
+  if (resposta.error !== null) throw erroDoBanco(resposta.error, AO_LER);
+  return z.array(esquemaMudanca).parse(resposta.data);
+}

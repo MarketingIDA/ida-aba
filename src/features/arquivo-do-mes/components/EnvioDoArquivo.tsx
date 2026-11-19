@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import type { CarteiraDoMes } from '@/features/arquivo-do-mes/api/arquivos.api';
+import { PlanoDasMetas } from '@/features/arquivo-do-mes/components/PlanoDasMetas';
 import { evolucoes, prontoParaEnviar } from '@/features/arquivo-do-mes/logica';
 import { useEnviarArquivo } from '@/features/arquivo-do-mes/queries';
 import { ehErroApp } from '@/lib/erroApp';
@@ -20,13 +21,22 @@ const focar = (elemento: HTMLElement | null) => {
 
 interface PropsDaConfirmacao {
   pergunta: string;
+  carteiraId: number;
+  mes: string;
   enviando: boolean;
   aoEnviar: () => void;
   aoCancelar: () => void;
 }
 
 /** O segundo passo: o que o envio faz, e os botões de enviar e de desistir. */
-function Confirmacao({ pergunta, enviando, aoEnviar, aoCancelar }: Readonly<PropsDaConfirmacao>) {
+function Confirmacao({
+  pergunta,
+  carteiraId,
+  mes,
+  enviando,
+  aoEnviar,
+  aoCancelar,
+}: Readonly<PropsDaConfirmacao>) {
   return (
     <div
       ref={focar}
@@ -39,6 +49,7 @@ function Confirmacao({ pergunta, enviando, aoEnviar, aoCancelar }: Readonly<Prop
         <b>{pergunta}</b> O envio não tem volta: as evoluções ficam só para leitura, e a carteira
         não abre outra evolução neste mês.
       </p>
+      <PlanoDasMetas carteiraId={carteiraId} mes={mes} />
       <div className="flex flex-wrap gap-2">
         <Button size="lg" disabled={enviando} onClick={aoEnviar}>
           <Send aria-hidden="true" />
@@ -67,6 +78,8 @@ export function EnvioDoArquivo({ carteira, mes }: Readonly<Props>) {
     return (
       <Confirmacao
         pergunta={`Enviar o arquivo de ${nomeDoMes(mes)} com ${evolucoes(carteira.concluidas)}?`}
+        carteiraId={carteira.carteiraId}
+        mes={mes}
         enviando={enviar.isPending}
         aoEnviar={() => {
           enviar.mutate(carteira.carteiraId, { onSettled: fechar });

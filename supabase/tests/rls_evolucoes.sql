@@ -449,7 +449,18 @@ begin
   insert into evolucao.versoes (evolucao_id, numero, conteudo) values
     (nova, 2, jsonb_build_object('abertura', '', 'programas', repeat('Texto fictício de teste. ', 30),
                                  'comportamentos', '', 'recursos', '', 'fechamento', '')),
-    (nova, 3, '{"metas": ["Meta alcançada fictícia"]}'),
+    (nova, 3, '{"metas": ["Meta fictícia do cadastro."]}'),
+    (nova, 4, '{"metas": ["Meta um", "Meta dois", "Meta três", "meta ficticia do cadastro"]}');
+  update evolucao.partes set conferida = true where evolucao_id = nova;
+  begin
+    update evolucao.evolucoes set situacao = 'concluida' where id = nova;
+    insert into resultado (teste, ok) values ('meta alcançada não volta às metas para o mês atual (E12)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok)
+      values ('meta alcançada não volta às metas para o mês atual (E12)', dica = 'meta_ja_alcancada');
+  end;
+  insert into evolucao.versoes (evolucao_id, numero, conteudo) values
     (nova, 4, '{"metas": ["Meta um", "Meta dois", "Meta três", "Meta quatro"]}');
   update evolucao.partes set conferida = true where evolucao_id = nova;
   update evolucao.evolucoes set situacao = 'concluida' where id = nova;
@@ -808,6 +819,9 @@ insert into resultado (teste, ok) select 'prévia do Word antes do envio: as con
   (select c ->> 'enviado_em' is null and jsonb_array_length(c -> 'evolucoes') = 1
           and c ->> 'assinatura' like current_setting('teste.id_a') || '/%'
      from evolucao.conteudo_do_arquivo(current_setting('teste.carteira_a')::bigint, date_trunc('month', now() at time zone 'America/Recife')::date) c);
+insert into resultado (teste, ok) select 'plano das metas antes do envio: o que muda no cadastro (E23)',
+  (select count(*) filter (where acao = 'alcancada') = 1 and count(*) filter (where acao = 'nova') = 4
+     from evolucao.plano_das_metas(current_setting('teste.carteira_a')::bigint, date_trunc('month', now() at time zone 'America/Recife')::date));
 reset role;
 -- Quem não teve sessão no mês sai pelo cadastro (P19): o arquivo leva só os ativos.
 update cadastro.assistidos set ativo = false
@@ -824,6 +838,11 @@ insert into resultado (teste, ok) select 'as evoluções do arquivo ficam enviad
   (select count(*) = 1 and bool_and(e.situacao = 'enviada' and e.enviada_em = ar.enviado_em)
      from evolucao.evolucoes e join evolucao.arquivos ar on ar.id = e.arquivo_id
     where ar.carteira_id = current_setting('teste.carteira_a')::bigint);
+insert into resultado (teste, ok) select 'o envio atualiza o cadastro de metas: a da parte 3 fica alcançada e as da parte 4 entram (E23)',
+  (select situacao = 'alcancada' from cadastro.metas where texto = 'Meta fictícia do cadastro')
+  and (select count(*) = 4 and bool_and(programa is null and situacao = 'desenvolvimento'
+                                        and criterio = 'Critério a definir no cadastro')
+         from cadastro.metas where texto in ('Meta um', 'Meta dois', 'Meta três', 'Meta quatro'));
 reset role;
 insert into cadastro.assistidos (nome, genero, unidade_id, carteira_id)
   select 'Assistida Quatro Teste', 'feminino', c.unidade_id, c.id
