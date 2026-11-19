@@ -559,3 +559,51 @@ describe('Semelhança com o mês anterior (P7)', () => {
     ).toBeEnabled();
   });
 });
+
+describe('Gerar uma parte de novo (E08)', () => {
+  it('o coordenador pede de novo só a parte da IA, com a instrução', async () => {
+    Object.assign(banco, { partes_da_ia: [4] });
+    banco.versoes = [
+      {
+        numero: 4,
+        conteudo: { metas: ['Meta fictícia da IA'] },
+        autor: 'ia',
+        criado_em: '2026-11-04T15:00:00Z',
+        criado_por: null,
+      },
+    ];
+    const pedidos: unknown[] = [];
+    server.use(
+      http.post(`${env.SUPABASE_URL}/functions/v1/gerar-rascunho`, async ({ request }) => {
+        pedidos.push(await request.json());
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    const { user } = abrir();
+
+    await screen.findByRole('heading', { level: 1 });
+    // Só a parte que a IA escreveu ganha o botão.
+    expect(
+      parte('Metas alcançadas').queryByRole('button', {
+        name: 'Gerar esta parte de novo com a IA',
+      }),
+    ).not.toBeInTheDocument();
+    await user.click(
+      parte('Metas para o mês atual').getByRole('button', {
+        name: 'Gerar esta parte de novo com a IA',
+      }),
+    );
+    await user.type(
+      screen.getByLabelText('O que a IA deve mudar nesta parte?'),
+      'Inclua a meta de rotina.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Gerar de novo' }));
+
+    expect(
+      await screen.findByText('Parte gerada de novo. Confira o texto acima.'),
+    ).toBeInTheDocument();
+    expect(pedidos).toEqual([
+      { numero: 4, instrucao: 'Inclua a meta de rotina.', evolucao_id: ID },
+    ]);
+  });
+});

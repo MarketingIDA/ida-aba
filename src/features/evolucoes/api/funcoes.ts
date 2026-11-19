@@ -14,9 +14,10 @@ export async function chamarFuncaoDaEvolucao(
   nome: string,
   evolucaoId: string,
   indisponivel: string,
+  extra: Record<string, unknown> = {},
 ): Promise<void> {
   const resposta = await supabase.functions.invoke<unknown>(nome, {
-    body: { evolucao_id: evolucaoId },
+    body: { ...extra, evolucao_id: evolucaoId },
   });
   const erro: unknown = resposta.error;
   if (erro === null) return;
