@@ -1,3 +1,5 @@
+import { ArrowUpRight } from 'lucide-react';
+
 import { SITUACAO, SITUACOES, type Situacao } from '@/features/evolucoes/logica';
 import { cn } from '@/lib/utils';
 
@@ -23,9 +25,19 @@ interface Props {
 }
 
 const cartao =
-  'relative flex cursor-pointer flex-col items-start gap-0.5 rounded-xl border px-4 py-3 text-left shadow-sm foco-anel transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.98] motion-reduce:transition-none';
+  'relative flex cursor-pointer flex-col items-start gap-0.5 rounded-[18px] border px-4 py-3.5 text-left shadow-sm foco-anel transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.98] motion-reduce:transition-none';
 
-const numero = 'font-display text-[1.75rem] leading-tight font-bold num';
+const numero = 'font-display text-[1.75rem] leading-[1.1] font-extrabold num';
+
+/** A seta do canto: todo card leva à lista do que conta (o `.card-go` do protótipo). */
+function Seta() {
+  return (
+    <ArrowUpRight
+      aria-hidden="true"
+      className="absolute top-3.5 right-3.5 size-[15px] opacity-70"
+    />
+  );
+}
 
 // O espaço entre os spans faz o nome acessível ler "Concluídas 1 no arquivo do mês"; no flex ele
 // não ocupa lugar.
@@ -53,12 +65,13 @@ function CartaoDaSituacao({
           : 'border-borda hover:border-borda-forte',
       )}
     >
-      <span className="flex items-center gap-1.5 rotulo text-apagado">
+      <span className="flex items-center gap-1.5 pr-5 rotulo text-apagado">
         <span aria-hidden="true" className={cn('size-2 rounded-full', PONTO[tom])} />
         {plural}
       </span>{' '}
       <span className={cn(numero, 'text-marinho')}>{contagem[situacao]}</span>{' '}
       <span className="text-xs font-bold text-apagado">{LEGENDA[situacao]}</span>
+      <Seta />
     </button>
   );
 }
@@ -84,6 +97,7 @@ export function ResumoDoMes({ total, rotuloDoTotal, legendaDoTotal, ...props }: 
       >
         <span className="rotulo">{rotuloDoTotal}</span> <span className={numero}>{total}</span>{' '}
         <span className="text-xs font-bold">{legendaDoTotal}</span>
+        <Seta />
       </button>
       {SITUACOES.map((situacao) => (
         <CartaoDaSituacao key={situacao} situacao={situacao} {...props} />

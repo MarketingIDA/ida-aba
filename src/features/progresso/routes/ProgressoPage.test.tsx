@@ -83,7 +83,7 @@ describe('Evolução das metas em gráfico (E27)', () => {
       await screen.findByRole('heading', { level: 1, name: 'Ana Fictícia Souza' }),
     ).toBeInTheDocument();
     expect(screen.getByText('de 2 metas já chegou à independência')).toBeInTheDocument();
-    expect(screen.getByText('Mesmo degrau há 4 semanas')).toBeInTheDocument();
+    expect(screen.getByText('mesmo degrau há 4 semanas')).toBeInTheDocument();
     expect(
       await screen.findByText('Acima da mediana da carteira, que é de 0 metas'),
     ).toBeInTheDocument();

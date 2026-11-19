@@ -1,69 +1,104 @@
 import { useQuery } from '@tanstack/react-query';
-import { Target, Users } from 'lucide-react';
-import { Link } from 'react-router';
+import { Search, Target, Users } from 'lucide-react';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import type { Assistido } from '@/features/cadastros/api/assistidos.api';
 import type { Meta } from '@/features/cadastros/api/metas.api';
-import { contarMetas, todasAsMetasOptions } from '@/features/cadastros/metas';
+import { LinhaDasMetas, useLocalDasCarteiras } from '@/features/cadastros/components/LinhaDasMetas';
+import { todasAsMetasOptions } from '@/features/cadastros/metas';
 import { assistidosOptions } from '@/features/cadastros/queries';
 import { ehErroApp } from '@/lib/erroApp';
-import { iniciais } from '@/utils/iniciais';
-import { plural } from '@/utils/textos';
 
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise a coordenação geral.';
 
-function Linha({ assistido, metas }: Readonly<{ assistido: Assistido; metas: readonly Meta[] }>) {
-  const contagem = contarMetas(metas);
-  const resumo =
-    metas.length === 0
-      ? 'Ainda sem metas cadastradas'
-      : `${plural(contagem.desenvolvimento, 'meta', 'metas')} em desenvolvimento · ${String(contagem.alcancada)} alcançadas`;
-  return (
-    <li className="relative flex items-center gap-3 px-4 py-3 sm:px-5">
-      <span
-        aria-hidden="true"
-        className="grid size-8 shrink-0 place-items-center rounded-full bg-info-soft text-caption font-extrabold text-azul-escuro"
-      >
-        {iniciais(assistido.nome)}
-      </span>
-      <span className="flex min-w-0 flex-col">
-        <b className="truncate text-[0.90625rem] leading-tight text-marinho">
-          {/* A linha toda é o alvo do toque: o ::after do link cobre o `li`. */}
-          <Link
-            to={`/metas/${String(assistido.id)}`}
-            className="rounded-sm foco-anel after:absolute after:inset-0 after:content-['']"
-          >
-            {assistido.nome}
-          </Link>
-        </b>
-        <span className="text-caption font-semibold text-apagado">{resumo}</span>
-      </span>
-    </li>
-  );
-}
-
 const CABECALHO = (
   <div className="flex max-w-[72ch] flex-col gap-1.5">
-    <p className="flex items-center gap-2 rotulo text-azul">
+    <p className="flex items-center gap-1.5 text-xs font-extrabold tracking-[0.1em] text-info-text uppercase">
       <Target aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
-      Plano terapêutico
+      Cadastros
     </p>
     <h1>Metas dos assistidos</h1>
-    <p className="text-sm font-semibold text-texto-2">
-      As metas em desenvolvimento são o ponto de partida das metas para o mês atual de cada
-      evolução.
+    <p className="text-apagado">
+      O plano terapêutico de cada assistido: metas em desenvolvimento, alcançadas, em manutenção e
+      suspensas.
     </p>
   </div>
 );
 
 /** Os assistidos ativos numa carteira (o rascunho da Tita ainda não tem), em ordem alfabética. */
-const emOrdem = (assistidos: readonly Assistido[]) =>
+const sem = (texto: string) =>
+  texto
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+const emOrdem = (assistidos: readonly Assistido[], busca: string) =>
   assistidos
     .filter((assistido) => assistido.ativo && assistido.carteiraId !== null)
+    .filter((assistido) => sem(assistido.nome).includes(sem(busca.trim())))
     .toSorted((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+function Busca({ valor, aoMudar }: Readonly<{ valor: string; aoMudar: (v: string) => void }>) {
+  return (
+    <label className="relative w-full max-w-[360px]">
+      <Search
+        aria-hidden="true"
+        className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-apagado"
+      />
+      <span className="sr-only">Buscar assistido</span>
+      <input
+        type="search"
+        placeholder="Buscar assistido"
+        value={valor}
+        onChange={(e) => {
+          aoMudar(e.target.value);
+        }}
+        className="h-10 w-full rounded-md border-[1.5px] border-borda-forte bg-white pr-3.5 pl-[38px] font-semibold foco-anel"
+      />
+    </label>
+  );
+}
+
+function Lista({
+  ativos,
+  metas,
+  buscando,
+}: Readonly<{ ativos: readonly Assistido[]; metas: readonly Meta[]; buscando: boolean }>) {
+  const local = useLocalDasCarteiras();
+  if (ativos.length === 0 && buscando) {
+    return (
+      <p role="status" className="text-sm font-semibold text-texto-2">
+        Nenhum assistido com esse nome.
+      </p>
+    );
+  }
+  if (ativos.length === 0) {
+    return (
+      <EmptyState
+        icone={Users}
+        titulo="Nenhum assistido na carteira"
+        descricao="As metas são cadastradas por assistido. A coordenação geral inclui os assistidos na carteira."
+      />
+    );
+  }
+  return (
+    <ul
+      aria-label="Assistidos"
+      className="overflow-hidden rounded-xl border border-borda bg-superficie shadow-md"
+    >
+      {ativos.map((assistido) => (
+        <LinhaDasMetas
+          key={assistido.id}
+          assistido={assistido}
+          local={assistido.carteiraId === null ? undefined : local.get(assistido.carteiraId)}
+          metas={metas.filter((meta) => meta.assistidoId === assistido.id)}
+        />
+      ))}
+    </ul>
+  );
+}
 
 /**
  * Metas dos assistidos (E23): cada assistido ativo com o resumo do plano terapêutico. O
@@ -72,12 +107,14 @@ const emOrdem = (assistidos: readonly Assistido[]) =>
 export function MetasPage() {
   const assistidos = useQuery(assistidosOptions());
   const metas = useQuery(todasAsMetasOptions());
-  const ativos = emOrdem(assistidos.data ?? []);
+  const [busca, setBusca] = useState('');
+  const ativos = emOrdem(assistidos.data ?? [], busca);
   const erro = assistidos.error ?? metas.error;
 
   return (
     <section className="flex flex-col gap-5">
       {CABECALHO}
+      <Busca valor={busca} aoMudar={setBusca} />
       {(assistidos.isPending || metas.isPending) && (
         <div
           role="status"
@@ -95,26 +132,8 @@ export function MetasPage() {
           }}
         />
       )}
-      {assistidos.isSuccess && metas.isSuccess && ativos.length === 0 && (
-        <EmptyState
-          icone={Users}
-          titulo="Nenhum assistido na carteira"
-          descricao="As metas são cadastradas por assistido. A coordenação geral inclui os assistidos na carteira."
-        />
-      )}
-      {assistidos.isSuccess && metas.isSuccess && ativos.length > 0 && (
-        <ul
-          aria-label="Assistidos"
-          className="divide-y divide-borda overflow-hidden rounded-xl border border-borda bg-superficie shadow-sm"
-        >
-          {ativos.map((assistido) => (
-            <Linha
-              key={assistido.id}
-              assistido={assistido}
-              metas={metas.data.filter((meta) => meta.assistidoId === assistido.id)}
-            />
-          ))}
-        </ul>
+      {assistidos.isSuccess && metas.isSuccess && (
+        <Lista ativos={ativos} metas={metas.data} buscando={busca.trim() !== ''} />
       )}
     </section>
   );

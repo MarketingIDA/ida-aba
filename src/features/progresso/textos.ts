@@ -7,7 +7,7 @@ export const nomeDoNivel = (nivel: number | null): string =>
   nivel === null ? 'Sem nível' : (NIVEIS_DE_APOIO[nivel - 1] ?? 'Sem nível');
 
 /** O nome curto, para o eixo da escada. */
-export const NIVEL_CURTO = ['Física total', 'Física parcial', 'Gestual', 'Verbal', 'Independente'];
+export const NIVEL_CURTO = ['F. total', 'F. parcial', 'Gestual', 'Verbal', 'Indep.'];
 
 /** O mês analisado pelo início do período: `outubro`. */
 export const mesDoPeriodo = (inicio: string): string => nomeDoMes(`${inicio.slice(0, 7)}-01`);
