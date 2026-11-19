@@ -7,6 +7,7 @@ import { CartoesDeContagem } from '@/components/CartoesDeContagem';
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import { Situacao } from '@/components/Situacao';
+import { TituloDasMetas } from '@/features/cadastros/components/TituloDasMetas';
 import { Button } from '@/components/ui/button';
 import {
   type DadosDaMeta,
@@ -165,10 +166,7 @@ export function MetasDoAssistidoPage() {
         <ArrowLeft aria-hidden="true" className="size-4" />
         Metas dos assistidos
       </Link>
-      <div>
-        <p className="mb-1.5 rotulo text-azul">Plano terapêutico</p>
-        <h1>{assistido?.nome ?? 'Metas do assistido'}</h1>
-      </div>
+      <TituloDasMetas assistidoId={assistidoId} nome={assistido?.nome} />
       {valido && (assistidos.isPending || metas.isPending) && (
         <div
           role="status"

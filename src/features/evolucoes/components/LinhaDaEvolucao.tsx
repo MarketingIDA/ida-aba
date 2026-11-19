@@ -1,3 +1,4 @@
+import { ChartLine } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { Situacao } from '@/components/Situacao';
@@ -73,11 +74,30 @@ function Detalhe({ linha, visaoGeral, coordenador, nomeDoMes }: Readonly<Props>)
   );
 }
 
+/** O fim da linha: o gráfico das metas e a situação. */
+function Fim({ linha }: Readonly<{ linha: LinhaDoMes }>) {
+  const { rotulo, tom } = SITUACAO[situacaoDe(linha)];
+  const devolvida = linha.evolucao?.devolvida === true;
+  return (
+    <span className="flex items-center gap-1.5">
+      {/* A evolução das metas em gráfico (E27): acima do link da linha, que cobre o `li`. */}
+      <Link
+        to={`/progresso/${String(linha.assistidoId)}`}
+        aria-label={`Evolução das metas de ${linha.nome}`}
+        title="Evolução das metas"
+        className="relative z-10 grid size-8 place-items-center rounded-md text-azul foco-anel hover:bg-info-soft"
+      >
+        <ChartLine aria-hidden="true" className="size-[18px]" />
+      </Link>
+      {/* Devolvida segue em conferência; a pílula avisa que há um motivo a resolver (E13). */}
+      <Situacao rotulo={devolvida ? 'Devolvida' : rotulo} tom={devolvida ? 'bloq' : tom} />
+    </span>
+  );
+}
+
 /** Uma linha da lista: avatar, nome, código e plano, andamento das partes e a situação. */
 export function LinhaDaEvolucao(props: Readonly<Props>) {
   const { linha, visaoGeral } = props;
-  const { rotulo, tom } = SITUACAO[situacaoDe(linha)];
-  const devolvida = linha.evolucao?.devolvida === true;
   return (
     // A coluna da situação tem largura fixa no desktop: as do meio ficam alinhadas entre as linhas.
     <li className="relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:grid-cols-[auto_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)_8rem] sm:px-5 [&>:last-child]:justify-self-end">
@@ -113,8 +133,7 @@ export function LinhaDaEvolucao(props: Readonly<Props>) {
       <span className="hidden sm:block">
         <Andamento linha={linha} />
       </span>
-      {/* Devolvida segue em conferência; a pílula avisa que há um motivo a resolver (E13). */}
-      <Situacao rotulo={devolvida ? 'Devolvida' : rotulo} tom={devolvida ? 'bloq' : tom} />
+      <Fim linha={linha} />
     </li>
   );
 }

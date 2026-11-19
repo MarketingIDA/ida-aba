@@ -1,0 +1,94 @@
+import { z } from 'zod';
+
+import { erroDoBanco } from '@/lib/erroDoBanco';
+import { supabase } from '@/lib/supabase';
+import type { PeriodoDoProgresso, PontoDoProgresso } from '@dominio/progresso.ts';
+
+/**
+ * O que a evolução das metas lê (E27): as últimas evoluções do assistido, a situação da leitura
+ * dos níveis de cada uma e os níveis lidos. Quem lê o quê é do RLS: o coordenador, a carteira dele;
+ * a coordenação geral, tudo; contas médicas, nada.
+ */
+
+/** Quantas evoluções (meses) a tela mostra: a janela dos gráficos. */
+export const MESES_NO_GRAFICO = 3;
+
+export interface PeriodoDaEvolucao extends PeriodoDoProgresso {
+  evolucaoId: string;
+  mesRef: string;
+}
+
+export interface DadosDoProgresso {
+  periodos: PeriodoDaEvolucao[];
+  pontos: PontoDoProgresso[];
+}
+
+const esquemaEvolucao = z.object({
+  id: z.string(),
+  mes_ref: z.string(),
+  periodo_inicio: z.string(),
+  periodo_fim: z.string(),
+});
+const esquemaLeitura = z.object({ evolucao_id: z.string(), situacao: z.string() });
+const esquemaNivel = z
+  .object({
+    meta_id: z.number().int(),
+    data: z.string(),
+    nivel: z.number().int().nullable(),
+    trecho: z.string(),
+  })
+  .transform((n): PontoDoProgresso => ({
+    metaId: n.meta_id,
+    data: n.data,
+    nivel: n.nivel,
+    trecho: n.trecho,
+  }));
+
+const INDISPONIVEL = 'Não foi possível carregar a evolução das metas agora. Tente de novo.';
+
+/** As evoluções da janela, a situação da leitura de cada uma e os níveis lidos. */
+export async function buscarDadosDoProgresso(assistidoId: number): Promise<DadosDoProgresso> {
+  const evolucoes = await supabase
+    .schema('evolucao')
+    .from('evolucoes')
+    .select('id, mes_ref, periodo_inicio, periodo_fim')
+    .eq('assistido_id', assistidoId)
+    .order('mes_ref', { ascending: false })
+    .limit(MESES_NO_GRAFICO);
+  if (evolucoes.error !== null) throw erroDoBanco(evolucoes.error, { indisponivel: INDISPONIVEL });
+  const lista = z.array(esquemaEvolucao).parse(evolucoes.data);
+  if (lista.length === 0) return { periodos: [], pontos: [] };
+  const ids = lista.map((e) => e.id);
+  const [leituras, niveis] = await Promise.all([
+    supabase
+      .schema('evolucao')
+      .from('leituras_de_nivel')
+      .select('evolucao_id, situacao')
+      .in('evolucao_id', ids),
+    supabase
+      .schema('evolucao')
+      .from('niveis_de_apoio')
+      .select('meta_id, data, nivel, trecho')
+      .in('evolucao_id', ids)
+      .order('data'),
+  ]);
+  const erro = leituras.error ?? niveis.error;
+  if (erro !== null) throw erroDoBanco(erro, { indisponivel: INDISPONIVEL });
+  const lidas = new Set(
+    z
+      .array(esquemaLeitura)
+      .parse(leituras.data)
+      .filter((l) => l.situacao === 'lida')
+      .map((l) => l.evolucao_id),
+  );
+  return {
+    periodos: lista.map((e) => ({
+      evolucaoId: e.id,
+      mesRef: e.mes_ref,
+      inicio: e.periodo_inicio,
+      fim: e.periodo_fim,
+      lido: lidas.has(e.id),
+    })),
+    pontos: z.array(esquemaNivel).parse(niveis.data),
+  };
+}
