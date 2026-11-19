@@ -2,6 +2,7 @@ import type { Evolucao, NumeroDaParte, Versao } from '@/features/evolucoes/api/e
 import { ContadorDeLinhas, ContadorDeMetas } from '@/features/evolucoes/components/Contadores';
 import { DicaParaAIA } from '@/features/evolucoes/components/DicaParaAIA';
 import { Identificacao } from '@/features/evolucoes/components/Identificacao';
+import { GerarParteDeNovo } from '@/features/evolucoes/components/GerarParteDeNovo';
 import { Fontes } from '@/features/evolucoes/routes/Fontes';
 import { Lacunas } from '@/features/evolucoes/routes/Lacunas';
 import { EdicaoDasMetas, MetasDaParte } from '@/features/evolucoes/components/MetasDaParte';
@@ -56,6 +57,10 @@ const podeMudar = (evolucao: Evolucao) =>
 /** A dica para a IA cabe a quem coordena a carteira, e só na parte que tem texto da IA (E21). */
 const cabeDica = (evolucao: Evolucao, numero: NumeroDaParte) =>
   evolucao.editavel && evolucao.partesDaIA.includes(numero);
+
+/** Gerar a parte de novo (E08): o coordenador, em conferência, numa parte que a IA já escreveu. */
+const cabeParteDeNovo = (evolucao: Evolucao, numero: NumeroDaParte) =>
+  podeMudar(evolucao) && evolucao.partesDaIA.includes(numero);
 
 /** Parte 2 na leitura: o texto, os termos inadequados (E10) e a dica para a IA (E21). */
 function LeituraDoTexto({ evolucao, edicao }: Readonly<Omit<Props, 'contexto'>>) {
@@ -163,6 +168,9 @@ export function PartesDaEvolucao({ evolucao, edicao, contexto }: Readonly<Props>
         )}
         <CorpoDaParte evolucao={evolucao} edicao={edicao} numero={numero} />
         {numero !== 1 && !editando && <Fontes evolucaoId={evolucao.id} numero={numero} />}
+        {numero !== 1 && cabeParteDeNovo(evolucao, numero) && edicao.editando === null && (
+          <GerarParteDeNovo evolucaoId={evolucao.id} numero={numero} ocupado={edicao.ocupado} />
+        )}
       </ParteDaEvolucao>
     );
   });

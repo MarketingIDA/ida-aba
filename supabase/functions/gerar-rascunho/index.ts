@@ -11,6 +11,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 
 import { type Fonte, fontesDasFrases } from '../_shared/dominio/fontes.ts';
+import {
+  lerPedidoDaParte,
+  pedidoDaParteDeNovo,
+  textoAtualDaParte,
+} from '../_shared/dominio/parteDeNovo.ts';
 import { type Genero, tratamentoDe, trocarNome } from '../_shared/dominio/pseudonimo.ts';
 import {
   type AnaliseDoPeriodo,
@@ -140,8 +145,10 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
   if (orientacoes.error !== null) {
     console.error('gerar-rascunho: orientações não lidas', orientacoes.error.code);
   }
+  const versoes = (completa.data.versoes ?? []) as { numero: number; conteudo: unknown }[];
   return {
     url,
+    versoes,
     orientacoes: lerOrientacoes(orientacoes.data),
     mesRef: evolucao.data.mes_ref as string,
     nome: assistido.data.nome as string,
@@ -222,12 +229,20 @@ async function gravarFontes(
 async function gerar(pedido: Request): Promise<Response> {
   const autorizacao = pedido.headers.get('Authorization');
   const corpo: unknown = await pedido.json().catch(() => null);
-  const evolucaoId =
-    typeof corpo === 'object' && corpo !== null
-      ? (corpo as { evolucao_id?: unknown }).evolucao_id
-      : null;
+  const campos =
+    typeof corpo === 'object' && corpo !== null ? (corpo as Record<string, unknown>) : {};
+  const evolucaoId = campos.evolucao_id;
   if (autorizacao === null || typeof evolucaoId !== 'string' || !UUID.test(evolucaoId)) {
     throw new Recusa(400, 'pedido_invalido', 'Pedido inválido.');
+  }
+  // Gerar uma parte de novo (E08): a parte 2, 3 ou 4 e a instrução do coordenador.
+  const { valido, parte } = lerPedidoDaParte(campos);
+  if (!valido) {
+    throw new Recusa(
+      400,
+      'instrucao_invalida',
+      'Escreva o que a IA deve mudar, com até 500 caracteres.',
+    );
   }
   const modelo = Deno.env.get('OPENAI_MODEL');
   if (modelo === undefined)
@@ -259,16 +274,23 @@ async function gerar(pedido: Request): Promise<Response> {
       .filter((m) => m.situacao !== 'desenvolvimento')
       .map((m) => semNome(m.texto)),
   };
-  const rascunho = await pedirRascunho(
-    montarPedido(modelo, {
-      mesRef: lido.mesRef,
-      tratamento: tratamentoDe(lido.genero),
-      analises,
-      orientacoes,
-      documentos,
-      metas: plano,
-    }),
-  );
+  const corpoDoPedido = montarPedido(modelo, {
+    mesRef: lido.mesRef,
+    tratamento: tratamentoDe(lido.genero),
+    analises,
+    orientacoes,
+    documentos,
+    metas: plano,
+  });
+  if (parte !== null) {
+    // O texto atual pode ter sido editado à mão, e a instrução é livre: o nome sai dos dois (E05).
+    const atual = lido.versoes.find((v) => v.numero === parte.numero)?.conteudo;
+    corpoDoPedido.messages.push({
+      role: 'user',
+      content: semNome(pedidoDaParteDeNovo(parte, textoAtualDaParte(parte.numero, atual ?? null))),
+    });
+  }
+  const rascunho = await pedirRascunho(corpoDoPedido);
 
   // As versões da IA não têm autor humano: só a chave de serviço grava `autor = 'ia'`. Os triggers
   // continuam valendo (evolução em conferência e formato de cada parte).
@@ -276,19 +298,24 @@ async function gerar(pedido: Request): Promise<Response> {
     lido.url,
     chave('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY'),
   );
+  // Na parte de novo, só ela é gravada, com a instrução usada (E07); as outras não mudam.
+  const linhas = [
+    { evolucao_id: evolucaoId, numero: 2, conteudo: rascunho.texto, autor: 'ia' },
+    {
+      evolucao_id: evolucaoId,
+      numero: 3,
+      conteudo: { metas: rascunho.metasAlcancadas },
+      autor: 'ia',
+    },
+    { evolucao_id: evolucaoId, numero: 4, conteudo: { metas: rascunho.metasDoMes }, autor: 'ia' },
+  ].flatMap((linha) => {
+    if (parte === null) return [linha];
+    return linha.numero === parte.numero ? [{ ...linha, instrucao: parte.instrucao }] : [];
+  });
   const gravacao = await servico
     .schema('evolucao')
     .from('versoes')
-    .insert([
-      { evolucao_id: evolucaoId, numero: 2, conteudo: rascunho.texto, autor: 'ia' },
-      {
-        evolucao_id: evolucaoId,
-        numero: 3,
-        conteudo: { metas: rascunho.metasAlcancadas },
-        autor: 'ia',
-      },
-      { evolucao_id: evolucaoId, numero: 4, conteudo: { metas: rascunho.metasDoMes }, autor: 'ia' },
-    ])
+    .insert(linhas)
     .select('id, numero');
   if (gravacao.error !== null) {
     console.error('gerar-rascunho: falha ao gravar', gravacao.error.code);

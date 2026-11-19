@@ -18,7 +18,7 @@ import {
 import { buscarCoordenadores, buscarEvolucoesDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { buscarImportacao, gravarImportacao } from '@/features/evolucoes/api/importacao.api';
 import { buscarLeituraDeNivel, lerNiveis } from '@/features/evolucoes/api/niveis.api';
-import { gerarRascunho } from '@/features/evolucoes/api/rascunho.api';
+import { gerarParteDeNovo, gerarRascunho } from '@/features/evolucoes/api/rascunho.api';
 import type { Leitura } from '@/features/evolucoes/tita/leitura';
 import type { DocumentoConferido } from '@dominio/documentos.ts';
 
@@ -124,6 +124,16 @@ export function useGerarRascunho(evolucaoId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => gerarRascunho(evolucaoId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
+  });
+}
+
+/** Uma parte de novo pela IA (E08): a evolução, as fontes e as lacunas voltam do banco. */
+export function useGerarParteDeNovo(evolucaoId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ numero, instrucao }: { numero: 2 | 3 | 4; instrucao: string }) =>
+      gerarParteDeNovo(evolucaoId, numero, instrucao),
     onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
   });
 }
