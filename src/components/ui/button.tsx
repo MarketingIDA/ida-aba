@@ -5,10 +5,11 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 // MODIFIED: variantes e medidas do design system IDA (docs/design-system/README.md §5.1) no lugar
-// das do shadcn: primário com borda 3D, secundário branco, fantasma e link; Nunito 700; o
-// pressionar responde em 60 ms; desabilitado a 0,45 e sem 3D. Anel de foco em duas camadas.
-const buttonVariants = cva(
-  'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 border border-transparent font-bold whitespace-nowrap transition-[background-color,border-color,color,transform] duration-150 select-none active:duration-[60ms] disabled:pointer-events-none disabled:opacity-45 disabled:shadow-none motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0',
+// das do shadcn: primário com borda 3D, secundário branco, fantasma e link; Nunito 800 e borda de
+// 1,5 px como o `.btn` do protótipo; o pressionar responde em 60 ms; desabilitado a 0,45 e sem
+// 3D. Anel de foco em duas camadas.
+const variantes = cva(
+  'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 border-[1.5px] border-transparent font-extrabold whitespace-nowrap transition-[background-color,border-color,color,transform] duration-150 select-none active:duration-[60ms] disabled:pointer-events-none disabled:opacity-45 disabled:shadow-none motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -35,16 +36,19 @@ const buttonVariants = cva(
   },
 );
 
+/** As classes do botão para um link com cara de botão; o `cn` resolve a borda da variante. */
+const buttonVariants = (opcoes?: Parameters<typeof variantes>[0]) => cn(variantes(opcoes));
+
 function Button({
   className,
   variant = 'primary',
   size = 'md',
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props & VariantProps<typeof variantes>) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={buttonVariants({ variant, size, className })}
       {...props}
     />
   );

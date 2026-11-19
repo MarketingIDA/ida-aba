@@ -1,7 +1,7 @@
 import { Search, X } from 'lucide-react';
 import { useId } from 'react';
 
-import { Seletor } from '@/components/Seletor';
+import { SeletorCompacto } from '@/components/Seletor';
 import { Input } from '@/components/ui/input';
 import { SITUACAO, type Situacao } from '@/features/evolucoes/logica';
 import type { Opcao } from '@/features/evolucoes/textos';
@@ -43,7 +43,7 @@ function Busca({ busca, aoBuscar }: Readonly<Pick<Props, 'busca' | 'aoBuscar'>>)
         onChange={(evento) => {
           aoBuscar(evento.target.value);
         }}
-        className="pl-9"
+        className="min-h-10 rounded-md border-[1.5px] border-borda-forte pl-[38px] font-semibold"
       />
     </div>
   );
@@ -63,13 +63,12 @@ function Escolha({
   aoMudar: (valor: string) => void;
 }>) {
   return (
-    <Seletor
+    <SeletorCompacto
       aria-label={rotulo}
       value={valor}
       onChange={(evento) => {
         aoMudar(evento.target.value);
       }}
-      className="w-auto max-w-full"
     >
       <option value="">{todos}</option>
       {opcoes.map((opcao) => (
@@ -77,7 +76,7 @@ function Escolha({
           {opcao.rotulo}
         </option>
       ))}
-    </Seletor>
+    </SeletorCompacto>
   );
 }
 

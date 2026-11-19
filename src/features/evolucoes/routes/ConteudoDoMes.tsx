@@ -1,9 +1,13 @@
+import { FolderOpen } from 'lucide-react';
 import { Link } from 'react-router';
+
+import { buttonVariants } from '@/components/ui/button';
 
 import type { Coordenador, LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { BarraDoPrazo } from '@/features/evolucoes/components/BarraDoPrazo';
 import { FiltrosDaLista, type Recorte } from '@/features/evolucoes/components/FiltrosDaLista';
 import { ListaDeEvolucoes } from '@/features/evolucoes/components/ListaDeEvolucoes';
+import { NovaEvolucao } from '@/features/evolucoes/components/NovaEvolucao';
 import { ResumoDoMes } from '@/features/evolucoes/components/ResumoDoMes';
 import { contarPorSituacao, filtrarLista, recortar } from '@/features/evolucoes/logica';
 import type { FiltrosDaUrl } from '@/features/evolucoes/routes/useFiltrosDaUrl';
@@ -43,7 +47,7 @@ function recorteDaVisaoGeral(
 
 /**
  * O prazo só aparece no mês aberto: nos anteriores o arquivo já foi. Para o coordenador, a barra
- * leva ao arquivo do mês, onde ele envia.
+ * leva ao arquivo do mês, onde ele envia, e começa uma evolução nova.
  */
 function prazoDoMes(
   contagem: ReturnType<typeof contarPorSituacao>,
@@ -56,11 +60,15 @@ function prazoDoMes(
       faltam={contagem.sem + contagem.em_conferencia}
       prazo={formatarData(prazoDoArquivo(mes), true)}
       dias={diasAtePrazo(props.hoje, mes)}
-      acao={
-        props.visaoGeral ? null : (
-          <Link to="/arquivo" className="ml-auto rounded-sm text-azul underline foco-anel">
-            Arquivo do mês
-          </Link>
+      acoes={
+        props.visaoGeral ? undefined : (
+          <>
+            <Link to="/arquivo" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
+              <FolderOpen aria-hidden="true" />
+              Arquivo do mês
+            </Link>
+            <NovaEvolucao mesAberto={props.mesAberto} />
+          </>
         )
       }
     />
@@ -107,6 +115,7 @@ export function ConteudoDoMes({
         visaoGeral={visaoGeral}
         coordenadores={new Map(coordenadores.map((c) => [c.id, nomeCurto(c.nome)]))}
         nomeDoMes={nomeDoMes(filtros.mes)}
+        noMesAberto={filtros.mes === mes.mesAberto}
         situacao={filtros.situacao}
         temBusca={filtros.busca.trim() !== ''}
         aoTirarFiltros={() => {
