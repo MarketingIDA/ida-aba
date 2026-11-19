@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ChartLine } from 'lucide-react';
+import { ChartLine } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -9,6 +9,7 @@ import type { Meta } from '@/features/cadastros/api/metas.api';
 import { metasDoAssistidoOptions } from '@/features/cadastros/metas';
 import { assistidosOptions } from '@/features/cadastros/queries';
 import type { DadosDoProgresso } from '@/features/progresso/api/progresso.api';
+import { VoltarParaEvolucoes } from '@/features/progresso/components/AcoesDoProgresso';
 import { ProgressoDoAssistido } from '@/features/progresso/components/ProgressoDoAssistido';
 import { progressoOptions } from '@/features/progresso/queries';
 import { ehErroApp } from '@/lib/erroApp';
@@ -62,6 +63,7 @@ function Conteudo({
   if (!dados.periodos.some((p) => p.lido)) {
     return (
       <>
+        <VoltarParaEvolucoes />
         <h1>{nome}</h1>
         <SemNiveis dados={dados} />
       </>
@@ -104,15 +106,11 @@ export function ProgressoPage() {
     assistidoId,
     valido,
   );
+  const temConteudo = assistido !== undefined && dados.isSuccess && metas.isSuccess;
   return (
     <section className="flex flex-col gap-5">
-      <Link
-        to="/evolucoes"
-        className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-bold text-azul foco-anel hover:underline"
-      >
-        <ArrowLeft aria-hidden="true" className="size-4" />
-        Evoluções
-      </Link>
+      {/* Com o gráfico na tela, a volta divide a linha com "Baixar PDF" (ProgressoDoAssistido). */}
+      {!temConteudo && <VoltarParaEvolucoes />}
       {carregando && (
         <div
           role="status"
@@ -134,7 +132,7 @@ export function ProgressoPage() {
           descricao="O endereço pode estar incompleto, ou o assistido é de uma carteira que não é a sua."
         />
       )}
-      {assistido !== undefined && dados.isSuccess && metas.isSuccess && (
+      {temConteudo && (
         <Conteudo
           nome={assistido.nome}
           assistidoId={assistidoId}

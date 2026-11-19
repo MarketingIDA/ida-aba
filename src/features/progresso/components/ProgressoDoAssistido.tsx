@@ -5,7 +5,11 @@ import { CartoesDeContagem } from '@/components/CartoesDeContagem';
 import { Button } from '@/components/ui/button';
 import type { Meta } from '@/features/cadastros/api/metas.api';
 import type { PeriodoDaEvolucao } from '@/features/progresso/api/progresso.api';
-import { AcoesDoProgresso } from '@/features/progresso/components/AcoesDoProgresso';
+import {
+  AcoesDoProgresso,
+  BaixarPdf,
+  VoltarParaEvolucoes,
+} from '@/features/progresso/components/AcoesDoProgresso';
 import { EscadaDaMeta } from '@/features/progresso/components/EscadaDaMeta';
 import { HeroDoProgresso } from '@/features/progresso/components/HeroDoProgresso';
 import { MapaDeSessoes } from '@/features/progresso/components/MapaDeSessoes';
@@ -163,6 +167,16 @@ export function ProgressoDoAssistido({
   const ordenados = [...periodos].reverse();
   return (
     <>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <VoltarParaEvolucoes />
+        <BaixarPdf
+          nome={nome}
+          assistidoId={assistidoId}
+          progresso={progresso}
+          mediana={mediana}
+          periodos={periodos}
+        />
+      </div>
       <HeroDoProgresso nome={nome} progresso={progresso} periodos={ordenados} mediana={mediana} />
       <CartoesDeContagem<FiltroDoProgresso>
         rotulo="Situação das metas no gráfico"
@@ -182,13 +196,7 @@ export function ProgressoDoAssistido({
       ) : (
         <Graficos progresso={progresso} periodos={ordenados} filtro={visao.filtro} />
       )}
-      <AcoesDoProgresso
-        nome={nome}
-        assistidoId={assistidoId}
-        progresso={progresso}
-        mediana={mediana}
-        periodos={periodos}
-      />
+      <AcoesDoProgresso assistidoId={assistidoId} periodos={periodos} />
     </>
   );
 }

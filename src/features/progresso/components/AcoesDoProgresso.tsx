@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { FileDown, FileText, Target } from 'lucide-react';
+import { ArrowLeft, FileDown, FileText, Target } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -37,13 +37,27 @@ function useBaixarRelatorio({ nome, assistidoId, progresso, mediana, periodos }:
   });
 }
 
-function BaixarPdf(props: Readonly<Props>) {
+/** A volta à lista, no alto da tela; ao lado vão as ações do relatório. */
+export function VoltarParaEvolucoes() {
+  return (
+    <Link
+      to="/evolucoes"
+      className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-bold text-azul foco-anel hover:underline"
+    >
+      <ArrowLeft aria-hidden="true" className="size-4" />
+      Evoluções
+    </Link>
+  );
+}
+
+/** "Baixar PDF", no alto da tela, na linha da volta à lista (como no protótipo). */
+export function BaixarPdf(props: Readonly<Props>) {
   const baixar = useBaixarRelatorio(props);
   return (
-    <div className="flex flex-col items-start gap-1.5">
+    <div className="flex flex-col items-end gap-1.5">
       <Button
         variant="secondary"
-        size="lg"
+        size="sm"
         disabled={baixar.isPending}
         onClick={() => {
           baixar.mutate();
@@ -68,14 +82,16 @@ function BaixarPdf(props: Readonly<Props>) {
   );
 }
 
-/** O fim da tela: o relatório em PDF, o cadastro de metas e a evolução mais recente. */
-export function AcoesDoProgresso(props: Readonly<Props>) {
-  const evolucaoId = props.periodos[0]?.evolucaoId;
+/** O fim da tela: o cadastro de metas e a evolução mais recente. */
+export function AcoesDoProgresso({
+  assistidoId,
+  periodos,
+}: Readonly<Pick<Props, 'assistidoId' | 'periodos'>>) {
+  const evolucaoId = periodos[0]?.evolucaoId;
   return (
-    <div className="flex flex-wrap items-start gap-2">
-      <BaixarPdf {...props} />
+    <div className="flex flex-wrap gap-2">
       <Link
-        to={`/metas/${String(props.assistidoId)}`}
+        to={`/metas/${String(assistidoId)}`}
         className={buttonVariants({ variant: 'secondary', size: 'lg' })}
       >
         <Target aria-hidden="true" />
