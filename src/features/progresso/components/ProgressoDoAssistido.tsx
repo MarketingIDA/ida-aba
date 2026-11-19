@@ -7,7 +7,7 @@ import type { Meta } from '@/features/cadastros/api/metas.api';
 import type { PeriodoDaEvolucao } from '@/features/progresso/api/progresso.api';
 import {
   AcoesDoProgresso,
-  BaixarPdf,
+  AcoesDoRelatorio,
   VoltarParaEvolucoes,
 } from '@/features/progresso/components/AcoesDoProgresso';
 import { EscadaDaMeta } from '@/features/progresso/components/EscadaDaMeta';
@@ -169,7 +169,7 @@ export function ProgressoDoAssistido({
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <VoltarParaEvolucoes />
-        <BaixarPdf
+        <AcoesDoRelatorio
           nome={nome}
           assistidoId={assistidoId}
           progresso={progresso}

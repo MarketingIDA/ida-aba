@@ -1,39 +1,25 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, FileDown, FileText, Target } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { Button, buttonVariants } from '@/components/ui/button';
-import type { PeriodoDaEvolucao } from '@/features/progresso/api/progresso.api';
+import { CompartilharRelatorio } from '@/features/progresso/components/CompartilharRelatorio';
 import { baixarRelatorio } from '@/features/progresso/pdf/baixarRelatorio';
-import { codigoDoRelatorio } from '@/features/progresso/pdf/gerarRelatorio';
-import { useUsuario } from '@/hooks/useUsuario';
+import { progressoKeys } from '@/features/progresso/queries';
+import {
+  type PropsDoRelatorio,
+  useDadosDoRelatorio,
+} from '@/features/progresso/useDadosDoRelatorio';
 import { ehErroApp } from '@/lib/erroApp';
-import type { MedianaDaCarteira } from '@dominio/mediana.ts';
-import type { Progresso } from '@dominio/progresso.ts';
 
-interface Props {
-  nome: string;
-  assistidoId: number;
-  progresso: Progresso;
-  mediana: MedianaDaCarteira | null;
-  /** Do mais recente ao mais antigo, como vêm do banco. */
-  periodos: readonly PeriodoDaEvolucao[];
-}
-
-/** Monta o relatório em PDF (E28) com os números da tela, sem filtro, e baixa. */
-function useBaixarRelatorio({ nome, assistidoId, progresso, mediana, periodos }: Props) {
-  const usuario = useUsuario();
+/** Baixa o relatório em PDF (E28) e põe o download no registro. */
+function useBaixarRelatorio(props: PropsDoRelatorio) {
+  const { dados } = useDadosDoRelatorio(props);
+  const cliente = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      baixarRelatorio(assistidoId, {
-        nome,
-        codigo: codigoDoRelatorio(periodos[0]?.codigo ?? String(assistidoId)),
-        emitidoPor: usuario?.nome ?? 'usuário do sistema',
-        emitidoEm: new Date(),
-        progresso,
-        mediana,
-        periodos: [...periodos].reverse(),
-      }),
+    mutationFn: () => baixarRelatorio(props.assistidoId, dados()),
+    onSettled: () =>
+      cliente.invalidateQueries({ queryKey: progressoKeys.registro(props.assistidoId) }),
   });
 }
 
@@ -51,7 +37,7 @@ export function VoltarParaEvolucoes() {
 }
 
 /** "Baixar PDF", no alto da tela, na linha da volta à lista (como no protótipo). */
-export function BaixarPdf(props: Readonly<Props>) {
+function BaixarPdf(props: Readonly<PropsDoRelatorio>) {
   const baixar = useBaixarRelatorio(props);
   return (
     <div className="flex flex-col items-end gap-1.5">
@@ -86,7 +72,7 @@ export function BaixarPdf(props: Readonly<Props>) {
 export function AcoesDoProgresso({
   assistidoId,
   periodos,
-}: Readonly<Pick<Props, 'assistidoId' | 'periodos'>>) {
+}: Readonly<Pick<PropsDoRelatorio, 'assistidoId' | 'periodos'>>) {
   const evolucaoId = periodos[0]?.evolucaoId;
   return (
     <div className="flex flex-wrap gap-2">
@@ -106,6 +92,16 @@ export function AcoesDoProgresso({
           Evolução mais recente
         </Link>
       )}
+    </div>
+  );
+}
+
+/** As ações do relatório no alto da tela: "Baixar PDF" e, ao lado, compartilhar. */
+export function AcoesDoRelatorio(props: Readonly<PropsDoRelatorio>) {
+  return (
+    <div className="flex items-start gap-2">
+      <BaixarPdf {...props} />
+      <CompartilharRelatorio {...props} />
     </div>
   );
 }

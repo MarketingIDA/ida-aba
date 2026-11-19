@@ -14,6 +14,12 @@ async function lerLogo(): Promise<Uint8Array | null> {
   }
 }
 
+/** Monta o PDF no navegador e devolve o arquivo, com o código no nome (não o nome da criança). */
+export async function montarArquivo(dados: DadosDoRelatorio): Promise<File> {
+  const bytes = await gerarRelatorio(dados, await lerLogo());
+  return new File([new Uint8Array(bytes)], nomeDoRelatorio(dados), { type: 'application/pdf' });
+}
+
 /**
  * Baixa o relatório de metas (E28): primeiro registra quem baixou, depois monta o PDF no navegador
  * e o salva. Se o registro falhar, o arquivo não sai.
@@ -23,8 +29,7 @@ export async function baixarRelatorio(
   dados: DadosDoRelatorio,
 ): Promise<string> {
   await registrarRelatorio(assistidoId, 'baixou');
-  const bytes = await gerarRelatorio(dados, await lerLogo());
-  const nome = nomeDoRelatorio(dados);
-  salvarArquivo(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }), nome);
-  return nome;
+  const arquivo = await montarArquivo(dados);
+  salvarArquivo(arquivo, arquivo.name);
+  return arquivo.name;
 }
