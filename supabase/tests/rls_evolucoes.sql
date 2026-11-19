@@ -477,6 +477,22 @@ begin
     insert into resultado (teste, ok)
       values ('meta alcançada não volta às metas para o mês atual (E12)', dica = 'meta_ja_alcancada');
   end;
+  -- Fontes por frase (E06): só o servidor grava; o coordenador lê as da carteira dele.
+  begin
+    insert into evolucao.fontes (versao_id, campo, ordem, frase)
+      select max(id), 'programas', 0, 'Frase inventada.' from evolucao.versoes
+       where evolucao_id = nova and numero = 2;
+    insert into resultado (teste, ok) values ('o cliente não grava as fontes (E06)', false);
+  exception when insufficient_privilege then
+    insert into resultado (teste, ok) values ('o cliente não grava as fontes (E06)', true);
+  end;
+  execute 'set local role service_role';
+  insert into evolucao.fontes (versao_id, campo, ordem, frase, datas)
+    select max(id), 'programas', 0, 'Frase fictícia da IA.', array[inicio] from evolucao.versoes
+     where evolucao_id = nova and numero = 2;
+  execute 'set local role authenticated';
+  insert into resultado (teste, ok) select 'coordenador lê as fontes da evolução dele (E06)',
+    (select count(*) = 1 and bool_and(datas = array[inicio]) from evolucao.fontes);
   insert into evolucao.versoes (evolucao_id, numero, conteudo) values
     (nova, 4, '{"metas": ["Meta um", "Meta dois", "Meta três", "Meta quatro"]}');
   update evolucao.partes set conferida = true where evolucao_id = nova;
@@ -918,9 +934,10 @@ insert into resultado (teste, ok) select 'contas médicas não lê a importaçã
 insert into resultado (teste, ok) select 'contas médicas não lê as dicas nem as orientações da IA',
   (select count(*) from evolucao.dicas_ia) = 0
   and (select count(*) from evolucao.orientacoes_ia) = 0;
-insert into resultado (teste, ok) select 'contas médicas não lê os outros documentos (E25) nem as lacunas (E10)',
+insert into resultado (teste, ok) select 'contas médicas não lê os outros documentos (E25), as lacunas (E10) nem as fontes (E06)',
   (select count(*) from evolucao.documentos) = 0
-  and (select count(*) from evolucao.lacunas_ignoradas) = 0;
+  and (select count(*) from evolucao.lacunas_ignoradas) = 0
+  and (select count(*) from evolucao.fontes) = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê o nível de apoio (E27)',
   (select count(*) from evolucao.niveis_de_apoio) = 0
   and (select count(*) from evolucao.leituras_de_nivel) = 0;

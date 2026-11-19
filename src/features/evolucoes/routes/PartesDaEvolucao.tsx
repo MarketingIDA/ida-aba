@@ -2,6 +2,7 @@ import type { Evolucao, NumeroDaParte, Versao } from '@/features/evolucoes/api/e
 import { ContadorDeLinhas, ContadorDeMetas } from '@/features/evolucoes/components/Contadores';
 import { DicaParaAIA } from '@/features/evolucoes/components/DicaParaAIA';
 import { Identificacao } from '@/features/evolucoes/components/Identificacao';
+import { Fontes } from '@/features/evolucoes/routes/Fontes';
 import { Lacunas } from '@/features/evolucoes/routes/Lacunas';
 import { EdicaoDasMetas, MetasDaParte } from '@/features/evolucoes/components/MetasDaParte';
 import { ParteDaEvolucao } from '@/features/evolucoes/components/ParteDaEvolucao';
@@ -161,6 +162,7 @@ export function PartesDaEvolucao({ evolucao, edicao, contexto }: Readonly<Props>
           <Lacunas evolucao={evolucao} edicao={edicao} lacunas={contexto.lacunas ?? []} />
         )}
         <CorpoDaParte evolucao={evolucao} edicao={edicao} numero={numero} />
+        {numero !== 1 && !editando && <Fontes evolucaoId={evolucao.id} numero={numero} />}
       </ParteDaEvolucao>
     );
   });

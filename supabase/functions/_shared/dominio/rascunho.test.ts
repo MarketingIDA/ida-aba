@@ -28,14 +28,22 @@ const PEDIDO = {
   ],
 };
 
+const frase = (texto: unknown, sessoes: unknown = [1], documentos: unknown = []) => ({
+  texto,
+  sessoes,
+  documentos,
+});
+
 const RASCUNHO = {
-  abertura: ' Abertura fictícia. ',
-  programas: 'Programas fictícios.',
-  comportamentos: '',
-  recursos: '',
-  fechamento: 'Fecho fictício.',
-  metas_alcancadas: [' Meta alcançada ', '', 7],
-  metas_do_mes: ['Meta um', 'Meta dois', 'Meta três', 'M'.repeat(MAXIMO_DA_META + 10)],
+  abertura: [frase(' Abertura fictícia. ')],
+  programas: [frase('Programas fictícios.', [1, 2]), frase('Segunda frase.', [2], [1])],
+  comportamentos: [],
+  recursos: [frase('  ')],
+  fechamento: [frase('Fecho fictício.')],
+  metas_alcancadas: [frase(' Meta alcançada '), frase(''), 7],
+  metas_do_mes: ['Meta um', 'Meta dois', 'Meta três', 'M'.repeat(MAXIMO_DA_META + 10)].map((m) =>
+    frase(m),
+  ),
 };
 
 const resposta = (content: unknown) => ({ choices: [{ message: { content } }] });
@@ -49,8 +57,8 @@ describe('pedido do rascunho à IA', () => {
         'Frequência: 1 sessões realizadas em 2 evoluções diárias (50%).',
         '',
         'Análises do atendimento:',
-        '[05/10] A assistida seguiu a rotina com dica verbal.',
-        '[07/10, falta] A assistida não compareceu.',
+        '[S1, 05/10] A assistida seguiu a rotina com dica verbal.',
+        '[S2, 07/10, falta] A assistida não compareceu.',
       ].join('\n'),
     );
     const comDocumentos = conteudoDoPedido({
@@ -63,9 +71,9 @@ describe('pedido do rascunho à IA', () => {
     });
     expect(comDocumentos.split('\n').slice(-4)).toEqual([
       'Outros documentos:',
-      '[Relatório escolar, 20/10/2026] A assistida participa da roda.',
-      '[Avaliação, 02/03/2026, contexto] Avaliação fictícia.',
-      '[Outro, sem data, contexto] Bilhete fictício.',
+      '[D1, Relatório escolar, 20/10/2026] A assistida participa da roda.',
+      '[D2, Avaliação, 02/03/2026, contexto] Avaliação fictícia.',
+      '[D3, Outro, sem data, contexto] Bilhete fictício.',
     ]);
     const comPlano = conteudoDoPedido({
       ...PEDIDO,
@@ -89,27 +97,39 @@ describe('pedido do rascunho à IA', () => {
 
 describe('leitura do rascunho da IA', () => {
   it('apara os trechos e as metas, e corta no limite do banco', () => {
-    expect(lerRespostaDaIA(resposta(JSON.stringify(RASCUNHO)))).toEqual({
-      texto: {
-        abertura: 'Abertura fictícia.',
-        programas: 'Programas fictícios.',
-        comportamentos: '',
-        recursos: '',
-        fechamento: 'Fecho fictício.',
-      },
-      metasAlcancadas: ['Meta alcançada'],
-      metasDoMes: ['Meta um', 'Meta dois', 'Meta três', 'M'.repeat(MAXIMO_DA_META)],
+    const lido = lerRespostaDaIA(resposta(JSON.stringify(RASCUNHO)));
+    expect(lido?.texto).toEqual({
+      abertura: 'Abertura fictícia.',
+      programas: 'Programas fictícios. Segunda frase.',
+      comportamentos: '',
+      recursos: '',
+      fechamento: 'Fecho fictício.',
     });
+    expect(lido?.metasAlcancadas).toEqual(['Meta alcançada']);
+    expect(lido?.metasDoMes).toEqual([
+      'Meta um',
+      'Meta dois',
+      'Meta três',
+      'M'.repeat(MAXIMO_DA_META),
+    ]);
+    expect(lido?.frases.find((f) => f.campo === 'programas' && f.ordem === 1)).toEqual({
+      campo: 'programas',
+      ordem: 1,
+      texto: 'Segunda frase.',
+      sessoes: [2],
+      documentos: [1],
+    });
+    expect(lido?.frases).toHaveLength(9);
   });
 
   it('recusa o que não segue o formato, em vez de gravar pela metade', () => {
-    const vazio = { ...RASCUNHO, abertura: '', programas: ' ', fechamento: '' };
+    const vazio = { ...RASCUNHO, abertura: [], programas: [frase(' ')], fechamento: [] };
     for (const errado of [
       null,
       'texto solto',
       { ...RASCUNHO, metas_alcancadas: 'nenhuma' },
       { ...RASCUNHO, metas_do_mes: null },
-      { ...RASCUNHO, recursos: 3 },
+      { ...RASCUNHO, recursos: 'texto solto' },
       vazio,
     ]) {
       expect(lerRascunho(errado)).toBeNull();
