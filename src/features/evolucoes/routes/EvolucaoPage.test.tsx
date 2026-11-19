@@ -524,3 +524,38 @@ describe('Fontes do rascunho (E06, E25)', () => {
     expect(parte('Metas alcançadas').queryByText(/Fontes do rascunho/)).not.toBeInTheDocument();
   });
 });
+
+describe('Semelhança com o mês anterior (P7)', () => {
+  it('avisa, sem bloquear, o texto quase igual ao da evolução de outubro', async () => {
+    const trechos = {
+      abertura: '',
+      programas: 'A assistida pareou figuras com dica verbal e nomeou cores. '.repeat(14).trim(),
+      comportamentos: '',
+      recursos: '',
+      fechamento: '',
+    };
+    Object.assign(banco, { assistido_id: 5 });
+    banco.versoes = [
+      {
+        numero: 2,
+        conteudo: trechos,
+        autor: 'coordenador',
+        criado_em: '2026-11-04T15:00:00Z',
+        criado_por: 'Carla',
+      },
+    ];
+    server.use(
+      http.get(`${REST}/metas`, () => HttpResponse.json([])),
+      http.get(`${REST}/evolucoes`, () => HttpResponse.json({ id: 'anterior' })),
+      http.get(`${REST}/versoes`, () => HttpResponse.json({ conteudo: trechos })),
+    );
+    abrir();
+    await screen.findByRole('heading', { level: 1 });
+    expect(
+      await parte('Evolução mensal').findByText(/100% parecido com o da evolução de outubro/),
+    ).toBeInTheDocument();
+    expect(
+      parte('Evolução mensal').getByRole('button', { name: 'Marcar como conferida' }),
+    ).toBeEnabled();
+  });
+});

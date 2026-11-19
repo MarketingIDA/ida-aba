@@ -11,6 +11,7 @@ import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDa
 import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
+import { textoAnteriorOptions } from '@/features/evolucoes/api/anterior.api';
 import { lacunasOptions } from '@/features/evolucoes/api/lacunas.api';
 import { metasJaAlcancadasOptions } from '@/features/evolucoes/api/metasDoCadastro.api';
 import type { ContextoDaConferencia } from '@/features/evolucoes/conferencia';
@@ -55,7 +56,11 @@ function useJaAlcancadas(assistidoId: number | null): readonly string[] {
 function useContexto(evolucao: Evolucao): ContextoDaConferencia {
   const jaAlcancadas = useJaAlcancadas(evolucao.assistidoId);
   const lacunas = useQuery(lacunasOptions(evolucao.id));
-  return { jaAlcancadas, lacunas: lacunas.data ?? [] };
+  const anterior = useQuery({
+    ...textoAnteriorOptions(evolucao.assistidoId ?? 0, evolucao.mesRef),
+    enabled: evolucao.assistidoId !== null,
+  });
+  return { jaAlcancadas, lacunas: lacunas.data ?? [], anterior: anterior.data ?? null };
 }
 
 function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
