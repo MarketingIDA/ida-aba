@@ -1,141 +1,80 @@
-import { CalendarDays, LogOut } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Link, NavLink } from 'react-router';
+import { Link } from 'react-router';
 
-import { MENU_DO_PAPEL, rotaInicial } from '@/app/navegacao';
+import { CartaoDoMes } from '@/app/layouts/CartaoDoMes';
+import { CartaoDoUsuario } from '@/app/layouts/CartaoDoUsuario';
+import { focoNoAzul } from '@/app/layouts/estilosDoMenu';
+import { NavegacaoPrincipal } from '@/app/layouts/NavegacaoPrincipal';
+import { useResumoDoMenu } from '@/app/layouts/useResumoDoMenu';
+import { rotaInicial } from '@/app/navegacao';
+import logo from '@/assets/marca/logo-instituto-autismo.png';
 import quadrados from '@/assets/marca/squares.png';
-import { type Papel, ROTULO_DO_PAPEL, useAcoesDeAuth, useUsuario } from '@/hooks/useUsuario';
+import { type Papel, useUsuario } from '@/hooks/useUsuario';
 import { cn } from '@/lib/utils';
-import { iniciais } from '@/utils/iniciais';
-import {
-  formatarData,
-  hojeNaClinica,
-  mesDaEvolucao,
-  nomeDoMes,
-  periodoAnalisado,
-  prazoDoArquivo,
-} from '@dominio/mes.ts';
+import { hojeNaClinica, mesDaEvolucao } from '@dominio/mes.ts';
 
-/**
- * Sobre o azul do menu e da barra do topo, o foco é um contorno branco. Texto branco nunca fica
- * sobre azul clareado (branco translúcido por cima dá 3,97:1): card e hover escurecem com o
- * azul-escuro da marca.
- */
-export const focoNoAzul =
-  'outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
-
-const pressionar =
-  'transition-[background-color,color,transform,box-shadow] duration-150 motion-reduce:transition-none';
-
-function CartaoDoUsuario() {
-  const usuario = useUsuario();
-  const { logout } = useAcoesDeAuth();
-  if (usuario === null) return null;
-
+/** O logo do Instituto na pílula branca com a borda 3D azul-clara. */
+export function LogoDoInstituto({ pequeno = false }: Readonly<{ pequeno?: boolean }>) {
   return (
-    <div className="flex items-center gap-2 rounded-[18px] bg-marinho/22 py-2.5 pr-2.5 pl-3">
-      <span
-        aria-hidden="true"
-        className="grid size-9 shrink-0 place-items-center rounded-full bg-white font-display text-sm font-bold text-azul ring-2 ring-white/22"
-      >
-        {iniciais(usuario.nome)}
-      </span>
-      <p className="flex min-w-0 flex-1 flex-col leading-tight">
-        <span className="truncate text-[0.84rem] font-bold">{usuario.nome}</span>
-        <span className="truncate text-xs font-semibold">{ROTULO_DO_PAPEL[usuario.papel]}</span>
-      </p>
-      <button
-        type="button"
-        aria-label="Sair"
-        onClick={() => void logout()}
-        className={cn(
-          'grid size-[34px] shrink-0 cursor-pointer place-items-center rounded-[11px] bg-white/14 hover:bg-white/20 active:scale-[0.94]',
-          pressionar,
-          focoNoAzul,
-        )}
-      >
-        <LogOut aria-hidden="true" className="size-[18px]" strokeWidth={1.6} />
-      </button>
-    </div>
+    <span
+      className={cn(
+        'inline-flex items-center bg-white',
+        pequeno
+          ? 'rounded-xl px-[9px] py-[5px] shadow-[0_2px_0_var(--ida-azul-3d)]'
+          : 'rounded-[14px] px-[11px] py-[7px] shadow-[0_3px_0_var(--ida-azul-3d)]',
+      )}
+    >
+      <img
+        src={logo}
+        alt="Instituto do Autismo"
+        className={cn('block w-auto', pequeno ? 'h-[26px]' : 'h-[30px]')}
+      />
+    </span>
   );
 }
 
-/**
- * Card do mês da evolução: o mês aberto, as sessões que ele analisa (E18) e o prazo do arquivo do
- * mês (E15). Leva à primeira tela do papel (todo card leva à lista do que ele conta).
- */
-function CartaoDoMes({
-  papel,
-  aoNavegar,
-}: Readonly<{ papel: Papel; aoNavegar?: (() => void) | undefined }>) {
-  const mes = mesDaEvolucao(hojeNaClinica(new Date()));
-  const { inicio, fim } = periodoAnalisado(mes);
-  const nome = nomeDoMes(mes);
-
+/** O botão branco do coordenador: abre a escolha do assistido na tela das evoluções (E01). */
+function NovaEvolucaoNoMenu({ aoNavegar }: Readonly<{ aoNavegar?: (() => void) | undefined }>) {
   return (
     <Link
-      to={rotaInicial(papel)}
+      to="/evolucoes?nova=1"
       onClick={aoNavegar}
       className={cn(
-        'flex flex-col gap-1.5 rounded-xl border border-white/16 bg-azul-escuro/55 px-4 py-3.5 hover:bg-azul-escuro active:scale-[0.98]',
-        pressionar,
+        'flex h-[46px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-white font-display text-[0.97rem] font-extrabold text-azul shadow-[0_4px_0_var(--ida-azul-3d),0_10px_22px_-10px_rgb(14_42_71/0.55)] transition-[transform,box-shadow] duration-150 active:translate-y-[3px] active:shadow-[0_1px_0_var(--ida-azul-3d),0_6px_14px_-10px_rgb(14_42_71/0.55)] motion-reduce:transition-none',
         focoNoAzul,
       )}
     >
-      <span className="flex items-center gap-1.5 rotulo">
-        <CalendarDays aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
-        Evolução do mês
-      </span>{' '}
-      <span className="font-display text-xl leading-tight font-bold">
-        {nome.charAt(0).toUpperCase() + nome.slice(1)} <span className="opacity-70">/</span>{' '}
-        {mes.slice(0, 4)}
-      </span>{' '}
-      <span className="text-xs font-semibold">
-        Sessões de {formatarData(inicio, true)} a {formatarData(fim, true)}
-      </span>{' '}
-      <span className="-mt-1 text-xs font-semibold">
-        Arquivo do mês até {formatarData(prazoDoArquivo(mes), true)}
-      </span>
+      <Plus aria-hidden="true" className="size-[18px]" strokeWidth={2.2} />
+      Nova evolução mensal
     </Link>
   );
 }
 
-function NavegacaoPrincipal({
+function MesENavegacao({
   papel,
   aoNavegar,
 }: Readonly<{ papel: Papel; aoNavegar?: (() => void) | undefined }>) {
+  const mes = mesDaEvolucao(hojeNaClinica(new Date()));
+  const resumo = useResumoDoMenu(papel, mes);
   return (
-    <nav aria-label="Principal">
-      <ul className="flex flex-col gap-0.5">
-        {MENU_DO_PAPEL[papel].map(({ rota, rotulo, icone: Icone }) => (
-          <li key={rota}>
-            <NavLink
-              to={rota}
-              onClick={aoNavegar}
-              className={({ isActive }) =>
-                cn(
-                  'flex h-10 items-center gap-3 rounded-[14px] pr-2.5 pl-3 text-sm active:scale-[0.98] [@media(max-height:760px)]:h-[38px]',
-                  isActive
-                    ? 'bg-white font-bold text-azul shadow-[0_6px_14px_-10px_rgb(14_42_71/0.45)]'
-                    : 'font-semibold hover:bg-azul-escuro',
-                  pressionar,
-                  focoNoAzul,
-                )
-              }
-            >
-              <Icone aria-hidden="true" className="size-[18px] shrink-0" strokeWidth={1.6} />
-              <span className="min-w-0 flex-1 truncate">{rotulo}</span>
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <>
+      <CartaoDoMes
+        mes={mes}
+        destino={rotaInicial(papel)}
+        andamento={resumo.andamento}
+        aoNavegar={aoNavegar}
+      />
+      {papel === 'coordenador' && <NovaEvolucaoNoMenu aoNavegar={aoNavegar} />}
+      <NavegacaoPrincipal papel={papel} resumo={resumo} aoNavegar={aoNavegar} />
+    </>
   );
 }
 
 /**
- * Conteúdo do menu lateral, o mesmo no menu fixo e na gaveta: nome do app, mês da evolução,
- * navegação do papel e, no rodapé, os quadrados e o usuário.
+ * Conteúdo do menu lateral, o mesmo no menu fixo e na gaveta, como no protótipo: o logo, o nome do
+ * app, o mês da evolução, o botão de nova evolução, a navegação do papel e, no rodapé, os
+ * quadrados e o usuário.
  */
 export function MenuLateral({
   aoNavegar,
@@ -145,16 +84,19 @@ export function MenuLateral({
 
   return (
     <div className="relative z-[1] flex h-full [scrollbar-width:none] flex-col gap-3.5 overflow-y-auto px-3.5 pt-[22px] pb-4 [@media(max-height:760px)]:gap-2.5 [@media(max-height:760px)]:pt-4">
-      <div className="flex min-h-9 items-center justify-between px-1">
-        <p className="font-display text-[1.03rem] font-bold">Evolução ABA</p>
+      <div className="flex items-center justify-between px-1">
+        <Link
+          to={usuario === null ? '/' : rotaInicial(usuario.papel)}
+          onClick={aoNavegar}
+          aria-label="Início"
+          className={cn('rounded-[14px]', focoNoAzul)}
+        >
+          <LogoDoInstituto />
+        </Link>
         {botaoFechar}
       </div>
-      {usuario !== null && (
-        <>
-          <CartaoDoMes papel={usuario.papel} aoNavegar={aoNavegar} />
-          <NavegacaoPrincipal papel={usuario.papel} aoNavegar={aoNavegar} />
-        </>
-      )}
+      <p className="-mt-0.5 px-1 font-display text-[1.03rem] font-bold">Evolução ABA</p>
+      {usuario !== null && <MesENavegacao papel={usuario.papel} aoNavegar={aoNavegar} />}
       <div className="mt-auto flex flex-col gap-3">
         <img src={quadrados} alt="" className="ml-1.5 h-3.5 w-auto self-start opacity-95" />
         <CartaoDoUsuario />

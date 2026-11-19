@@ -1,12 +1,12 @@
 import {
-  ClipboardList,
   FileText,
   FolderOpen,
   Inbox,
   type LucideIcon,
-  Signature,
+  PenLine,
   Sparkles,
   Target,
+  Users,
 } from 'lucide-react';
 
 import type { Papel } from '@/hooks/useUsuario';
@@ -15,16 +15,41 @@ export interface ItemDoMenu {
   rota: string;
   rotulo: string;
   icone: LucideIcon;
+  /** Título de seção que vem antes do item no menu ("Cadastros"). */
+  secao?: string;
+  /** O número ao lado: assistidos do mês ou arquivos enviados. */
+  contador?: 'assistidos' | 'arquivos';
+  /** Abaixo do item, um subitem por situação da evolução, cada um com o seu número. */
+  situacoes?: boolean;
+  /** Outras telas que ficam dentro deste item (o gráfico das metas fica em Evoluções). */
+  inclui?: readonly string[];
 }
 
-const EVOLUCOES: ItemDoMenu = { rota: '/evolucoes', rotulo: 'Evoluções', icone: FileText };
+const EVOLUCOES: ItemDoMenu = {
+  rota: '/evolucoes',
+  rotulo: 'Evoluções',
+  icone: FileText,
+  contador: 'assistidos',
+  situacoes: true,
+  inclui: ['/progresso'],
+};
 const ARQUIVO: ItemDoMenu = { rota: '/arquivo', rotulo: 'Arquivo do mês', icone: FolderOpen };
 // A mesma tela, com o nome de cada lado: contas médicas recebe, a coordenação geral acompanha.
-const RECEBIDOS: ItemDoMenu = { rota: '/arquivos', rotulo: 'Arquivos recebidos', icone: Inbox };
-const ENVIADOS: ItemDoMenu = { rota: '/arquivos', rotulo: 'Arquivos enviados', icone: Inbox };
-const CADASTROS: ItemDoMenu = { rota: '/cadastros', rotulo: 'Cadastros', icone: ClipboardList };
-const METAS: ItemDoMenu = { rota: '/metas', rotulo: 'Metas', icone: Target };
-const ASSINATURA: ItemDoMenu = { rota: '/assinatura', rotulo: 'Assinatura', icone: Signature };
+const RECEBIDOS: ItemDoMenu = {
+  rota: '/arquivos',
+  rotulo: 'Arquivos recebidos',
+  icone: Inbox,
+  contador: 'arquivos',
+};
+const ENVIADOS: ItemDoMenu = { ...RECEBIDOS, rotulo: 'Arquivos enviados' };
+const METAS: ItemDoMenu = {
+  rota: '/metas',
+  rotulo: 'Metas dos assistidos',
+  icone: Target,
+  secao: 'Cadastros',
+};
+const ASSINATURA: ItemDoMenu = { rota: '/assinatura', rotulo: 'Minha assinatura', icone: PenLine };
+const PESSOAS: ItemDoMenu = { rota: '/cadastros', rotulo: 'Unidades e pessoas', icone: Users };
 // A curadoria das dicas dos coordenadores e as orientações que a IA lê (E22).
 const ORIENTACOES: ItemDoMenu = {
   rota: '/orientacoes',
@@ -33,12 +58,12 @@ const ORIENTACOES: ItemDoMenu = {
 };
 
 /**
- * O menu de cada papel mostra só as telas que já existem. Esconder um item é só UX: quem decide o
- * que cada papel lê é o RLS do banco.
+ * O menu de cada papel mostra só as telas que já existem, na ordem do protótipo. Esconder um item
+ * é só UX: quem decide o que cada papel lê é o RLS do banco.
  */
 export const MENU_DO_PAPEL: Record<Papel, readonly ItemDoMenu[]> = {
-  coordenador: [EVOLUCOES, METAS, ARQUIVO, ASSINATURA],
-  coordenacao_geral: [EVOLUCOES, METAS, ENVIADOS, CADASTROS, ORIENTACOES],
+  coordenador: [EVOLUCOES, ARQUIVO, METAS, ASSINATURA],
+  coordenacao_geral: [EVOLUCOES, ENVIADOS, METAS, PESSOAS, ORIENTACOES],
   contas_medicas: [RECEBIDOS],
 };
 
