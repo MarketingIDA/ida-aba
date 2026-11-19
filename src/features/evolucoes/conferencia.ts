@@ -1,5 +1,6 @@
 import type { Devolucao } from '@/features/evolucoes/api/devolucao.api';
 import type { Evolucao, NumeroDaParte } from '@/features/evolucoes/api/evolucao.api';
+import type { Lacuna } from '@/features/evolucoes/api/lacunas.api';
 import { plural } from '@/features/evolucoes/logica';
 import { linhasDoTexto, MINIMO_DE_LINHAS, MINIMO_DE_METAS_DO_MES } from '@dominio/evolucao.ts';
 import { metaJaAlcancada } from '@dominio/metas.ts';
@@ -17,6 +18,14 @@ export const TITULO_DA_PARTE: Record<NumeroDaParte, string> = {
 
 export const NUMEROS: readonly NumeroDaParte[] = [1, 2, 3, 4];
 
+/** O que a conferência lê fora da evolução. Enquanto não chega, a tela não bloqueia; o banco confere. */
+export interface ContextoDaConferencia {
+  /** As metas do cadastro já alcançadas ou em manutenção (E12). */
+  jaAlcancadas?: readonly string[];
+  /** Os programas do plano que não aparecem nas análises (E10). */
+  lacunas?: readonly Lacuna[];
+}
+
 export function linhasDa(evolucao: Evolucao): number {
   return evolucao.texto === null ? 0 : linhasDoTexto(evolucao.texto.conteudo);
 }
@@ -28,21 +37,28 @@ export function linhasDa(evolucao: Evolucao): number {
 export function pendenciaDaParte(
   evolucao: Evolucao,
   numero: NumeroDaParte,
-  jaAlcancadas: readonly string[] = [],
+  contexto: ContextoDaConferencia = {},
 ): string | null {
   if (numero === 1) {
     return evolucao.plano === null
       ? 'O plano de saúde está em branco no cadastro. Peça a correção à coordenação geral.'
       : null;
   }
-  if (numero === 2) {
-    const linhas = linhasDa(evolucao);
-    return linhas < MINIMO_DE_LINHAS
-      ? `O texto tem ${plural(linhas, 'linha', 'linhas')}; o mínimo é ${String(MINIMO_DE_LINHAS)}.`
-      : null;
-  }
-  if (numero === 4) return pendenciaDasMetasDoMes(evolucao, jaAlcancadas);
+  if (numero === 2) return pendenciaDoTexto(evolucao, contexto.lacunas ?? []);
+  if (numero === 4) return pendenciaDasMetasDoMes(evolucao, contexto.jaAlcancadas ?? []);
   return null;
+}
+
+/** E10: 7 linhas ou mais, e nenhuma lacuna aberta. */
+function pendenciaDoTexto(evolucao: Evolucao, lacunas: readonly Lacuna[]) {
+  const linhas = linhasDa(evolucao);
+  if (linhas < MINIMO_DE_LINHAS) {
+    return `O texto tem ${plural(linhas, 'linha', 'linhas')}; o mínimo é ${String(MINIMO_DE_LINHAS)}.`;
+  }
+  const abertas = lacunas.filter((l) => l.situacao === 'aberta').length;
+  return abertas === 0
+    ? null
+    : `${plural(abertas, 'lacuna aberta', 'lacunas abertas')}: resolva cada programa que não aparece nas análises.`;
 }
 
 /**
@@ -61,13 +77,30 @@ function pendenciaDasMetasDoMes(evolucao: Evolucao, jaAlcancadas: readonly strin
     : `A meta "${repetida}" já foi alcançada; tire-a das metas para o mês atual.`;
 }
 
-/** O que a parte deve olhar sem impedir a conferência (E11), ou `null`. */
-export function avisoDaParte(evolucao: Evolucao, numero: NumeroDaParte): string | null {
+/** O que a parte deve olhar sem impedir a conferência (E11, E12), ou `null`. */
+export function avisoDaParte(
+  evolucao: Evolucao,
+  numero: NumeroDaParte,
+  contexto: ContextoDaConferencia = {},
+): string | null {
+  if (numero === 4) return avisoDasMetasDoMes(evolucao, contexto.lacunas ?? []);
   if (numero !== 3) return null;
   const alcancadas = evolucao.metasAlcancadas?.conteudo.metas.length ?? 0;
   return alcancadas < MINIMO_DE_ALCANCADAS
     ? `${plural(alcancadas, 'meta alcançada', 'metas alcançadas')} no mês; o esperado é ${String(MINIMO_DE_ALCANCADAS)} ou mais. Não impede a conclusão.`
     : null;
+}
+
+/** E12: meta de um programa cuja lacuna foi ignorada, que continua nas metas para o mês atual. */
+function avisoDasMetasDoMes(evolucao: Evolucao, lacunas: readonly Lacuna[]): string | null {
+  const metas = evolucao.metasDoMes?.conteudo.metas ?? [];
+  for (const lacuna of lacunas.filter((l) => l.situacao === 'ignorada')) {
+    const meta = metaJaAlcancada(metas, lacuna.metas);
+    if (meta !== null) {
+      return `A meta "${meta}" é do programa ${lacuna.programa}, que não aparece nas análises e teve a lacuna ignorada.`;
+    }
+  }
+  return null;
 }
 
 export function conferidas(evolucao: Evolucao): number {
@@ -82,11 +115,11 @@ export function devolucaoAberta(evolucao: Evolucao): Devolucao | null {
 /** Pronta para concluir: as 4 partes conferidas, nenhuma pendência e nenhuma devolução aberta. */
 export function prontaParaConcluir(
   evolucao: Evolucao,
-  jaAlcancadas: readonly string[] = [],
+  contexto: ContextoDaConferencia = {},
 ): boolean {
   return (
     conferidas(evolucao) === 4 &&
     devolucaoAberta(evolucao) === null &&
-    NUMEROS.every((n) => pendenciaDaParte(evolucao, n, jaAlcancadas) === null)
+    NUMEROS.every((n) => pendenciaDaParte(evolucao, n, contexto) === null)
   );
 }

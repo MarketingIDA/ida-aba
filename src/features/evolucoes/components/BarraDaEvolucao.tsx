@@ -3,7 +3,12 @@ import { CircleCheck, Info, Lock, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
 import { DevolverEvolucao } from '@/features/evolucoes/components/DevolverEvolucao';
-import { conferidas, devolucaoAberta, prontaParaConcluir } from '@/features/evolucoes/conferencia';
+import {
+  type ContextoDaConferencia,
+  conferidas,
+  devolucaoAberta,
+  prontaParaConcluir,
+} from '@/features/evolucoes/conferencia';
 import { formatarDataHora } from '@/features/evolucoes/textos';
 
 interface Props {
@@ -12,8 +17,8 @@ interface Props {
   erro: string | null;
   aoConcluir: () => void;
   aoReabrir: () => void;
-  /** As metas do cadastro já alcançadas ou em manutenção (E12). */
-  jaAlcancadas: readonly string[];
+  /** As metas já alcançadas (E12) e as lacunas (E10). */
+  contexto: ContextoDaConferencia;
 }
 
 function Resumo({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
@@ -57,9 +62,9 @@ export function BarraDaEvolucao({
   erro,
   aoConcluir,
   aoReabrir,
-  jaAlcancadas,
+  contexto,
 }: Readonly<Props>) {
-  const pronta = prontaParaConcluir(evolucao, jaAlcancadas);
+  const pronta = prontaParaConcluir(evolucao, contexto);
   return (
     <div className="sticky bottom-4 z-10 flex flex-col gap-2 rounded-xl border border-borda bg-superficie px-4 py-3 text-sm font-bold text-texto-2 shadow-lg">
       {erro !== null && (

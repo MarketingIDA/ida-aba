@@ -55,6 +55,7 @@ Entre com a conta da coordenadora pelo link do convite e crie a senha (no mínim
 - [ ] 2.11 **Termo inadequado.** Escreva no texto o termo do item 1.7. Ele fica marcado e vira alerta. Troque pelo substituto com um toque.
 - [ ] 2.12 **Dica para a IA.** Num bloco escrito pela IA, use "Dica para a IA" e escreva o que ela deve fazer diferente. O texto da evolução não muda.
 - [ ] 2.13 **Trazer metas.** Na parte 4, "Trazer do cadastro de metas" acrescenta as metas em desenvolvimento.
+- [ ] 2.12b **Lacuna.** Antes, no cadastro, dê a uma meta em desenvolvimento um programa que o PDF não cita. Na evolução mensal aparece a lacuna e a parte não pode ser conferida. Teste as três saídas em evoluções diferentes: "Não foi trabalhado" (a frase entra no texto), "Foi trabalhado" (escreva citando o programa) e "Ignorar" (fica o nome e a hora; se a meta do programa estiver nas metas para o mês atual, a parte 4 mostra um alerta). Metas sem programa não geram lacuna.
 - [ ] 2.13b **Meta já alcançada.** Na parte 4, escreva uma meta que está na parte 3 ou que já está alcançada no cadastro. A conclusão fica bloqueada com o nome da meta. Com menos de 4 metas na parte 3, aparece só um aviso.
 - [ ] 2.14 **Conferir e concluir.** "Marcar como conferida" nas 4 partes, e depois "Concluir evolução". Teste "Reabrir" e conclua de novo.
 - [ ] 2.15 **Evolução escrita à mão.** No outro assistido, crie a evolução sem o PDF, escreva as 4 partes, confira e conclua.
