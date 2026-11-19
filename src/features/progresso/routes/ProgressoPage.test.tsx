@@ -1,7 +1,7 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { env } from '@/config/env';
 import { ProgressoPage } from '@/features/progresso';
@@ -121,5 +121,38 @@ describe('Evolução das metas em gráfico (E27)', () => {
       'Você não tem permissão para emitir o relatório deste assistido.',
     );
     expect(screen.queryByText(/Baixado:/)).not.toBeInTheDocument();
+  });
+
+  it('envia o PDF pela janela de compartilhar e, sem envio de arquivo no navegador, baixa para anexar', async () => {
+    servirProgresso();
+    const acoes: unknown[] = [];
+    server.use(
+      http.get('*/logo-instituto-autismo.png', () => new HttpResponse(null, { status: 404 })),
+      http.get(`${REST}/relatorios_de_metas`, () => HttpResponse.json([])),
+      http.post(`${REST}/relatorios_de_metas`, async ({ request }) => {
+        acoes.push(await request.json());
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+    const criar = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:teste');
+    vi.spyOn(URL, 'revokeObjectURL').mockReturnValue(undefined);
+    const { user } = renderWithProviders(
+      <Routes>
+        <Route path="/progresso/:assistidoId" element={<ProgressoPage />} />
+      </Routes>,
+      { rota: '/progresso/1', usuario: usuarioDemo() },
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Compartilhar' }));
+    expect(await screen.findByText('Nenhum download ou envio ainda.')).toBeInTheDocument();
+    const enviar = screen.getByRole('button', { name: /Enviar o PDF/ });
+    await waitFor(() => {
+      expect(enviar).toBeEnabled();
+    });
+    await user.click(enviar);
+    expect(await screen.findByText(/o PDF foi baixado para você anexar/)).toBeInTheDocument();
+    expect(acoes).toEqual([{ assistido_id: 1, acao: 'baixou_para_enviar' }]);
+    expect(criar).toHaveBeenCalledOnce();
+    vi.restoreAllMocks();
   });
 });
