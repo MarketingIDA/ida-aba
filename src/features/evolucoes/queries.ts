@@ -30,6 +30,7 @@ export const evolucoesKeys = {
   importacao: (id: string) => [...evolucoesKeys.all, 'importacao', id] as const,
   documentos: (id: string) => [...evolucoesKeys.all, 'documentos', id] as const,
   niveis: (id: string) => [...evolucoesKeys.all, 'niveis', id] as const,
+  lacunas: (id: string) => [...evolucoesKeys.all, 'lacunas', id] as const,
 };
 
 export const documentosOptions = (evolucaoId: string) =>
@@ -111,7 +112,10 @@ export function useLerNiveis(evolucaoId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => lerNiveis(evolucaoId),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.niveis(evolucaoId) }),
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: evolucoesKeys.niveis(evolucaoId) });
+      await queryClient.invalidateQueries({ queryKey: evolucoesKeys.lacunas(evolucaoId) });
+    },
   });
 }
 

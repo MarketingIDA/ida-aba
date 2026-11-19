@@ -60,10 +60,14 @@ function evolucaoNoBanco() {
   };
 }
 
+/** As lacunas como a RPC `lacunas` devolve (E10). */
+let lacunasNoBanco: Record<string, unknown>[] = [];
+
 /** O banco em memória: versão nova desfaz a conferência da parte, como o trigger. */
 function servirBanco(banco: Banco) {
   server.use(
     http.post(`${REST}/rpc/evolucao_completa`, () => HttpResponse.json(banco)),
+    http.post(`${REST}/rpc/lacunas`, () => HttpResponse.json(lacunasNoBanco)),
     http.post(`${REST}/versoes`, async ({ request }) => {
       const { numero, conteudo } = (await request.json()) as { numero: number; conteudo: unknown };
       const versao = { numero, conteudo, autor: 'coordenador', criado_em: '2026-11-04T15:00:00Z' };
@@ -116,6 +120,7 @@ let banco: Banco;
 
 beforeEach(() => {
   banco = evolucaoNoBanco();
+  lacunasNoBanco = [];
   servirBanco(banco);
 });
 
@@ -441,5 +446,50 @@ describe('Nível de apoio', () => {
       await screen.findByText('Nível de apoio lido: 1 dia com nível, em 1 meta.'),
     ).toBeInTheDocument();
     expect(pedidos).toEqual([{ evolucao_id: ID }]);
+  });
+});
+
+describe('Lacunas da evolução mensal (E10)', () => {
+  it('a lacuna aberta impede conferir, e "Não foi trabalhado" põe a frase no texto', async () => {
+    lacunasNoBanco = [
+      {
+        programa: 'Programa fictício',
+        situacao: 'aberta',
+        metas: ['Meta fictícia'],
+        ignorada_por: null,
+        ignorada_em: null,
+      },
+    ];
+    banco.versoes = [
+      {
+        numero: 2,
+        conteudo: {
+          abertura: '',
+          programas: 'Texto fictício de teste. '.repeat(30).trim(),
+          comportamentos: '',
+          recursos: '',
+          fechamento: '',
+        },
+        autor: 'ia',
+        criado_em: '2026-11-04T15:00:00Z',
+        criado_por: null,
+      },
+    ];
+    const { user } = abrir();
+    await screen.findByRole('heading', { level: 1 });
+    expect(
+      await parte('Evolução mensal').findByText('1 lacuna aberta', { exact: false }),
+    ).toBeInTheDocument();
+    expect(
+      parte('Evolução mensal').getByRole('button', { name: 'Marcar como conferida' }),
+    ).toBeDisabled();
+
+    await user.click(parte('Evolução mensal').getByRole('button', { name: 'Não foi trabalhado' }));
+    await vi.waitFor(() => {
+      const versao = banco.versoes.find((v) => v.numero === 2);
+      expect((versao?.conteudo as { programas: string }).programas).toMatch(
+        /O programa Programa fictício não foi aplicado no período\.$/,
+      );
+    });
   });
 });

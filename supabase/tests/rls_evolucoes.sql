@@ -452,6 +452,23 @@ begin
     (nova, 3, '{"metas": ["Meta fictícia do cadastro."]}'),
     (nova, 4, '{"metas": ["Meta um", "Meta dois", "Meta três", "meta ficticia do cadastro"]}');
   update evolucao.partes set conferida = true where evolucao_id = nova;
+  -- Lacuna (E10): o programa da meta nova não aparece nas análises (não tem nível lido).
+  insert into cadastro.metas (assistido_id, programa, texto, criterio)
+    select assistido_id, 'Programa ausente', 'Outra meta fictícia', 'Critério fictício'
+      from evolucao.evolucoes where id = nova;
+  insert into resultado (teste, ok) select 'lacuna: o programa que não aparece nas análises fica aberto (E10)',
+    (select count(*) = 1 and bool_and(programa = 'Programa ausente' and situacao = 'aberta')
+       from evolucao.lacunas(nova));
+  begin
+    update evolucao.evolucoes set situacao = 'concluida' where id = nova;
+    insert into resultado (teste, ok) values ('lacuna aberta não deixa concluir (E10)', false);
+  exception when check_violation then
+    get stacked diagnostics dica = pg_exception_hint;
+    insert into resultado (teste, ok) values ('lacuna aberta não deixa concluir (E10)', dica = 'lacuna_aberta');
+  end;
+  insert into evolucao.lacunas_ignoradas (evolucao_id, programa) values (nova, ' programa AUSENTE ');
+  insert into resultado (teste, ok) select 'coordenador ignora a lacuna, com o nome de quem ignorou (E10)',
+    (select situacao = 'ignorada' and ignorada_por = 'Coordenadora A' from evolucao.lacunas(nova));
   begin
     update evolucao.evolucoes set situacao = 'concluida' where id = nova;
     insert into resultado (teste, ok) values ('meta alcançada não volta às metas para o mês atual (E12)', false);
@@ -901,8 +918,9 @@ insert into resultado (teste, ok) select 'contas médicas não lê a importaçã
 insert into resultado (teste, ok) select 'contas médicas não lê as dicas nem as orientações da IA',
   (select count(*) from evolucao.dicas_ia) = 0
   and (select count(*) from evolucao.orientacoes_ia) = 0;
-insert into resultado (teste, ok) select 'contas médicas não lê os outros documentos (E25)',
-  (select count(*) from evolucao.documentos) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê os outros documentos (E25) nem as lacunas (E10)',
+  (select count(*) from evolucao.documentos) = 0
+  and (select count(*) from evolucao.lacunas_ignoradas) = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê o nível de apoio (E27)',
   (select count(*) from evolucao.niveis_de_apoio) = 0
   and (select count(*) from evolucao.leituras_de_nivel) = 0;

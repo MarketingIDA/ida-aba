@@ -11,7 +11,9 @@ import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDa
 import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
+import { lacunasOptions } from '@/features/evolucoes/api/lacunas.api';
 import { metasJaAlcancadasOptions } from '@/features/evolucoes/api/metasDoCadastro.api';
+import type { ContextoDaConferencia } from '@/features/evolucoes/conferencia';
 import { evolucaoOptions } from '@/features/evolucoes/queries';
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
 import { useEdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
@@ -49,10 +51,17 @@ function useJaAlcancadas(assistidoId: number | null): readonly string[] {
   return consulta.data ?? [];
 }
 
+/** O que a conferência lê fora da evolução: as metas já alcançadas (E12) e as lacunas (E10). */
+function useContexto(evolucao: Evolucao): ContextoDaConferencia {
+  const jaAlcancadas = useJaAlcancadas(evolucao.assistidoId);
+  const lacunas = useQuery(lacunasOptions(evolucao.id));
+  return { jaAlcancadas, lacunas: lacunas.data ?? [] };
+}
+
 function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   const edicao = useEdicaoDaEvolucao(evolucao);
   const documentos = useOutrosDocumentos(evolucao);
-  const jaAlcancadas = useJaAlcancadas(evolucao.assistidoId);
+  const contexto = useContexto(evolucao);
   return (
     <>
       <CabecalhoDaEvolucao evolucao={evolucao} />
@@ -63,12 +72,12 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
       />
       <ImportacaoDoTita evolucao={evolucao} bloqueioDoRascunho={documentos.bloqueio} />
       <OutrosDocumentos evolucao={evolucao} estado={documentos} />
-      <PartesDaEvolucao evolucao={evolucao} edicao={edicao} jaAlcancadas={jaAlcancadas} />
+      <PartesDaEvolucao evolucao={evolucao} edicao={edicao} contexto={contexto} />
       <BarraDaEvolucao
         evolucao={evolucao}
         ocupado={edicao.ocupado || edicao.editando !== null}
         erro={edicao.erro}
-        jaAlcancadas={jaAlcancadas}
+        contexto={contexto}
         aoConcluir={() => {
           edicao.mudarSituacao('concluida');
         }}
