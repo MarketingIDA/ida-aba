@@ -13,7 +13,7 @@ const PONTO = {
 } as const;
 
 const GRADE = {
-  3: 'grid-cols-3',
+  3: 'grid-cols-2 sm:grid-cols-3',
   4: 'grid-cols-2 sm:grid-cols-4',
   largos: 'grid-cols-1 sm:grid-cols-3',
 } as const;

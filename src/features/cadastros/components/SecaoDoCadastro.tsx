@@ -77,14 +77,14 @@ export function SecaoDoCadastro(props: Readonly<Props>) {
     <section className="flex flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex max-w-[72ch] flex-col gap-1.5">
-          <p className="flex items-center gap-2 rotulo text-azul">
+          <p className="flex items-center gap-1.5 text-xs font-extrabold tracking-[0.1em] text-info-text uppercase">
             <ClipboardList aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
             Cadastros
           </p>
           <h1>{titulo}</h1>
-          <p className="text-sm font-semibold text-texto-2">{descricao}</p>
+          <p className="text-apagado">{descricao}</p>
         </div>
-        <Button onClick={aoCriar}>
+        <Button size="lg" onClick={aoCriar}>
           <Plus aria-hidden="true" />
           {botao}
         </Button>

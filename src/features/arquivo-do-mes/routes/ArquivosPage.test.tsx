@@ -86,11 +86,11 @@ describe('Arquivos recebidos, contas médicas', () => {
     expect(within(lista).getByText('1 de 4 evoluções concluídas')).toBeInTheDocument();
     expect(await violacoesDeAcessibilidade(container)).toEqual([]);
 
-    await user.click(card(/A chegar/));
+    await user.click(card(/a chegar/i));
     expect(within(lista).getByText('Outra Unidade Fictícia · Tarde')).toBeInTheDocument();
     expect(within(lista).queryByText('Unidade Fictícia · Manhã')).not.toBeInTheDocument();
 
-    await user.click(card(/Recebidos/));
+    await user.click(card(/recebidos/i));
     await user.click(within(lista).getByRole('button', { name: 'Ver 2 evoluções' }));
     const evolucoes = await within(lista).findByRole('list', { name: 'Evoluções do arquivo' });
     expect(within(evolucoes).getByText('Davi Fictício Nunes')).toBeInTheDocument();

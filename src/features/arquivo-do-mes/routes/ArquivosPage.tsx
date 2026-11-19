@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { Inbox } from 'lucide-react';
+import { Clock, FolderOpen, Inbox, User } from 'lucide-react';
 import { useState } from 'react';
 
 import { CabecalhoDoMes } from '@/components/CabecalhoDoMes';
-import { CartoesDeContagem } from '@/components/CartoesDeContagem';
+import { type CartaoDeDestaque, CartoesDeDestaque } from '@/components/CartoesDeDestaque';
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import type { CarteiraDoMes } from '@/features/arquivo-do-mes/api/arquivos.api';
@@ -12,6 +12,7 @@ import { arquivosDoMesOptions } from '@/features/arquivo-do-mes/queries';
 import { useMesDaUrl } from '@/features/arquivo-do-mes/routes/useMesDaUrl';
 import { useUsuario } from '@/hooks/useUsuario';
 import { ehErroApp } from '@/lib/erroApp';
+import { plural } from '@/utils/textos';
 import { nomeDoMes } from '@dominio/mes.ts';
 
 const SEM_FORMATO =
@@ -53,6 +54,45 @@ function ListaVazia({ todosChegaram }: Readonly<{ todosChegaram: boolean }>) {
   );
 }
 
+/** Os três cards grandes: arquivos que chegaram, evoluções neles e arquivos que faltam. */
+function cartoesDe(
+  carteiras: readonly CarteiraDoMes[],
+  enviado: string,
+  aberto: boolean,
+): CartaoDeDestaque<Filtro>[] {
+  const enviados = carteiras.filter((c) => c.arquivo !== null).length;
+  return [
+    {
+      valor: 'enviados',
+      rotulo: `Arquivos ${enviado.toLowerCase()}s`,
+      total: enviados,
+      legenda: `de ${plural(carteiras.length, 'carteira', 'carteiras')}`,
+      fundo: 'azul',
+      icone: FolderOpen,
+    },
+    {
+      valor: 'todas',
+      rotulo: 'Evoluções nos arquivos',
+      total: carteiras.reduce((soma, c) => soma + (c.arquivo?.evolucoes ?? 0), 0),
+      legenda: `de ${plural(
+        carteiras.reduce((soma, c) => soma + c.assistidos, 0),
+        'assistido',
+        'assistidos',
+      )}`,
+      fundo: 'marinho',
+      icone: User,
+    },
+    {
+      valor: 'a_chegar',
+      rotulo: aberto ? 'Arquivos a chegar' : 'Não chegaram',
+      total: carteiras.length - enviados,
+      legenda: aberto ? 'com a coordenação da unidade' : 'o mês fechou sem eles',
+      fundo: 'branco',
+      icone: Clock,
+    },
+  ];
+}
+
 interface PropsDaLista {
   carteiras: readonly CarteiraDoMes[];
   mes: string;
@@ -64,31 +104,21 @@ interface PropsDaLista {
 function ListaDosArquivos({ carteiras, mes, aberto, geral }: Readonly<PropsDaLista>) {
   const [filtro, setFiltro] = useState<Filtro | null>(null);
   const textos = TEXTOS[geral ? 'coordenacao_geral' : 'contas_medicas'];
-  const enviados = carteiras.filter((c) => c.arquivo !== null).length;
   const lista = filtrar(carteiras, filtro);
   return (
     <>
-      <CartoesDeContagem<Filtro>
+      <CartoesDeDestaque<Filtro>
         rotulo={`Arquivos de ${nomeDoMes(mes)}`}
         escolhido={filtro}
         aoEscolher={setFiltro}
-        cartoes={[
-          { valor: 'todas', rotulo: 'Carteiras', total: carteiras.length, tom: 'neutro' },
-          { valor: 'enviados', rotulo: `${textos.enviado}s`, total: enviados, tom: 'ok' },
-          {
-            valor: 'a_chegar',
-            rotulo: aberto ? 'A chegar' : 'Não chegaram',
-            total: carteiras.length - enviados,
-            tom: 'alerta',
-          },
-        ]}
+        cartoes={cartoesDe(carteiras, textos.enviado, aberto)}
       />
       {lista.length === 0 ? (
         <ListaVazia todosChegaram={filtro === 'a_chegar'} />
       ) : (
         <ul
           aria-label={`Arquivos de ${nomeDoMes(mes)}`}
-          className="divide-y divide-borda overflow-hidden rounded-xl border border-borda bg-superficie shadow-sm"
+          className="overflow-hidden rounded-xl border border-borda bg-superficie shadow-md"
         >
           {lista.map((carteira) => (
             <LinhaDoArquivo

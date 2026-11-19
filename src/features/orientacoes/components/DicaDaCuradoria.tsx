@@ -1,4 +1,5 @@
 import { Situacao } from '@/components/Situacao';
+import { cn } from '@/lib/utils';
 import type { Dica, SituacaoDaDica } from '@/features/orientacoes/api/orientacoes.api';
 import { DecisaoDaDica } from '@/features/orientacoes/components/DecisaoDaDica';
 import type { Curadoria } from '@/features/orientacoes/queries';
@@ -22,34 +23,63 @@ function decisaoDa(dica: Dica): string {
   return dica.motivo === null ? quem : `${quem} Motivo: ${dica.motivo}`;
 }
 
-/** Uma dica na curadoria: o campo, quem sugeriu, a dica, o que a IA tinha escrito e a decisão. */
+const COLUNA = 'flex min-w-0 flex-col gap-1.5';
+const TITULO_DA_COLUNA = 'rotulo text-apagado';
+
+/** As duas colunas do protótipo: o que a IA tinha escrito e a dica. */
+function TextoEDica({ dica }: Readonly<{ dica: Dica }>) {
+  return (
+    <div className="grid gap-4 min-[861px]:grid-cols-2 min-[861px]:gap-6">
+      <div className={COLUNA}>
+        <p className={TITULO_DA_COLUNA}>Texto original da IA</p>
+        <p className="border-l-2 border-borda-forte pl-3 text-[0.8125rem] whitespace-pre-line text-texto-2">
+          {dica.textoOriginal === '' ? 'A IA deixou este bloco em branco.' : dica.textoOriginal}
+        </p>
+      </div>
+      <div className={COLUNA}>
+        <p className={TITULO_DA_COLUNA}>Dica</p>
+        <p className="border-l-2 border-azul pl-3 text-sm font-bold whitespace-pre-line text-marinho">
+          {dica.dica}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Uma dica na curadoria: o campo, quem sugeriu, o texto da IA, a dica e a decisão. */
 export function DicaDaCuradoria({
   dica,
   curadoria,
 }: Readonly<{ dica: Dica; curadoria: Curadoria }>) {
   const { rotulo, tom } = SITUACAO_DA_DICA[dica.situacao];
   const ocupado = curadoria.aprovar.isPending || curadoria.descartar.isPending;
+  const pendente = dica.situacao === 'pendente';
   return (
-    <li className="flex flex-col gap-3 px-4 py-4 sm:px-5">
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-        <b className="text-sm text-marinho">{ROTULO_DO_CAMPO[dica.campo]}</b>
-        <Situacao rotulo={rotulo} tom={tom} />
-        <span className="text-caption font-semibold text-apagado">
-          Sugerida por {dica.criadoPor} em {dataEHora(dica.criadoEm)}
-        </span>
+    <li
+      className={cn(
+        'flex flex-col gap-3 border-b border-borda px-5 py-4 last:border-b-0 min-[861px]:px-[22px]',
+        pendente && 'bg-[linear-gradient(90deg,var(--alerta-soft),transparent_70%)]',
+      )}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          <b className="flex items-center gap-2 text-sm text-marinho">
+            <span
+              aria-hidden="true"
+              className="grid size-[22px] place-items-center rounded-full border border-info-border bg-info-soft font-serif text-xs font-bold text-azul italic"
+            >
+              i
+            </span>
+            {ROTULO_DO_CAMPO[dica.campo]}
+          </b>
+          <span className="text-[0.78rem] font-semibold text-apagado">
+            {dica.criadoPor} · {dataEHora(dica.criadoEm)}
+          </span>
+        </div>
+        <Situacao rotulo={rotulo} tom={tom} pequena />
       </div>
-      <p className="max-w-[75ch] text-sm font-semibold whitespace-pre-line text-texto">
-        {dica.dica}
-      </p>
-      <details className="max-w-[75ch] text-sm">
-        <summary className="cursor-pointer rounded-sm text-caption font-bold text-azul foco-anel">
-          O que a IA tinha escrito
-        </summary>
-        <p className="mt-2 whitespace-pre-line text-texto-2">
-          {dica.textoOriginal === '' ? 'A IA deixou este bloco em branco.' : dica.textoOriginal}
-        </p>
-      </details>
-      {dica.situacao === 'pendente' ? (
+      <TextoEDica dica={dica} />
+      {pendente ? (
         <DecisaoDaDica
           dica={dica}
           ocupado={ocupado}
@@ -61,7 +91,7 @@ export function DicaDaCuradoria({
           }}
         />
       ) : (
-        <p className="text-caption font-bold text-texto-2">{decisaoDa(dica)}</p>
+        <p className="text-[0.78rem] font-semibold text-apagado">{decisaoDa(dica)}</p>
       )}
     </li>
   );

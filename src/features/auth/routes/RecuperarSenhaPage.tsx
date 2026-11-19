@@ -53,12 +53,7 @@ export function RecuperarSenhaPage() {
             <Input id="email" name="email" type="email" autoComplete="username" required />
           </div>
           {erro !== null && <ErroDeAcesso>{erro}</ErroDeAcesso>}
-          <Button
-            type="submit"
-            size="lg"
-            disabled={estado === 'enviando'}
-            className="mt-2 font-display"
-          >
+          <Button type="submit" size="lg" disabled={estado === 'enviando'} className="mt-2">
             {estado === 'enviando' ? 'Enviando…' : 'Enviar o link'}
           </Button>
         </form>

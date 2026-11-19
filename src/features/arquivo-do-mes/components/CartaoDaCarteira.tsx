@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck } from 'lucide-react';
+import { Check, CircleX } from 'lucide-react';
 import { type ReactNode, useId } from 'react';
 import { Link } from 'react-router';
 
@@ -34,19 +34,24 @@ function Exigencia({
   titulo,
   children,
 }: Readonly<{ ok: boolean; titulo: string; children: ReactNode }>) {
-  const Icone = ok ? CircleCheck : CircleAlert;
+  const Icone = ok ? Check : CircleX;
   return (
-    <li className="flex items-start gap-2.5">
-      <Icone
+    <li className="flex items-start gap-3">
+      <span
         aria-hidden="true"
-        className={cn('mt-0.5 size-[18px] shrink-0', ok ? 'text-ok-ic' : 'text-bloq-ic')}
-      />
+        className={cn(
+          'grid size-6 shrink-0 place-items-center rounded-[7px]',
+          ok ? 'bg-ok-soft text-ok-text' : 'bg-bloq-soft text-bloq-text',
+        )}
+      >
+        <Icone className="size-3.5" strokeWidth={2.4} />
+      </span>
       <span className="flex flex-col gap-0.5">
-        <b className="text-sm text-marinho">
+        <b className="text-sm font-bold text-marinho">
           <span className="sr-only">{ok ? 'Pronto: ' : 'Falta: '}</span>
           {titulo}
         </b>
-        <span className="text-caption font-semibold text-texto-2">{children}</span>
+        <span className="text-[0.8125rem] text-texto-2">{children}</span>
       </span>
     </li>
   );
@@ -55,7 +60,7 @@ function Exigencia({
 function OQueFalta({ carteira }: Readonly<{ carteira: CarteiraDoMes }>) {
   const pendentes = faltam(carteira);
   return (
-    <ul aria-label="O que o envio exige" className="flex flex-col gap-3">
+    <ul aria-label="O que o envio exige" className="flex flex-col gap-3.5">
       <Exigencia
         ok={pendentes === 0 && carteira.concluidas > 0}
         titulo={textoDoAndamento(carteira)}
@@ -95,7 +100,7 @@ function situacaoDe(carteira: CarteiraDoMes, aberto: boolean) {
   if (!aberto) return { rotulo: 'Não enviado', tom: 'neutro' } as const;
   if (prontoParaEnviar(carteira)) return { rotulo: 'Pronto para enviar', tom: 'info' } as const;
   const pendencias = (faltam(carteira) > 0 ? 1 : 0) + (carteira.comAssinatura === true ? 0 : 1);
-  return { rotulo: plural(pendencias, 'pendência', 'pendências'), tom: 'alerta' } as const;
+  return { rotulo: plural(pendencias, 'pendência', 'pendências'), tom: 'neutro' } as const;
 }
 
 function Corpo({ carteira, mes, aberto }: Readonly<Props>) {
@@ -144,13 +149,21 @@ export function CartaoDaCarteira(props: Readonly<Props>) {
   return (
     <article
       aria-labelledby={titulo}
-      className="flex flex-col gap-4 rounded-xl border border-borda bg-superficie p-5 shadow-md sm:p-6"
+      className="overflow-hidden rounded-xl border border-borda bg-superficie shadow-md"
     >
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id={titulo}>{nomeDaCarteira(props.carteira)}</h2>
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-borda px-5 py-[18px] min-[861px]:px-[22px]">
+        <div>
+          <h2 id={titulo}>{nomeDaCarteira(props.carteira)}</h2>
+          <p className="mt-0.5 text-[0.8125rem] text-texto-2">
+            Vai o arquivo do mês inteiro, não cada evolução. Você envia quando a carteira toda
+            estiver concluída.
+          </p>
+        </div>
         <Situacao rotulo={situacao.rotulo} tom={situacao.tom} />
       </header>
-      <Corpo {...props} />
+      <div className="flex flex-col gap-4 px-5 py-[18px] min-[861px]:px-[22px]">
+        <Corpo {...props} />
+      </div>
     </article>
   );
 }
