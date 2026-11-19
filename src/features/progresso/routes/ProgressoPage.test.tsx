@@ -50,6 +50,14 @@ function servirProgresso() {
     http.get(`${REST}/leituras_de_nivel`, () =>
       HttpResponse.json([{ evolucao_id: EVOLUCAO, situacao: 'lida' }]),
     ),
+    // A carteira: o próprio assistido e dois lidos sem meta independente. Sem nome nem meta.
+    http.post(`${REST}/rpc/independencia_da_carteira`, () =>
+      HttpResponse.json([
+        { assistido: 1, independente_em: '2026-10-20' },
+        { assistido: 2, independente_em: null },
+        { assistido: 3, independente_em: null },
+      ]),
+    ),
     http.get(`${REST}/niveis_de_apoio`, () =>
       HttpResponse.json([
         nivel(2, '2026-10-01', 2),
@@ -61,7 +69,7 @@ function servirProgresso() {
 }
 
 describe('Evolução das metas em gráfico (E27)', () => {
-  it('mostra a escada de cada meta, filtra pelas que pedem atenção e troca para a tabela', async () => {
+  it('mostra a escada de cada meta e a mediana da carteira, filtra pelas que pedem atenção e troca para a tabela', async () => {
     servirProgresso();
     const { user, container } = renderWithProviders(
       <Routes>
@@ -75,6 +83,10 @@ describe('Evolução das metas em gráfico (E27)', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('de 2 metas já chegou à independência')).toBeInTheDocument();
     expect(screen.getByText('Mesmo degrau há 4 semanas')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Acima da mediana da carteira, que é de 0 metas'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Mediana da carteira · 3 assistidos')).toBeInTheDocument();
     expect(await violacoesDeAcessibilidade(container)).toEqual([]);
 
     await user.click(screen.getByRole('button', { name: /Pedem atenção/ }));
@@ -86,5 +98,6 @@ describe('Evolução das metas em gráfico (E27)', () => {
       screen.getByRole('table', { name: 'Cada sessão, com a frase da análise' }),
     ).toBeInTheDocument();
     expect(screen.getByText('Trecho fictício de 2026-10-01.')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Mediana da carteira' })).toBeInTheDocument();
   });
 });

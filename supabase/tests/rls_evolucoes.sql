@@ -364,6 +364,39 @@ begin
     insert into resultado (teste, ok) values ('o cliente não grava o nível de apoio (E27)',
       not has_function_privilege('authenticated', 'evolucao.gravar_niveis(bigint, text, jsonb)', 'execute'));
   end;
+  -- Mediana da carteira (E27): só os assistidos lidos contam, sem identificar ninguém, e cada um
+  -- só alcança a carteira que já lê.
+  insert into resultado (teste, ok) select 'mediana da carteira: só o assistido lido entra, e sem meta independente conta zero (E27)',
+    (select count(*) = 1 and bool_and(independente_em is null) and bool_and(assistido = 1)
+       from evolucao.independencia_da_carteira(
+         (select assistido_id from evolucao.evolucoes where id = nova), inicio, fim));
+  execute 'set local role service_role';
+  perform evolucao.gravar_niveis(imp, 'lida', jsonb_build_array(jsonb_build_object(
+    'meta_id', meta_dois, 'data', inicio + 3, 'nivel', 5, 'trecho', 'Análise fictícia um.')));
+  execute 'set local role authenticated';
+  insert into resultado (teste, ok) select 'mediana da carteira: o dia em que a meta chegou à independência (E27)',
+    (select count(*) = 1 and bool_and(independente_em = inicio + 3)
+       from evolucao.independencia_da_carteira(
+         (select assistido_id from evolucao.evolucoes where id = nova), inicio, fim));
+  perform set_config('teste.assistido_lido',
+    (select assistido_id from evolucao.evolucoes where id = nova)::text, true);
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  insert into resultado (teste, ok) select 'mediana da carteira: outro coordenador não alcança a carteira alheia (E27)',
+    (select count(*) = 0 from evolucao.independencia_da_carteira(
+       current_setting('teste.assistido_lido')::bigint, inicio, fim));
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000004","role":"authenticated"}', true);
+  insert into resultado (teste, ok) select 'mediana da carteira: contas médicas não lê (E27)',
+    (select count(*) = 0 from evolucao.independencia_da_carteira(
+       current_setting('teste.assistido_lido')::bigint, inicio, fim));
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+  insert into resultado (teste, ok) select 'mediana da carteira: a coordenação geral lê (E27)',
+    (select count(*) = 1 from evolucao.independencia_da_carteira(
+       current_setting('teste.assistido_lido')::bigint, inicio, fim));
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
   -- Importar de novo apaga os níveis do PDF anterior; a leitura atrasada do anterior é recusada.
   insert into evolucao.importacoes (evolucao_id, arquivo_nome, favorecido, analises)
     select evolucao_id, 'ficticio-2.pdf', favorecido, analises from evolucao.importacoes where id = imp;

@@ -28,3 +28,15 @@ export function semanasDaJanela(inicio: string, fim: string): string[] {
 /** O número da semana do dia, contado da segunda-feira da primeira semana. */
 export const semanaDe = (d: string, primeiraSegunda: number) =>
   Math.floor((dias(d) - primeiraSegunda) / 7);
+
+/** Quantas das datas já tinham acontecido em cada semana da janela: a contagem acumulada. */
+export function acumuladoPorSemana(
+  datas: readonly string[],
+  inicio: string,
+  fim: string,
+): number[] {
+  const primeira = segunda(inicio);
+  return semanasDaJanela(inicio, fim).map(
+    (_, w) => datas.filter((d) => semanaDe(d, primeira) <= w).length,
+  );
+}

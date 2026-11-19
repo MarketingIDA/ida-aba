@@ -9,7 +9,7 @@
  * Domínio puro: a tela só desenha.
  */
 
-import { dias, segunda, semanaDe, semanasDaJanela } from './janela.ts';
+import { acumuladoPorSemana, dias, segunda, semanaDe, semanasDaJanela } from './janela.ts';
 import {
   type AnaliseDaMeta,
   DIAS_PARADA,
@@ -166,11 +166,10 @@ export function calcularProgresso(
     analisar(m, naJanela, primeiraSegunda, semanas.length, ultimo, fim),
   );
   const ativas = analises.filter((x) => x.meta.programa !== null && x.meta.situacao !== 'suspensa');
-  const porSemana = semanas.map(
-    (_, w) =>
-      ativas.filter(
-        (x) => x.independente !== null && semanaDe(x.independente.data, primeiraSegunda) <= w,
-      ).length,
+  const porSemana = acumuladoPorSemana(
+    ativas.flatMap((x) => (x.independente === null ? [] : [x.independente.data])),
+    inicio,
+    fim,
   );
   const comNivel = naJanela.filter((p) => p.nivel !== null);
   return {

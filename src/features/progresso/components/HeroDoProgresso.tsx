@@ -1,11 +1,11 @@
-import { AlertTriangle, ChartLine, ChevronRight, TrendingUp } from 'lucide-react';
+import { AlertTriangle, ChartLine, ChevronRight, TrendingDown, TrendingUp } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import {
   GraficoDeIndependencia,
   type PropsDoGrafico,
 } from '@/features/progresso/components/GraficoDeIndependencia';
-import { mesDoPeriodo, nomeDoNivel } from '@/features/progresso/textos';
+import { mesDoPeriodo, nomeDoNivel, numero } from '@/features/progresso/textos';
 import { plural } from '@/utils/textos';
 import { formatarData } from '@dominio/mes.ts';
 import type { AnaliseDaMeta } from '@dominio/progresso.ts';
@@ -90,6 +90,41 @@ function Destaques({ progresso, periodos }: Readonly<PropsDoGrafico>) {
   );
 }
 
+/** Acima, abaixo ou na mediana da carteira, no fim da janela. */
+function Comparacao({ progresso, mediana }: Readonly<PropsDoGrafico>) {
+  if (mediana === null) return null;
+  const fim = mediana.porSemana.at(-1) ?? 0;
+  const dif = progresso.independentes - fim;
+  const Seta = dif >= 0 ? TrendingUp : TrendingDown;
+  let posicao = 'Na';
+  if (dif > 0) posicao = 'Acima da';
+  else if (dif < 0) posicao = 'Abaixo da';
+  return (
+    <p className="inline-flex items-center gap-1.5 text-sm font-bold text-[#9cc8ff]">
+      <Seta aria-hidden="true" className="size-4" />
+      {posicao} mediana da carteira, que é de {numero(fim)} {fim === 1 ? 'meta' : 'metas'}
+    </p>
+  );
+}
+
+/** A legenda das duas linhas: o assistido em azul claro, a carteira em cinza. */
+function Legenda({ nome, mediana }: Readonly<PropsDoGrafico>) {
+  if (mediana === null) return null;
+  const item = 'inline-flex items-center gap-1.5';
+  return (
+    <p className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-caption font-bold text-[#b9cce4]">
+      <span className={item}>
+        <i aria-hidden="true" className="inline-block h-[3px] w-4 rounded-full bg-[#5ca8ff]" />
+        {nome}
+      </span>
+      <span className={item}>
+        <i aria-hidden="true" className="inline-block h-[2px] w-4 rounded-full bg-[#6a7891]" />
+        Mediana da carteira · {plural(mediana.assistidos, 'assistido', 'assistidos')}
+      </span>
+    </p>
+  );
+}
+
 /** O topo da tela: quantas metas chegaram à independência, os destaques e o gráfico. */
 export function HeroDoProgresso(props: Readonly<PropsDoGrafico>) {
   const { nome, progresso } = props;
@@ -110,6 +145,7 @@ export function HeroDoProgresso(props: Readonly<PropsDoGrafico>) {
             de {plural(progresso.ativas, 'meta', 'metas')} {chegou} à independência
           </span>
         </p>
+        <Comparacao {...props} />
         <p className="max-w-[50ch] text-sm font-semibold text-[#b9cce4]">
           Nível de apoio lido pela IA em {plural(progresso.dias, 'dia de sessão', 'dias de sessão')}
           , de {formatarData(progresso.inicio)} a {formatarData(progresso.fim)}. O Tita não traz
@@ -121,6 +157,7 @@ export function HeroDoProgresso(props: Readonly<PropsDoGrafico>) {
         <figcaption className="mb-2 text-base font-bold text-white">
           Metas independentes, semana a semana
         </figcaption>
+        <Legenda {...props} />
         <GraficoDeIndependencia {...props} />
       </figure>
     </section>
