@@ -1,10 +1,15 @@
-import { ChartLine, FileText, List, Target, X } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router';
+import { ChartLine, List, X } from 'lucide-react';
+import { useSearchParams } from 'react-router';
 
 import { CartoesDeContagem } from '@/components/CartoesDeContagem';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import type { Meta } from '@/features/cadastros/api/metas.api';
 import type { PeriodoDaEvolucao } from '@/features/progresso/api/progresso.api';
+import {
+  AcoesDoProgresso,
+  BaixarPdf,
+  VoltarParaEvolucoes,
+} from '@/features/progresso/components/AcoesDoProgresso';
 import { EscadaDaMeta } from '@/features/progresso/components/EscadaDaMeta';
 import { HeroDoProgresso } from '@/features/progresso/components/HeroDoProgresso';
 import { MapaDeSessoes } from '@/features/progresso/components/MapaDeSessoes';
@@ -139,32 +144,6 @@ function Cabecalho({ visao }: Readonly<{ visao: Visao }>) {
   );
 }
 
-function Rodape({
-  assistidoId,
-  evolucaoId,
-}: Readonly<{ assistidoId: number; evolucaoId: string | undefined }>) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Link
-        to={`/metas/${String(assistidoId)}`}
-        className={buttonVariants({ variant: 'secondary', size: 'lg' })}
-      >
-        <Target aria-hidden="true" />
-        Cadastro de metas
-      </Link>
-      {evolucaoId !== undefined && (
-        <Link
-          to={`/evolucoes/${evolucaoId}`}
-          className={buttonVariants({ variant: 'primary', size: 'lg' })}
-        >
-          <FileText aria-hidden="true" />
-          Evolução mais recente
-        </Link>
-      )}
-    </div>
-  );
-}
-
 interface Props {
   nome: string;
   assistidoId: number;
@@ -188,6 +167,16 @@ export function ProgressoDoAssistido({
   const ordenados = [...periodos].reverse();
   return (
     <>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <VoltarParaEvolucoes />
+        <BaixarPdf
+          nome={nome}
+          assistidoId={assistidoId}
+          progresso={progresso}
+          mediana={mediana}
+          periodos={periodos}
+        />
+      </div>
       <HeroDoProgresso nome={nome} progresso={progresso} periodos={ordenados} mediana={mediana} />
       <CartoesDeContagem<FiltroDoProgresso>
         rotulo="Situação das metas no gráfico"
@@ -207,7 +196,7 @@ export function ProgressoDoAssistido({
       ) : (
         <Graficos progresso={progresso} periodos={ordenados} filtro={visao.filtro} />
       )}
-      <Rodape assistidoId={assistidoId} evolucaoId={periodos[0]?.evolucaoId} />
+      <AcoesDoProgresso assistidoId={assistidoId} periodos={periodos} />
     </>
   );
 }

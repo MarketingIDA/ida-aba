@@ -5,7 +5,12 @@ import {
   GraficoDeIndependencia,
   type PropsDoGrafico,
 } from '@/features/progresso/components/GraficoDeIndependencia';
-import { mesDoPeriodo, nomeDoNivel, numero } from '@/features/progresso/textos';
+import {
+  chegaram,
+  comparacaoComMediana,
+  mesDoPeriodo,
+  nomeDoNivel,
+} from '@/features/progresso/textos';
 import { plural } from '@/utils/textos';
 import { formatarData } from '@dominio/mes.ts';
 import type { AnaliseDaMeta } from '@dominio/progresso.ts';
@@ -92,17 +97,13 @@ function Destaques({ progresso, periodos }: Readonly<PropsDoGrafico>) {
 
 /** Acima, abaixo ou na mediana da carteira, no fim da janela. */
 function Comparacao({ progresso, mediana }: Readonly<PropsDoGrafico>) {
-  if (mediana === null) return null;
-  const fim = mediana.porSemana.at(-1) ?? 0;
-  const dif = progresso.independentes - fim;
-  const Seta = dif >= 0 ? TrendingUp : TrendingDown;
-  let posicao = 'Na';
-  if (dif > 0) posicao = 'Acima da';
-  else if (dif < 0) posicao = 'Abaixo da';
+  const comparacao = comparacaoComMediana(progresso.independentes, mediana);
+  if (comparacao === null) return null;
+  const Seta = comparacao.subiu ? TrendingUp : TrendingDown;
   return (
     <p className="inline-flex items-center gap-1.5 text-sm font-bold text-[#9cc8ff]">
       <Seta aria-hidden="true" className="size-4" />
-      {posicao} mediana da carteira, que é de {numero(fim)} {fim === 1 ? 'meta' : 'metas'}
+      {comparacao.texto}
     </p>
   );
 }
@@ -128,7 +129,6 @@ function Legenda({ nome, mediana }: Readonly<PropsDoGrafico>) {
 /** O topo da tela: quantas metas chegaram à independência, os destaques e o gráfico. */
 export function HeroDoProgresso(props: Readonly<PropsDoGrafico>) {
   const { nome, progresso } = props;
-  const chegou = progresso.independentes === 1 ? 'já chegou' : 'já chegaram';
   return (
     <section className="grid gap-7 rounded-3xl bg-marinho p-6 text-white shadow-lg sm:p-7 lg:grid-cols-[minmax(0,.92fr)_minmax(0,1.25fr)] lg:items-center">
       <div className="flex flex-col gap-3">
@@ -142,7 +142,8 @@ export function HeroDoProgresso(props: Readonly<PropsDoGrafico>) {
             {progresso.independentes}
           </b>
           <span className="max-w-[15ch] font-display text-xl leading-tight font-bold">
-            de {plural(progresso.ativas, 'meta', 'metas')} {chegou} à independência
+            de {plural(progresso.ativas, 'meta', 'metas')} {chegaram(progresso.independentes)} à
+            independência
           </span>
         </p>
         <Comparacao {...props} />
