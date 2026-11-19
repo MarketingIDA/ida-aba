@@ -1,14 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Pencil, Plus, Target } from 'lucide-react';
+import { ArrowLeft, Plus, Target } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { CartoesDeContagem } from '@/components/CartoesDeContagem';
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
-import { Situacao } from '@/components/Situacao';
+import { BarraInferior } from '@/components/BarraInferior';
 import { TituloDasMetas } from '@/features/cadastros/components/TituloDasMetas';
 import { Button } from '@/components/ui/button';
+import { ListaDeMetas } from '@/features/cadastros/components/ListaDeMetas';
 import {
   type DadosDaMeta,
   type Meta,
@@ -31,61 +32,31 @@ import { ehErroApp } from '@/lib/erroApp';
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise a coordenação geral.';
 
-function LinhaDaMeta({ meta, aoAlterar }: Readonly<{ meta: Meta; aoAlterar?: () => void }>) {
-  const { rotulo, tom } = SITUACAO_DA_META[meta.situacao];
-  return (
-    <li className="flex flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-5">
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <b className="text-sm text-marinho">{meta.texto}</b>
-        <span className="text-caption font-semibold text-apagado">
-          {meta.programa ?? 'Sem programa'} · critério: {meta.criterio}
-        </span>
-      </span>
-      <span className="flex items-center gap-2">
-        <Situacao rotulo={rotulo} tom={tom} />
-        {aoAlterar !== undefined && (
-          <Button variant="secondary" size="sm" onClick={aoAlterar}>
-            <Pencil aria-hidden="true" />
-            Alterar
-          </Button>
-        )}
-      </span>
-    </li>
-  );
-}
+/** A linha pequena de cada card, como no protótipo. */
+const LEGENDA: Record<SituacaoDaMeta, string> = {
+  desenvolvimento: 'entram nas metas do mês',
+  alcancada: 'saem das metas do mês',
+  manutencao: 'alcançadas, acompanhadas',
+  suspensa: 'fora das metas do mês',
+};
 
-/** As metas do filtro, ou o convite a cadastrar a primeira. */
-function ListaDeMetas({
-  metas,
-  semNenhuma,
-  aoAlterar,
-}: Readonly<{ metas: readonly Meta[]; semNenhuma: boolean; aoAlterar?: (meta: Meta) => void }>) {
-  if (metas.length === 0) {
-    return (
-      <EmptyState
-        icone={Target}
-        titulo={semNenhuma ? 'Nenhuma meta cadastrada' : 'Nenhuma meta nesta situação'}
-        descricao="As metas em desenvolvimento entram como ponto de partida das metas para o mês atual da evolução."
-      />
-    );
-  }
+/** A barra do pé da tela, só para quem cadastra: a regra e "Nova meta". */
+function BarraDasMetas({ aoIncluir }: Readonly<{ aoIncluir: () => void }>) {
   return (
-    <ul
-      aria-label="Metas"
-      className="divide-y divide-borda overflow-hidden rounded-xl border border-borda bg-superficie shadow-sm"
-    >
-      {metas.map((meta) => (
-        <LinhaDaMeta
-          key={meta.id}
-          meta={meta}
-          {...(aoAlterar !== undefined && {
-            aoAlterar: () => {
-              aoAlterar(meta);
-            },
-          })}
-        />
-      ))}
-    </ul>
+    <BarraInferior
+      regra={
+        <>
+          <Target aria-hidden="true" className="size-4 shrink-0" />
+          As metas em desenvolvimento entram nas metas para o mês atual do rascunho.
+        </>
+      }
+      acoes={
+        <Button size="lg" onClick={aoIncluir}>
+          <Plus aria-hidden="true" />
+          Nova meta
+        </Button>
+      }
+    />
   );
 }
 
@@ -121,15 +92,12 @@ function MetasDoAssistido({ assistidoId, metas, podeAlterar }: Readonly<PropsDas
           rotulo: SITUACAO_DA_META[valor].plural,
           total: contagem[valor],
           tom: SITUACAO_DA_META[valor].tom,
+          legenda: LEGENDA[valor],
         }))}
       />
-      {podeAlterar && (
-        <Button size="lg" className="self-start" onClick={gaveta.abrirNovo}>
-          <Plus aria-hidden="true" />
-          Nova meta
-        </Button>
-      )}
+      {podeAlterar && <BarraDasMetas aoIncluir={gaveta.abrirNovo} />}
       <ListaDeMetas
+        titulo={filtro === null ? 'Plano terapêutico' : SITUACAO_DA_META[filtro].plural}
         metas={lista}
         semNenhuma={metas.length === 0}
         {...(podeAlterar && { aoAlterar: gaveta.abrirEdicao })}

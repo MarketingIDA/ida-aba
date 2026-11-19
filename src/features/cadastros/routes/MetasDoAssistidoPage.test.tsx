@@ -63,9 +63,7 @@ describe('Metas do assistido, coordenador', () => {
       screen.getByRole('heading', { level: 1, name: 'Ana Fictícia Souza' }),
     ).toBeInTheDocument();
     expect(within(lista).getAllByRole('listitem')).toHaveLength(2);
-    expect(
-      within(lista).getByText('Imitação · critério: 80% em três sessões seguidas'),
-    ).toBeInTheDocument();
+    expect(within(lista).getByText('80% em três sessões seguidas')).toBeInTheDocument();
     expect(await violacoesDeAcessibilidade(container)).toEqual([]);
 
     await user.click(card(/Alcançadas/));
@@ -99,7 +97,7 @@ describe('Metas dos assistidos', () => {
       'href',
       '/metas/1',
     );
-    expect(within(lista).getByText('1 meta em desenvolvimento · 1 alcançadas')).toBeInTheDocument();
-    expect(within(lista).getAllByText('Ainda sem metas cadastradas').length).toBeGreaterThan(0);
+    expect(within(lista).getByText('1 em desenvolvimento')).toBeInTheDocument();
+    expect(within(lista).getAllByText(/sem metas cadastradas/).length).toBeGreaterThan(0);
   });
 });

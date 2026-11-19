@@ -1,6 +1,7 @@
 import { ChartLine, List, X } from 'lucide-react';
 import { useSearchParams } from 'react-router';
 
+import { Abas } from '@/components/Abas';
 import { CartoesDeContagem } from '@/components/CartoesDeContagem';
 import { Button } from '@/components/ui/button';
 import type { Meta } from '@/features/cadastros/api/metas.api';
@@ -12,7 +13,7 @@ import {
 } from '@/features/progresso/components/AcoesDoProgresso';
 import { EscadaDaMeta } from '@/features/progresso/components/EscadaDaMeta';
 import { HeroDoProgresso } from '@/features/progresso/components/HeroDoProgresso';
-import { MapaDeSessoes } from '@/features/progresso/components/MapaDeSessoes';
+import { LegendaDoMapa, MapaDeSessoes } from '@/features/progresso/components/MapaDeSessoes';
 import { TabelaDoProgresso } from '@/features/progresso/components/TabelaDoProgresso';
 import { useMedianaDaCarteira } from '@/features/progresso/useMedianaDaCarteira';
 import {
@@ -24,11 +25,21 @@ import {
   type Progresso,
 } from '@dominio/progresso.ts';
 
-const CARTOES: { valor: FiltroDoProgresso; rotulo: string; tom: 'alerta' | 'ok' | 'neutro' }[] = [
-  { valor: 'desenvolvimento', rotulo: 'Em desenvolvimento', tom: 'neutro' },
-  { valor: 'alcancada', rotulo: 'Alcançadas', tom: 'ok' },
-  { valor: 'manutencao', rotulo: 'Em manutenção', tom: 'ok' },
-  { valor: 'atencao', rotulo: 'Pedem atenção', tom: 'alerta' },
+const CARTOES: {
+  valor: FiltroDoProgresso;
+  rotulo: string;
+  tom: 'alerta' | 'ok' | 'info';
+  legenda: string;
+}[] = [
+  {
+    valor: 'desenvolvimento',
+    rotulo: 'Em desenvolvimento',
+    tom: 'info',
+    legenda: 'subindo a escada',
+  },
+  { valor: 'alcancada', rotulo: 'Alcançadas', tom: 'ok', legenda: 'saíram das metas do mês' },
+  { valor: 'manutencao', rotulo: 'Em manutenção', tom: 'ok', legenda: 'alcançadas, acompanhadas' },
+  { valor: 'atencao', rotulo: 'Pedem atenção', tom: 'alerta', legenda: 'paradas ou sem registro' },
 ];
 
 /** O filtro do card e a aba (gráficos ou tabela) moram na URL: dá para voltar e mandar o link. */
@@ -72,15 +83,20 @@ function Graficos({
           <EscadaDaMeta key={x.meta.id} analise={x} progresso={progresso} periodos={periodos} />
         ))}
       </div>
-      <section className="flex flex-col gap-3 rounded-xl border border-borda bg-superficie p-5 shadow-sm">
-        <div>
-          <h2>Mapa de sessões</h2>
-          <p className="text-sm text-texto-2">
-            Quantas sessões por semana trabalharam cada meta. Semana em branco: o programa não
-            apareceu nas análises lidas.
-          </p>
+      <section className="rounded-xl border border-borda bg-superficie shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-borda px-[22px] py-[18px]">
+          <div>
+            <h2>Mapa de sessões</h2>
+            <p className="mt-0.5 text-[0.8125rem] text-texto-2">
+              Quantas sessões por semana trabalharam cada meta. Semana em branco: o programa não
+              apareceu nas análises lidas.
+            </p>
+          </div>
+          <LegendaDoMapa />
         </div>
-        <MapaDeSessoes metas={metas} semanas={progresso.semanas} />
+        <div className="px-[22px] py-[18px]">
+          <MapaDeSessoes metas={metas} semanas={progresso.semanas} />
+        </div>
       </section>
     </>
   );
@@ -89,7 +105,7 @@ function Graficos({
 /** Os botões da seção: tirar o filtro e trocar entre gráficos e tabela. */
 function Botoes({ visao }: Readonly<{ visao: Visao }>) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2.5">
       {visao.filtro !== null && (
         <Button
           variant="secondary"
@@ -102,28 +118,17 @@ function Botoes({ visao }: Readonly<{ visao: Visao }>) {
           Tirar o filtro
         </Button>
       )}
-      <Button
-        variant={visao.tabela ? 'ghost' : 'secondary'}
-        size="sm"
-        aria-pressed={!visao.tabela}
-        onClick={() => {
-          visao.verTabela(false);
+      <Abas
+        rotulo="Ver como"
+        escolhida={visao.tabela ? 'tabela' : 'graficos'}
+        aoEscolher={(v) => {
+          visao.verTabela(v === 'tabela');
         }}
-      >
-        <ChartLine aria-hidden="true" />
-        Gráficos
-      </Button>
-      <Button
-        variant={visao.tabela ? 'secondary' : 'ghost'}
-        size="sm"
-        aria-pressed={visao.tabela}
-        onClick={() => {
-          visao.verTabela(true);
-        }}
-      >
-        <List aria-hidden="true" />
-        Tabela
-      </Button>
+        abas={[
+          { valor: 'graficos', rotulo: 'Gráficos', icone: ChartLine },
+          { valor: 'tabela', rotulo: 'Tabela', icone: List },
+        ]}
+      />
     </div>
   );
 }
@@ -131,7 +136,7 @@ function Botoes({ visao }: Readonly<{ visao: Visao }>) {
 function Cabecalho({ visao }: Readonly<{ visao: Visao }>) {
   const titulo = CARTOES.find((c) => c.valor === visao.filtro)?.rotulo ?? 'A escada de cada meta';
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="mt-1.5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2>{titulo}</h2>
         <p className="max-w-[62ch] text-sm text-texto-2">

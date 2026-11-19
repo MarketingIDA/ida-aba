@@ -13,12 +13,12 @@ import {
 /** Rótulo e cor fixa de cada situação da meta (E23). */
 export const SITUACAO_DA_META: Record<
   SituacaoDaMeta,
-  { rotulo: string; plural: string; tom: 'alerta' | 'ok' | 'neutro' | 'bloq' }
+  { rotulo: string; plural: string; tom: 'info' | 'ok' | 'neutro' }
 > = {
-  desenvolvimento: { rotulo: 'Em desenvolvimento', plural: 'Em desenvolvimento', tom: 'alerta' },
+  desenvolvimento: { rotulo: 'Em desenvolvimento', plural: 'Em desenvolvimento', tom: 'info' },
   alcancada: { rotulo: 'Alcançada', plural: 'Alcançadas', tom: 'ok' },
-  manutencao: { rotulo: 'Em manutenção', plural: 'Em manutenção', tom: 'neutro' },
-  suspensa: { rotulo: 'Suspensa', plural: 'Suspensas', tom: 'bloq' },
+  manutencao: { rotulo: 'Em manutenção', plural: 'Em manutenção', tom: 'ok' },
+  suspensa: { rotulo: 'Suspensa', plural: 'Suspensas', tom: 'neutro' },
 };
 
 /** Os limites são os do banco; o texto da meta cabe numa meta da evolução (500 letras). */

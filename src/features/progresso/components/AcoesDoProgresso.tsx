@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, FileDown, FileText, Target } from 'lucide-react';
+import { ArrowLeft, ChartLine, FileDown, FileText, Target } from 'lucide-react';
 import { Link } from 'react-router';
 
+import { BarraInferior } from '@/components/BarraInferior';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { CompartilharRelatorio } from '@/features/progresso/components/CompartilharRelatorio';
 import { baixarRelatorio } from '@/features/progresso/pdf/baixarRelatorio';
@@ -11,6 +12,7 @@ import {
   useDadosDoRelatorio,
 } from '@/features/progresso/useDadosDoRelatorio';
 import { ehErroApp } from '@/lib/erroApp';
+import { nomeDoMes } from '@dominio/mes.ts';
 
 /** Baixa o relatório em PDF (E28) e põe o download no registro. */
 function useBaixarRelatorio(props: PropsDoRelatorio) {
@@ -68,31 +70,42 @@ function BaixarPdf(props: Readonly<PropsDoRelatorio>) {
   );
 }
 
-/** O fim da tela: o cadastro de metas e a evolução mais recente. */
+/** A barra fixa do pé da tela, como no protótipo: o cadastro de metas e a evolução mais recente. */
 export function AcoesDoProgresso({
   assistidoId,
   periodos,
 }: Readonly<Pick<PropsDoRelatorio, 'assistidoId' | 'periodos'>>) {
-  const evolucaoId = periodos[0]?.evolucaoId;
+  const recente = periodos[0];
   return (
-    <div className="flex flex-wrap gap-2">
-      <Link
-        to={`/metas/${String(assistidoId)}`}
-        className={buttonVariants({ variant: 'secondary', size: 'lg' })}
-      >
-        <Target aria-hidden="true" />
-        Cadastro de metas
-      </Link>
-      {evolucaoId !== undefined && (
-        <Link
-          to={`/evolucoes/${evolucaoId}`}
-          className={buttonVariants({ variant: 'primary', size: 'lg' })}
-        >
-          <FileText aria-hidden="true" />
-          Evolução mais recente
-        </Link>
-      )}
-    </div>
+    <BarraInferior
+      regra={
+        <>
+          <ChartLine aria-hidden="true" className="size-4 shrink-0" />
+          Nível de apoio lido pela IA nas análises do Tita; cada ponto mostra a frase de onde saiu
+          (E27).
+        </>
+      }
+      acoes={
+        <>
+          <Link
+            to={`/metas/${String(assistidoId)}`}
+            className={buttonVariants({ variant: 'secondary', size: 'lg' })}
+          >
+            <Target aria-hidden="true" />
+            Cadastro de metas
+          </Link>
+          {recente !== undefined && (
+            <Link
+              to={`/evolucoes/${recente.evolucaoId}`}
+              className={buttonVariants({ variant: 'primary', size: 'lg' })}
+            >
+              <FileText aria-hidden="true" />
+              Evolução de {nomeDoMes(recente.mesRef)}
+            </Link>
+          )}
+        </>
+      }
+    />
   );
 }
 

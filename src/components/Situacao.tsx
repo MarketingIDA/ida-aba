@@ -10,35 +10,26 @@ const TONS = {
   bloq: 'border-bloq-border bg-bloq-soft text-bloq-text',
 } as const;
 
-const PONTOS = {
-  ok: 'bg-ok',
-  alerta: 'bg-alerta',
-  neutro: 'bg-tenue',
-  info: 'bg-azul',
-  bloq: 'bg-bloq',
-} as const;
-
 interface Props {
   rotulo: string;
   tom: keyof typeof TONS;
+  /** A versão de 24 px dos cards (o `.pg-meta-h .pill` do protótipo). */
+  pequena?: boolean;
   /** O ícone da situação, no lugar do ponto (o `.pill` do protótipo). */
   icone?: LucideIcon;
 }
 
-/** Pílula de situação: ponto ou ícone mais o texto, nunca só a cor. */
-export function Situacao({ rotulo, tom, icone: Icone }: Readonly<Props>) {
+/** Pílula de situação (o `.pill` do protótipo): texto, às vezes com ícone, nunca só a cor. */
+export function Situacao({ rotulo, tom, icone: Icone, pequena = false }: Readonly<Props>) {
   return (
     <span
       className={cn(
-        'inline-flex h-[26px] shrink-0 items-center gap-1.5 rounded-full border-[1.5px] px-[11px] text-[0.78rem] font-extrabold whitespace-nowrap',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-full border-[1.5px] px-[11px] font-extrabold whitespace-nowrap',
+        pequena ? 'h-6 text-xs' : 'h-[26px] text-[0.78rem]',
         TONS[tom],
       )}
     >
-      {Icone === undefined ? (
-        <span aria-hidden="true" className={cn('size-1.5 rounded-full', PONTOS[tom])} />
-      ) : (
-        <Icone aria-hidden="true" className="size-3.5" strokeWidth={2} />
-      )}
+      {Icone !== undefined && <Icone aria-hidden="true" className="size-3.5" strokeWidth={2} />}
       {rotulo}
     </span>
   );
