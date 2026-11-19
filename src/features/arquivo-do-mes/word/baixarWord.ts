@@ -5,21 +5,7 @@ import {
 import { gerarWord, nomeDoWord } from '@/features/arquivo-do-mes/word/gerarWord';
 import { imagemParaOWord } from '@/features/arquivo-do-mes/word/imagemParaOWord';
 import { ErroApp } from '@/lib/erroApp';
-
-/** Entrega o arquivo ao navegador, que o salva com o nome dado. */
-function salvar(arquivo: Blob, nome: string): void {
-  const endereco = URL.createObjectURL(arquivo);
-  const link = document.createElement('a');
-  link.href = endereco;
-  link.download = nome;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  // O navegador já começou a baixar; o endereço temporário pode ser liberado logo depois.
-  setTimeout(() => {
-    URL.revokeObjectURL(endereco);
-  }, 3000);
-}
+import { salvarArquivo } from '@/utils/salvarArquivo';
 
 /**
  * Baixa o Word do arquivo do mês de uma carteira: lê o conteúdo que o banco deixa, busca a
@@ -35,6 +21,6 @@ export async function baixarWord(carteiraId: number, mesRef: string): Promise<st
       ? null
       : await imagemParaOWord(await baixarAssinatura(conteudo.assinatura));
   const nome = nomeDoWord(conteudo);
-  salvar(await gerarWord(conteudo, assinatura), nome);
+  salvarArquivo(await gerarWord(conteudo, assinatura), nome);
   return nome;
 }

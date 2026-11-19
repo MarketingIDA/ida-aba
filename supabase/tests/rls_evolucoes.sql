@@ -132,6 +132,8 @@ $$;
 -- O id de um assistido da carteira do B, para a A tentar usar sem conseguir lê-lo.
 select set_config('teste.assistido_do_b',
   (select id::text from cadastro.assistidos where nome = 'Assistido Tres Teste'), true);
+select set_config('teste.assistido_dois',
+  (select id::text from cadastro.assistidos where nome = 'Assistido Dois Teste'), true);
 
 -- Coordenadora A: vê só a carteira dela.
 set local role authenticated;
@@ -149,6 +151,21 @@ insert into resultado (teste, ok) select 'lista do mês: 2 assistidos, 2 de 4 pa
      from evolucao.evolucoes_do_mes('2026-11-01') where unidade_sigla = 'TST');
 insert into resultado (teste, ok) select 'coordenador não lê a auditoria',
   (select count(*) from auditoria.eventos) = 0;
+-- Registro do relatório de metas (E28): quem fez e quando vêm do banco, não do cliente.
+insert into evolucao.relatorios_de_metas (assistido_id, acao)
+  values (current_setting('teste.assistido_dois')::bigint, 'baixou');
+insert into resultado (teste, ok) select 'coordenador registra o download do relatório de metas, com o próprio nome (E28)',
+  (select count(*) = 1 and bool_and(acao = 'baixou' and feito_por_nome = 'Coordenadora A')
+     from evolucao.relatorios_de_metas);
+do $$
+begin
+  insert into evolucao.relatorios_de_metas (assistido_id, acao, feito_por)
+    values (current_setting('teste.assistido_dois')::bigint, 'enviou', 1);
+  insert into resultado (teste, ok) values ('o cliente não escolhe quem fez o registro (E28)', false);
+exception when insufficient_privilege then
+  insert into resultado (teste, ok) values ('o cliente não escolhe quem fez o registro (E28)', true);
+end;
+$$;
 do $$
 begin
   begin
@@ -473,6 +490,16 @@ insert into resultado (teste, ok) select 'outro coordenador não vê a carteira 
 insert into resultado (teste, ok) select 'outro coordenador não lê o nível de apoio alheio (E27)',
   (select count(*) from evolucao.niveis_de_apoio) = 0
   and (select count(*) from evolucao.leituras_de_nivel) = 0;
+do $$
+begin
+  insert into evolucao.relatorios_de_metas (assistido_id, acao)
+    values (current_setting('teste.assistido_dois')::bigint, 'baixou');
+  insert into resultado (teste, ok) values ('outro coordenador não registra nem lê o relatório de metas alheio (E28)', false);
+exception when insufficient_privilege then
+  insert into resultado (teste, ok) values ('outro coordenador não registra nem lê o relatório de metas alheio (E28)',
+    (select count(*) from evolucao.relatorios_de_metas) = 0);
+end;
+$$;
 reset role;
 
 -- Coordenação geral: vê tudo e mantém o cadastro.
@@ -487,6 +514,8 @@ insert into resultado (teste, ok) select 'coordenação geral filtra a lista por
     where unidade_sigla = 'TST') = 1;
 insert into resultado (teste, ok) select 'coordenação geral lê a auditoria',
   (select count(*) from auditoria.eventos where tabela = 'assistidos') >= 3;
+insert into resultado (teste, ok) select 'coordenação geral lê o registro do relatório de metas (E28)',
+  (select count(*) from evolucao.relatorios_de_metas) = 1;
 update cadastro.metas set situacao = 'suspensa' where texto = 'Meta fictícia do cadastro';
 insert into resultado (teste, ok) select 'coordenação geral lê as metas e não altera (E23)',
   (select count(*) = 1 and bool_and(situacao = 'desenvolvimento')
@@ -749,6 +778,8 @@ insert into resultado (teste, ok) select 'contas médicas não lê assinatura so
     where usuario_id = current_setting('teste.id_a')::bigint) = 0
   and (select count(*) from storage.objects
         where bucket_id = 'assinaturas' and name like current_setting('teste.id_a') || '/%') = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê o registro do relatório de metas (E28)',
+  (select count(*) from evolucao.relatorios_de_metas) = 0;
 insert into resultado (teste, ok) select 'contas médicas não recebe a prévia do Word',
   (select evolucao.conteudo_do_arquivo(c.id, date_trunc('month', now() at time zone 'America/Recife')::date) is null
      from cadastro.carteiras c join cadastro.unidades u on u.id = c.unidade_id

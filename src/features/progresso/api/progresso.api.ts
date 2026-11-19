@@ -16,6 +16,8 @@ export const MESES_NO_GRAFICO = 3;
 
 export interface PeriodoDaEvolucao extends PeriodoDoProgresso {
   evolucaoId: string;
+  /** O código da evolução (E16): o relatório de metas leva o do mês mais recente. */
+  codigo: string;
   mesRef: string;
 }
 
@@ -26,6 +28,7 @@ export interface DadosDoProgresso {
 
 const esquemaEvolucao = z.object({
   id: z.string(),
+  codigo: z.string(),
   mes_ref: z.string(),
   periodo_inicio: z.string(),
   periodo_fim: z.string(),
@@ -52,7 +55,7 @@ export async function buscarDadosDoProgresso(assistidoId: number): Promise<Dados
   const evolucoes = await supabase
     .schema('evolucao')
     .from('evolucoes')
-    .select('id, mes_ref, periodo_inicio, periodo_fim')
+    .select('id, codigo, mes_ref, periodo_inicio, periodo_fim')
     .eq('assistido_id', assistidoId)
     .order('mes_ref', { ascending: false })
     .limit(MESES_NO_GRAFICO);
@@ -85,6 +88,7 @@ export async function buscarDadosDoProgresso(assistidoId: number): Promise<Dados
   return {
     periodos: lista.map((e) => ({
       evolucaoId: e.id,
+      codigo: e.codigo,
       mesRef: e.mes_ref,
       inicio: e.periodo_inicio,
       fim: e.periodo_fim,

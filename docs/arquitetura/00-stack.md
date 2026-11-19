@@ -41,7 +41,7 @@ Proposta para depois da aprovação do protótipo. A stack é a da casa, a mesma
 | `aprimorar-texto` | Entrada manual (E26): recebe as seções escritas pelo coordenador, sem o nome (E05), com as orientações ativas (E22), e pede à IA o texto aprimorado por seção, sem fato novo (o prompt proíbe acrescentar o que não está no texto e a saída é conferida contra ele). Calcula as lacunas pelo cadastro de metas e grava as duas versões de cada parte (E07). Não grava dia analisado. |
 | (sem função) envio do arquivo | Feito sem Edge Function: enviar o arquivo do mês (E24) é gravar uma linha em `evolucao.arquivos` com a carteira. Os triggers, na mesma transação, conferem que a carteira toda está concluída e que há assinatura (E14), preenchem o mês aberto e quem assina e marcam as evoluções como enviadas. A atualização do cadastro de metas (E23) entra com o cadastro de metas. Não existe envio de uma evolução sozinha. |
 | (sem função) Word do arquivo | Feito sem Edge Function: o Word do modelo (Cambria 12, espaçamento 1,5) é montado no navegador de quem baixa, com a biblioteca `docx`, carregada só nessa hora. A RPC `evolucao.conteudo_do_arquivo` entrega o que o RLS deixa ler: o arquivo enviado, com quem assinou e a assinatura da época, ou a prévia do coordenador antes do envio. A evolução de um assistido sozinha, só para conferência, ainda não tem Word. |
-| `emitir-relatorio-metas` | Gera o PDF da evolução das metas (E28) com os números do domínio puro, os mesmos da tela, e uma biblioteca de PDF que roda no Deno (pdf-lib, por exemplo), sem navegador. O texto é selecionável, o nome volta só no PDF e o arquivo leva o código do assistido. Confere o acesso (coordenador da carteira ou coordenação geral) e grava o registro em `auditoria.relatorio_metas`. O envio pelo aparelho usa a Web Share API no navegador, com o arquivo, e cai no download onde ela não envia arquivo; o registro do envio chega por uma chamada à mesma função. |
+| ~~`emitir-relatorio-metas`~~ | Feito sem Edge Function: o PDF da evolução das metas (E28) é montado no navegador de quem baixa, com `pdf-lib` carregada sob demanda (como o Word com `docx`), a partir dos mesmos números do domínio puro que a tela usa, sempre sem filtro. Texto selecionável, nome só dentro do PDF, arquivo com o código da evolução mais recente (`UNI-AAMM-NNN-METAS.pdf`). O acesso é o do RLS: o registro vai a `evolucao.relatorios_de_metas` antes de o arquivo sair, e sem registro o arquivo não sai. O envio pelo aparelho (Web Share API, com fallback para o download) e o copiar link vêm na parte seguinte e gravam no mesmo registro. |
 
 **Tabelas novas do período, das dicas, das metas e do arquivo do mês** (esboço; os nomes "dica-ia" e "orientacao-ia" do pedido viram `dica_ia` e `orientacao_ia`, porque hífen não é nome válido sem aspas no Postgres):
 
@@ -144,14 +144,17 @@ create table evolucao.niveis_de_apoio (
 -- ordem por assistido lido da carteira e o dia em que cada meta ativa chegou à independência, sem
 -- nome, meta, nível nem trecho; a mediana é do domínio puro (dominio/mediana.ts).
 
--- E28: quem baixou, enviou ou copiou o link do relatório de metas, e quando
-create table auditoria.relatorio_metas (
-  id            uuid primary key default gen_random_uuid(),
-  assistido_id  uuid not null references cadastro.assistido,
-  acao          text not null check (acao in ('baixou', 'enviou', 'baixou_para_enviar', 'copiou_link')),
-  feito_por     uuid not null references acesso.usuario,
-  feito_em      timestamptz not null default now()
+-- E28: quem baixou, enviou ou copiou o link do relatório de metas, e quando. Fica em `evolucao`, não
+-- em `auditoria`, porque a API não expõe `auditoria` e o coordenador precisa ler o registro.
+create table evolucao.relatorios_de_metas (
+  id              bigint generated always as identity primary key,
+  assistido_id    bigint not null references cadastro.assistidos,
+  acao            text not null check (acao in ('baixou', 'enviou', 'baixou_para_enviar', 'copiou_link')),
+  feito_por       bigint not null references acesso.usuarios,  -- preenchido por trigger
+  feito_por_nome  text not null,                                -- preenchido por trigger
+  feito_em        timestamptz not null default now()            -- preenchido por trigger
 );
+-- O cliente só informa assistido_id e acao (grant de coluna); o RLS aceita o assistido que ele vê.
 
 -- E21: a dica que o coordenador deixa no botão "i" de um bloco ("dica-ia")
 create table config.dica_ia (
@@ -211,8 +214,8 @@ create table cadastro.meta_historico (
 );
 ```
 
-**RLS dessas tabelas:** o coordenador grava `dicas_ia` só para evoluções da carteira dele e não lê as dicas dos outros; a coordenação geral lê e cura todas; `orientacoes_ia` é lida pela coordenação geral e pelos coordenadores, porque a função `gerar-rascunho` lê as orientações com o login de quem pede o rascunho. `cadastro.meta` segue a carteira, como o assistido: o coordenador edita a dele, a coordenação geral lê todas. Contas médicas lê `evolucao.arquivos`, as evoluções com `arquivo_id` preenchido e os assistidos delas, a versão final de cada parte dessas evoluções e a assinatura que foi no arquivo, e nada mais: os rascunhos e as partes ficam fechados. `niveis_de_apoio` e `leituras_de_nivel` seguem a evolução: o coordenador lê o da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E27). `auditoria.relatorio_metas` só recebe linha pela função `emitir-relatorio-metas`; o coordenador lê o registro da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E28).
+**RLS dessas tabelas:** o coordenador grava `dicas_ia` só para evoluções da carteira dele e não lê as dicas dos outros; a coordenação geral lê e cura todas; `orientacoes_ia` é lida pela coordenação geral e pelos coordenadores, porque a função `gerar-rascunho` lê as orientações com o login de quem pede o rascunho. `cadastro.meta` segue a carteira, como o assistido: o coordenador edita a dele, a coordenação geral lê todas. Contas médicas lê `evolucao.arquivos`, as evoluções com `arquivo_id` preenchido e os assistidos delas, a versão final de cada parte dessas evoluções e a assinatura que foi no arquivo, e nada mais: os rascunhos e as partes ficam fechados. `niveis_de_apoio` e `leituras_de_nivel` seguem a evolução: o coordenador lê o da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E27). `evolucao.relatorios_de_metas` recebe linha só de quem vê o assistido, e quem fez e quando vêm do trigger; o coordenador lê o registro da carteira dele, a coordenação geral lê tudo e contas médicas não lê (E28).
 
-**Testes de banco (pgTAP):** evolução de novembro calcula 01/10 a 31/10 e a de janeiro calcula o dezembro do ano anterior; `dia_analisado` aceita 01/10 e 31/10 e recusa 30/09 e 01/11 na evolução de novembro; o mesmo dia em duas evoluções falha pela PK; dia de outro assistido falha pela FK composta; `dica_ia` não aceita dica curta nem curadoria sem curador; uma orientação por dica; o coordenador não lê dica de outro coordenador; um programa ativo por vez no cadastro de metas; o envio do arquivo recusa carteira com evolução em conferência ou assistido sem evolução, e um segundo arquivo da mesma carteira e mês; contas médicas não lê evolução fora de arquivo enviado; documento de outro assistido não vai para `gerar-rascunho`; evolução manual não grava dia analisado; `gravar_niveis` recusa dia fora do período e a leitura de um PDF que já não vale, importar de novo apaga os níveis, o cliente não grava nível e contas médicas não lê `niveis_de_apoio`; `relatorio_metas` recusa ação fora da lista, o coordenador não lê o registro de outra carteira e contas médicas não lê o registro.
+**Testes de banco (pgTAP):** evolução de novembro calcula 01/10 a 31/10 e a de janeiro calcula o dezembro do ano anterior; `dia_analisado` aceita 01/10 e 31/10 e recusa 30/09 e 01/11 na evolução de novembro; o mesmo dia em duas evoluções falha pela PK; dia de outro assistido falha pela FK composta; `dica_ia` não aceita dica curta nem curadoria sem curador; uma orientação por dica; o coordenador não lê dica de outro coordenador; um programa ativo por vez no cadastro de metas; o envio do arquivo recusa carteira com evolução em conferência ou assistido sem evolução, e um segundo arquivo da mesma carteira e mês; contas médicas não lê evolução fora de arquivo enviado; documento de outro assistido não vai para `gerar-rascunho`; evolução manual não grava dia analisado; `gravar_niveis` recusa dia fora do período e a leitura de um PDF que já não vale, importar de novo apaga os níveis, o cliente não grava nível e contas médicas não lê `niveis_de_apoio`; `relatorios_de_metas` recusa ação fora da lista e `feito_por` informado pelo cliente, o coordenador não lê o registro de outra carteira e contas médicas não lê o registro.
 
 **Rotas do front** seguem as telas do protótipo, listadas em [`../escopo/01-dominio.md`](../escopo/01-dominio.md#6-telas-do-protótipo).

@@ -41,6 +41,7 @@ function servirProgresso() {
       HttpResponse.json([
         {
           id: EVOLUCAO,
+          codigo: 'TST-2611-001-EV',
           mes_ref: '2026-10-01',
           periodo_inicio: '2026-10-01',
           periodo_fim: '2026-10-31',
@@ -99,5 +100,26 @@ describe('Evolução das metas em gráfico (E27)', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Trecho fictício de 2026-10-01.')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Mediana da carteira' })).toBeInTheDocument();
+  });
+
+  it('não baixa o PDF quando o registro de quem baixou é recusado', async () => {
+    servirProgresso();
+    server.use(
+      http.post(`${REST}/relatorios_de_metas`, () =>
+        HttpResponse.json({ code: '42501', message: 'permission denied' }, { status: 403 }),
+      ),
+    );
+    const { user } = renderWithProviders(
+      <Routes>
+        <Route path="/progresso/:assistidoId" element={<ProgressoPage />} />
+      </Routes>,
+      { rota: '/progresso/1', usuario: usuarioDemo() },
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Baixar PDF' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Você não tem permissão para emitir o relatório deste assistido.',
+    );
+    expect(screen.queryByText(/Baixado:/)).not.toBeInTheDocument();
   });
 });
