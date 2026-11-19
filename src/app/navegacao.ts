@@ -21,6 +21,8 @@ export interface ItemDoMenu {
   contador?: 'assistidos' | 'arquivos';
   /** Abaixo do item, um subitem por situação da evolução, cada um com o seu número. */
   situacoes?: boolean;
+  /** Outras telas que ficam dentro deste item (o gráfico das metas fica em Evoluções). */
+  inclui?: readonly string[];
 }
 
 const EVOLUCOES: ItemDoMenu = {
@@ -29,6 +31,7 @@ const EVOLUCOES: ItemDoMenu = {
   icone: FileText,
   contador: 'assistidos',
   situacoes: true,
+  inclui: ['/progresso'],
 };
 const ARQUIVO: ItemDoMenu = { rota: '/arquivo', rotulo: 'Arquivo do mês', icone: FolderOpen };
 // A mesma tela, com o nome de cada lado: contas médicas recebe, a coordenação geral acompanha.

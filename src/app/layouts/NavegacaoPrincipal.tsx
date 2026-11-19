@@ -99,7 +99,9 @@ export function NavegacaoPrincipal({ papel, resumo, aoNavegar }: Readonly<Props>
       <ul className="flex flex-col gap-0.5">
         {MENU_DO_PAPEL[papel].map((item) => {
           const Icone = item.icone;
-          const naRota = pathname === item.rota || pathname.startsWith(`${item.rota}/`);
+          const naRota = [item.rota, ...(item.inclui ?? [])].some(
+            (rota) => pathname === rota || pathname.startsWith(`${rota}/`),
+          );
           const marcado = naRota && !(item.situacoes === true && situacao !== null);
           return (
             <li key={item.rota}>
