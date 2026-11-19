@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { erroDoBanco } from '@/lib/erroDoBanco';
 import { supabase } from '@/lib/supabase';
+import type { IndependenciaNaCarteira } from '@dominio/mediana.ts';
 import type { PeriodoDoProgresso, PontoDoProgresso } from '@dominio/progresso.ts';
 
 /**
@@ -91,4 +92,29 @@ export async function buscarDadosDoProgresso(assistidoId: number): Promise<Dados
     })),
     pontos: z.array(esquemaNivel).parse(niveis.data),
   };
+}
+
+const esquemaDaCarteira = z
+  .object({ assistido: z.number().int(), independente_em: z.string().nullable() })
+  .transform((l): IndependenciaNaCarteira => ({
+    assistido: l.assistido,
+    independenteEm: l.independente_em,
+  }));
+
+/**
+ * O dia em que cada meta dos assistidos lidos da carteira chegou à independência na janela, sem
+ * identificar ninguém: a base da mediana da carteira.
+ */
+export async function buscarIndependenciaDaCarteira(
+  assistidoId: number,
+  inicio: string,
+  fim: string,
+): Promise<IndependenciaNaCarteira[]> {
+  const resposta = await supabase.schema('evolucao').rpc('independencia_da_carteira', {
+    p_assistido_id: assistidoId,
+    p_inicio: inicio,
+    p_fim: fim,
+  });
+  if (resposta.error !== null) throw erroDoBanco(resposta.error, { indisponivel: INDISPONIVEL });
+  return z.array(esquemaDaCarteira).parse(resposta.data);
 }

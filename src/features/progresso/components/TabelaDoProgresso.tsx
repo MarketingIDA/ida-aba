@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 
 import { SITUACAO_DA_META } from '@/features/cadastros/metas';
-import { mesDoPeriodo, nomeDoNivel } from '@/features/progresso/textos';
+import { mesDoPeriodo, nomeDoNivel, numero } from '@/features/progresso/textos';
 import { plural } from '@/utils/textos';
 import { formatarData } from '@dominio/mes.ts';
+import type { MedianaDaCarteira } from '@dominio/mediana.ts';
 import type { AnaliseDaMeta, PontoDoProgresso, Progresso } from '@dominio/progresso.ts';
 
 const TH = 'px-3 py-2 text-left text-caption font-bold text-apagado';
@@ -87,13 +88,22 @@ function TabelaDasMetas({
   );
 }
 
-function TabelaPorSemana({ nome, progresso }: Readonly<{ nome: string; progresso: Progresso }>) {
+interface PropsPorSemana {
+  nome: string;
+  progresso: Progresso;
+  mediana: MedianaDaCarteira | null;
+}
+
+function TabelaPorSemana({ nome, progresso, mediana }: Readonly<PropsPorSemana>) {
+  const cabecalho = ['Semana de', nome];
+  if (mediana !== null) cabecalho.push('Mediana da carteira');
   return (
-    <Tabela titulo="Metas que chegaram à independência, por semana" cabecalho={['Semana de', nome]}>
+    <Tabela titulo="Metas que chegaram à independência, por semana" cabecalho={cabecalho}>
       {progresso.semanas.map((s, w) => (
         <tr key={s}>
           <td className={TD}>{formatarData(s, true)}</td>
           <td className={TD}>{progresso.porSemana[w]}</td>
+          {mediana !== null && <td className={TD}>{numero(mediana.porSemana[w] ?? 0)}</td>}
         </tr>
       ))}
     </Tabela>
@@ -125,12 +135,13 @@ function TabelaDasSessoes({ metas }: Readonly<{ metas: readonly AnaliseDaMeta[] 
 export function TabelaDoProgresso({
   nome,
   progresso,
+  mediana,
   metas,
-}: Readonly<{ nome: string; progresso: Progresso; metas: readonly AnaliseDaMeta[] }>) {
+}: Readonly<PropsPorSemana & { metas: readonly AnaliseDaMeta[] }>) {
   return (
     <div className="flex flex-col gap-4">
       <TabelaDasMetas metas={metas} ultimoMes={mesDoPeriodo(progresso.fim)} />
-      <TabelaPorSemana nome={nome} progresso={progresso} />
+      <TabelaPorSemana nome={nome} progresso={progresso} mediana={mediana} />
       <TabelaDasSessoes metas={metas} />
     </div>
   );

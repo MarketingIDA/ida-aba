@@ -139,8 +139,10 @@ create table evolucao.niveis_de_apoio (
 -- Só a RPC evolucao.gravar_niveis grava (service_role, pela Edge Function ler-niveis); importar de
 -- novo apaga os níveis e a leitura por trigger. A tela de evolução das metas (f2a) lê essas tabelas
 -- direto, nas 3 últimas evoluções do assistido, sem view; os indicadores vêm do domínio puro
--- (dominio/progresso.ts), o mesmo código no navegador e nos testes. A mediana da carteira (f2b)
--- virá de uma RPC que devolve uma linha por meta, sem expor os níveis dos outros assistidos.
+-- (dominio/progresso.ts), o mesmo código no navegador e nos testes. A mediana da carteira (f2b) sai
+-- da RPC evolucao.independencia_da_carteira(assistido, inicio, fim), security invoker: um número de
+-- ordem por assistido lido da carteira e o dia em que cada meta ativa chegou à independência, sem
+-- nome, meta, nível nem trecho; a mediana é do domínio puro (dominio/mediana.ts).
 
 -- E28: quem baixou, enviou ou copiou o link do relatório de metas, e quando
 create table auditoria.relatorio_metas (

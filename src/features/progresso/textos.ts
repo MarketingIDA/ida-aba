@@ -10,3 +10,7 @@ export const NIVEL_CURTO = ['Física total', 'Física parcial', 'Gestual', 'Verb
 
 /** O mês analisado pelo início do período: `outubro`. */
 export const mesDoPeriodo = (inicio: string): string => nomeDoMes(`${inicio.slice(0, 7)}-01`);
+
+/** Um número com vírgula decimal, como a mediana `1,5`. */
+export const numero = (n: number): string =>
+  n.toLocaleString('pt-BR', { maximumFractionDigits: 1 });

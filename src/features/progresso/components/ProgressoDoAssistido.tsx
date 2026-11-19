@@ -9,6 +9,7 @@ import { EscadaDaMeta } from '@/features/progresso/components/EscadaDaMeta';
 import { HeroDoProgresso } from '@/features/progresso/components/HeroDoProgresso';
 import { MapaDeSessoes } from '@/features/progresso/components/MapaDeSessoes';
 import { TabelaDoProgresso } from '@/features/progresso/components/TabelaDoProgresso';
+import { useMedianaDaCarteira } from '@/features/progresso/useMedianaDaCarteira';
 import {
   calcularProgresso,
   ehFiltroDoProgresso,
@@ -182,11 +183,12 @@ export function ProgressoDoAssistido({
 }: Readonly<Props>) {
   const visao = useVisao();
   const progresso = calcularProgresso(metas, pontos, periodos);
+  const mediana = useMedianaDaCarteira(assistidoId, progresso);
   if (progresso === null) return null;
   const ordenados = [...periodos].reverse();
   return (
     <>
-      <HeroDoProgresso nome={nome} progresso={progresso} periodos={ordenados} />
+      <HeroDoProgresso nome={nome} progresso={progresso} periodos={ordenados} mediana={mediana} />
       <CartoesDeContagem<FiltroDoProgresso>
         rotulo="Situação das metas no gráfico"
         colunas={4}
@@ -199,6 +201,7 @@ export function ProgressoDoAssistido({
         <TabelaDoProgresso
           nome={nome}
           progresso={progresso}
+          mediana={mediana}
           metas={filtrarProgresso(progresso.metas, visao.filtro)}
         />
       ) : (
