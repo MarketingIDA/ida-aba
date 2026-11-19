@@ -60,6 +60,8 @@ O app abre em <http://localhost:5173>. No Claude Code, a configuração `app` em
 
 Nenhum teste fala com o banco real: o Vitest usa o MSW e o Playwright responde o Supabase dentro do próprio teste, com dados fictícios. O `vite preview` manda os mesmos cabeçalhos do `vercel.json`, então o E2E roda sob a CSP da produção e reprova o teste se ela bloquear algo. Para rodar o E2E sem baixar navegadores, use o Edge instalado: `PLAYWRIGHT_CHANNEL=msedge pnpm test:e2e`.
 
+**Teste à mão:** o [roteiro de testes à mão](docs/testes/roteiro-de-testes-a-mao.md) percorre no site, por perfil, tudo o que está no ar, começando pela carteira de teste.
+
 O CI (`.github/workflows/ci.yml`) roda lint, tipos, testes com cobertura, build, E2E, gitleaks, Semgrep e auditoria de dependências em todo PR. O job `Resultado` reúne todos.
 
 ## Variáveis de ambiente
