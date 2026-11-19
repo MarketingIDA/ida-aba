@@ -493,6 +493,10 @@ begin
   execute 'set local role authenticated';
   insert into resultado (teste, ok) select 'coordenador lê as fontes da evolução dele (E06)',
     (select count(*) = 1 and bool_and(datas = array[inicio]) from evolucao.fontes);
+  insert into resultado (teste, ok) select 'coordenador lê o histórico das versões da parte (E07)',
+    (select count(*) >= 1 from evolucao.historico_da_parte(nova, 2::smallint))
+    and (select count(*) from evolucao.historico_da_parte(nova, 2::smallint))
+      = (select count(*) from evolucao.versoes where evolucao_id = nova and numero = 2);
   insert into evolucao.versoes (evolucao_id, numero, conteudo) values
     (nova, 4, '{"metas": ["Meta um", "Meta dois", "Meta três", "Meta quatro"]}');
   update evolucao.partes set conferida = true where evolucao_id = nova;
@@ -938,6 +942,11 @@ insert into resultado (teste, ok) select 'contas médicas não lê os outros doc
   (select count(*) from evolucao.documentos) = 0
   and (select count(*) from evolucao.lacunas_ignoradas) = 0
   and (select count(*) from evolucao.fontes) = 0;
+insert into resultado (teste, ok) select 'contas médicas não lê o histórico das versões (E07)',
+  (select count(*) from evolucao.evolucoes e
+     cross join generate_series(2, 4) n
+     cross join lateral evolucao.historico_da_parte(e.id, n::smallint)
+    where e.codigo like 'TST-%') = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê o nível de apoio (E27)',
   (select count(*) from evolucao.niveis_de_apoio) = 0
   and (select count(*) from evolucao.leituras_de_nivel) = 0;
