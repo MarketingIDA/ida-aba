@@ -162,6 +162,7 @@ describe('Evolução escrita à mão', () => {
         await parte(titulo).findByRole('button', { name: 'Desfazer conferência' }),
       ).toBeInTheDocument();
     }
+    expect(screen.getByRole('button', { name: /Pronta para concluir/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Concluir evolução' }));
     expect(await screen.findByRole('button', { name: 'Reabrir' })).toBeInTheDocument();
     expect(banco.situacao).toBe('concluida');
@@ -185,6 +186,13 @@ describe('Evolução escrita à mão', () => {
     expect(
       parte('Identificação').getByRole('button', { name: 'Marcar como conferida' }),
     ).toBeDisabled();
+    // A caixa de situação e as etapas apontam o bloqueio, como no protótipo.
+    expect(screen.getByText('Há bloqueio que impede concluir')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('list', { name: 'Etapas da evolução' })).getByRole('button', {
+        name: 'Identificação (com bloqueio)',
+      }),
+    ).toBeInTheDocument();
 
     await user.click(
       parte('Metas alcançadas').getByRole('button', { name: 'Marcar como conferida' }),
@@ -251,7 +259,7 @@ describe('Devolução pela coordenação geral', () => {
       name: 'Devolvida pela coordenação geral',
     });
     expect(bloqueio).toHaveTextContent(MOTIVO);
-    expect(screen.getByText(/devolução a resolver/)).toBeInTheDocument();
+    expect(screen.getAllByText(/devolução a resolver/).length).toBeGreaterThan(0);
     await user.click(within(bloqueio).getByRole('button', { name: 'Marcar como resolvida' }));
 
     expect(await screen.findByText('1 devolução resolvida')).toBeInTheDocument();

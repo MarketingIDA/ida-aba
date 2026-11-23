@@ -92,6 +92,46 @@ function Acoes(props: Readonly<Props>) {
   );
 }
 
+const ETIQUETA =
+  'inline-flex items-center gap-1 rounded-full px-2 py-px text-[0.72rem] font-extrabold whitespace-nowrap';
+
+/** As etiquetas do protótipo ao lado do título: bloqueio, alerta e conferida. */
+function Etiquetas({
+  parte,
+  pendencia,
+  aviso,
+}: Readonly<Pick<Props, 'parte' | 'pendencia' | 'aviso'>>) {
+  return (
+    <span className="flex flex-wrap gap-1.5">
+      {pendencia !== null && (
+        <span className={cn(ETIQUETA, 'bg-bloq-soft text-bloq-text')}>
+          <OctagonX aria-hidden="true" className="size-3" />1 bloqueio
+        </span>
+      )}
+      {aviso != null && (
+        <span className={cn(ETIQUETA, 'bg-alerta-soft text-alerta-text')}>
+          <TriangleAlert aria-hidden="true" className="size-3" />1 alerta
+        </span>
+      )}
+      {parte.conferidaEm !== null && (
+        <span className={cn(ETIQUETA, 'bg-ok-soft text-ok-text')}>
+          <Check aria-hidden="true" className="size-3" />
+          Conferida
+        </span>
+      )}
+    </span>
+  );
+}
+
+function AvisoDaParte({ aviso }: Readonly<{ aviso: string }>) {
+  return (
+    <p className="flex items-start gap-2 rounded-lg border border-alerta-border bg-alerta-soft px-3 py-2 text-caption font-semibold text-alerta-text">
+      <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+      {aviso}
+    </p>
+  );
+}
+
 /** Uma parte da evolução: número, título, origem, o conteúdo e a conferência. */
 export function ParteDaEvolucao(props: Readonly<Props>) {
   const { parte, origem, contador, podeMudar, editando, children } = props;
@@ -100,9 +140,11 @@ export function ParteDaEvolucao(props: Readonly<Props>) {
   const rodape = (podeMudar && !editando) || (!podeMudar && conferida);
   return (
     <section
+      id={`p-${String(numero)}`}
+      tabIndex={-1}
       aria-labelledby={`parte-${String(numero)}`}
       className={cn(
-        'rounded-xl border bg-superficie shadow-md',
+        'scroll-mt-20 rounded-xl border bg-superficie shadow-md outline-none',
         conferida ? 'border-ok-border' : 'border-borda',
       )}
     >
@@ -120,15 +162,13 @@ export function ParteDaEvolucao(props: Readonly<Props>) {
           <h2 id={`parte-${String(numero)}`}>{TITULO_DA_PARTE[numero]}</h2>
           <p className="text-caption font-semibold text-apagado">{origem}</p>
         </div>
-        {contador}
+        <span className="flex flex-wrap items-center gap-2">
+          {contador}
+          <Etiquetas parte={parte} pendencia={props.pendencia} aviso={props.aviso ?? null} />
+        </span>
       </header>
       <div className="flex flex-col gap-3 px-5 py-4">
-        {props.aviso != null && (
-          <p className="flex items-start gap-2 rounded-lg border border-alerta-border bg-alerta-soft px-3 py-2 text-caption font-semibold text-alerta-text">
-            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            {props.aviso}
-          </p>
-        )}
+        {props.aviso != null && <AvisoDaParte aviso={props.aviso} />}
         {children}
       </div>
       {rodape && (
