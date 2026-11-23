@@ -9,6 +9,7 @@ import {
   MINIMO_DE_METAS_DO_MES,
   textoDaEvolucao,
 } from '@dominio/evolucao.ts';
+import { citaFrequencia, LIMITE_DA_FREQUENCIA } from '@dominio/frequencia.ts';
 import { nomeDoMes } from '@dominio/mes.ts';
 import { LIMITE_DE_SEMELHANCA, semelhanca } from '@dominio/semelhanca.ts';
 import { metaJaAlcancada } from '@dominio/metas.ts';
@@ -34,6 +35,8 @@ export interface ContextoDaConferencia {
   lacunas?: readonly Lacuna[];
   /** O texto da evolução do mês anterior (P7). */
   anterior?: TextoAnterior | null;
+  /** A frequência do período, em %, pelo PDF do Tita (E04); `null` sem importação. */
+  frequencia?: number | null;
 }
 
 export function linhasDa(evolucao: Evolucao): number {
@@ -93,13 +96,29 @@ export function avisoDaParte(
   numero: NumeroDaParte,
   contexto: ContextoDaConferencia = {},
 ): string | null {
-  if (numero === 2) return avisoDoTexto(evolucao, contexto.anterior ?? null);
+  if (numero === 2) {
+    const avisos = [
+      avisoDaFrequencia(evolucao, contexto.frequencia ?? null),
+      avisoDoTexto(evolucao, contexto.anterior ?? null),
+    ].filter((aviso) => aviso !== null);
+    return avisos.length === 0 ? null : avisos.join(' ');
+  }
   if (numero === 4) return avisoDasMetasDoMes(evolucao, contexto.lacunas ?? []);
   if (numero !== 3) return null;
   const alcancadas = evolucao.metasAlcancadas?.conteudo.metas.length ?? 0;
   return alcancadas < MINIMO_DE_ALCANCADAS
     ? `${plural(alcancadas, 'meta alcançada', 'metas alcançadas')} no mês; o esperado é ${String(MINIMO_DE_ALCANCADAS)} ou mais. Não impede a conclusão.`
     : null;
+}
+
+/** E04: frequência abaixo de 75% que a abertura não cita. */
+function avisoDaFrequencia(evolucao: Evolucao, frequencia: number | null): string | null {
+  if (frequencia === null || frequencia >= LIMITE_DA_FREQUENCIA || evolucao.texto === null) {
+    return null;
+  }
+  return citaFrequencia(evolucao.texto.conteudo.abertura, frequencia)
+    ? null
+    : `A frequência do período foi de ${String(frequencia)}%, abaixo de ${String(LIMITE_DA_FREQUENCIA)}%, e a abertura não a cita. Cite a frequência na abertura. Não impede a conclusão.`;
 }
 
 /** P7: o texto 60% ou mais parecido com o da evolução do mês anterior. */

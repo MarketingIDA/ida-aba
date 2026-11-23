@@ -16,11 +16,12 @@ import { textoAnteriorOptions } from '@/features/evolucoes/api/anterior.api';
 import { lacunasOptions } from '@/features/evolucoes/api/lacunas.api';
 import { metasJaAlcancadasOptions } from '@/features/evolucoes/api/metasDoCadastro.api';
 import type { ContextoDaConferencia } from '@/features/evolucoes/conferencia';
-import { evolucaoOptions } from '@/features/evolucoes/queries';
+import { evolucaoOptions, importacaoOptions } from '@/features/evolucoes/queries';
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
 import { useEdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
 import { useOutrosDocumentos } from '@/features/evolucoes/routes/useOutrosDocumentos';
 import { ehErroApp } from '@/lib/erroApp';
+import { frequenciaDoPeriodo } from '@dominio/frequencia.ts';
 
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise a coordenação geral.';
@@ -53,7 +54,10 @@ function useJaAlcancadas(assistidoId: number | null): readonly string[] {
   return consulta.data ?? [];
 }
 
-/** O que a conferência lê fora da evolução: as metas já alcançadas (E12) e as lacunas (E10). */
+/**
+ * O que a conferência lê fora da evolução: as metas já alcançadas (E12), as lacunas (E10), o texto
+ * do mês anterior (P7) e a frequência do período (E04).
+ */
 function useContexto(evolucao: Evolucao): ContextoDaConferencia {
   const jaAlcancadas = useJaAlcancadas(evolucao.assistidoId);
   const lacunas = useQuery(lacunasOptions(evolucao.id));
@@ -61,7 +65,18 @@ function useContexto(evolucao: Evolucao): ContextoDaConferencia {
     ...textoAnteriorOptions(evolucao.assistidoId ?? 0, evolucao.mesRef),
     enabled: evolucao.assistidoId !== null,
   });
-  return { jaAlcancadas, lacunas: lacunas.data ?? [], anterior: anterior.data ?? null };
+  // A mesma consulta da importação do Tita: não busca de novo.
+  const importacao = useQuery(importacaoOptions(evolucao.id));
+  const { inicio, fim } = evolucao.periodo;
+  const noPeriodo = (importacao.data?.analises ?? []).filter(
+    (a) => a.data >= inicio && a.data <= fim,
+  );
+  return {
+    jaAlcancadas,
+    lacunas: lacunas.data ?? [],
+    anterior: anterior.data ?? null,
+    frequencia: frequenciaDoPeriodo(noPeriodo),
+  };
 }
 
 function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
