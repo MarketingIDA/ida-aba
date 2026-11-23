@@ -1107,6 +1107,44 @@ insert into resultado (teste, ok) select 'Tita: a coordenação geral vê os ras
   and cadastro.quem_sincroniza_a_tita() is not null;
 reset role;
 
+-- Auditoria: ação registrada com o autor do login, lista fechada, leitura só da coordenação geral
+-- e o autor das gravações da Edge Function com a chave de serviço, pelo cabeçalho.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
+select evolucao.registrar_acao('abriu_evolucao', 'auditoria-teste', '{"arquivo":"x.docx"}');
+do $$
+begin
+  perform evolucao.registrar_acao('apagou_tudo', 'x');
+  insert into resultado (teste, ok) values ('auditoria: ação fora da lista recusada', false);
+exception when invalid_parameter_value then
+  insert into resultado (teste, ok) values ('auditoria: ação fora da lista recusada', true);
+end;
+$$;
+do $$
+begin
+  perform acesso.eventos_de_auditoria();
+  insert into resultado (teste, ok) values ('auditoria: coordenador não lê a trilha', false);
+exception when insufficient_privilege then
+  insert into resultado (teste, ok) values ('auditoria: coordenador não lê a trilha', true);
+end;
+$$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
+insert into resultado (teste, ok) select 'auditoria: a coordenação geral lê a ação com o autor',
+  exists (select 1 from acesso.eventos_de_auditoria(p_registro => 'auditoria-teste') e
+           where e.acao = 'abriu_evolucao' and e.usuario_nome = 'Coordenadora A');
+reset role;
+set local request.jwt.claims = '{"role":"service_role"}';
+set local request.headers = '{"x-auditoria-usuario":"a0000000-0000-4000-8000-000000000001"}';
+insert into resultado (teste, ok) select 'auditoria: chave de serviço grava o autor do cabeçalho',
+  interno.autor_da_auditoria() = (select id from acesso.usuarios where email = 'coord.a@exemplo.test');
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}';
+set local request.headers = '{"x-auditoria-usuario":"a0000000-0000-4000-8000-000000000001"}';
+insert into resultado (teste, ok) select 'auditoria: o cabeçalho não vale sem a chave de serviço',
+  interno.autor_da_auditoria() = (select id from acesso.usuarios where email = 'geral@exemplo.test');
+set local request.headers = '{}';
+
 -- Anônimo: sem acesso a nenhum schema do sistema.
 insert into resultado (teste, ok) select 'anon sem uso dos schemas',
   not has_schema_privilege('anon', 'acesso', 'usage')

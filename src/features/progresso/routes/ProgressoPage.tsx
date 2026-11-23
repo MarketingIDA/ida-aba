@@ -12,6 +12,7 @@ import type { DadosDoProgresso } from '@/features/progresso/api/progresso.api';
 import { VoltarParaEvolucoes } from '@/features/progresso/components/AcoesDoProgresso';
 import { ProgressoDoAssistido } from '@/features/progresso/components/ProgressoDoAssistido';
 import { progressoOptions } from '@/features/progresso/queries';
+import { useRegistrarAbertura } from '@/lib/auditoria';
 import { ehErroApp } from '@/lib/erroApp';
 
 const SEM_FORMATO =
@@ -101,6 +102,7 @@ function useDadosDaPagina(assistidoId: number, valido: boolean) {
 /** A evolução das metas em gráfico de um assistido (E27). */
 export function ProgressoPage() {
   const assistidoId = Number(useParams().assistidoId);
+  useRegistrarAbertura('abriu_progresso', String(assistidoId));
   const valido = Number.isInteger(assistidoId) && assistidoId > 0;
   const { assistidos, metas, dados, assistido, erro, carregando, tentarDeNovo } = useDadosDaPagina(
     assistidoId,

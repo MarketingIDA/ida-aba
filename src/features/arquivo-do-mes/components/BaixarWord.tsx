@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { baixarWord } from '@/features/arquivo-do-mes/word/baixarWord';
+import { registrarAcao } from '@/lib/auditoria';
 import { ehErroApp } from '@/lib/erroApp';
 
 interface Props {
@@ -18,7 +19,13 @@ interface Props {
  * arquivo que saiu e, se falhar, o motivo.
  */
 export function BaixarWord({ carteiraId, mes, rotulo, tamanho = 'lg' }: Readonly<Props>) {
-  const baixar = useMutation({ mutationFn: () => baixarWord(carteiraId, mes) });
+  const baixar = useMutation({
+    mutationFn: async () => {
+      const nome = await baixarWord(carteiraId, mes);
+      registrarAcao('baixou_arquivo_word', `${String(carteiraId)}:${mes}`, { arquivo: nome });
+      return nome;
+    },
+  });
   return (
     <div className="flex flex-col items-start gap-1.5">
       <Button

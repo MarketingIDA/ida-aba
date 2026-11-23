@@ -31,6 +31,7 @@ import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
 import { useEdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
 import { useOutrosDocumentos } from '@/features/evolucoes/routes/useOutrosDocumentos';
 import { conferirLeitura } from '@/features/evolucoes/tita/leitura';
+import { useRegistrarAbertura } from '@/lib/auditoria';
 import { ehErroApp } from '@/lib/erroApp';
 import { frequenciaDoPeriodo } from '@dominio/frequencia.ts';
 
@@ -155,6 +156,7 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
 /** Uma evolução mensal: as 4 partes, a conferência de cada uma, a devolução e concluir ou reabrir. */
 export function EvolucaoPage() {
   const { id = '' } = useParams();
+  useRegistrarAbertura('abriu_evolucao', id);
   const valido = z.guid().safeParse(id).success;
   const consulta = useQuery({ ...evolucaoOptions(id), enabled: valido });
   return (

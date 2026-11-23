@@ -10,6 +10,7 @@
 // Segredos (Edge Functions → Secrets): OPENAI_API_KEY e OPENAI_MODEL, os mesmos do rascunho.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 
+import { cabecalhoDaAuditoria } from '../_shared/dominio/autorDoPedido.ts';
 import {
   conferirAprimoramento,
   INSTRUCAO_DO_APRIMORAMENTO,
@@ -203,9 +204,11 @@ async function aprimorar(pedido: Request): Promise<Response> {
   }
   // A versão da IA não tem autor humano: só a chave de serviço grava `autor = 'ia'`. Os triggers
   // continuam valendo (evolução em conferência, formato da parte e volta para "a conferir").
+  // Quem pediu vai no cabeçalho, para a auditoria registrar a pessoa e não o sistema.
   const servico = createClient(
     lido.url,
     chave('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY'),
+    { global: { headers: cabecalhoDaAuditoria(autorizacao) } },
   );
   const { error } = await servico.schema('evolucao').from('versoes').insert({
     evolucao_id: evolucaoId,

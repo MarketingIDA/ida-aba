@@ -48,6 +48,9 @@ const ArquivoDoMesPage = lazy(() =>
 const ArquivosPage = lazy(() =>
   import('@/features/arquivo-do-mes').then((m) => ({ default: m.ArquivosPage })),
 );
+const AuditoriaPage = lazy(() =>
+  import('@/features/auditoria').then((m) => ({ default: m.AuditoriaPage })),
+);
 const OrientacoesPage = lazy(() =>
   import('@/features/orientacoes').then((m) => ({ default: m.OrientacoesPage })),
 );
@@ -139,6 +142,14 @@ const TELAS = [
     tela: (
       <ExigePapel papeis={['coordenacao_geral']}>
         <OrientacoesPage />
+      </ExigePapel>
+    ),
+  },
+  {
+    rota: '/auditoria',
+    tela: (
+      <ExigePapel papeis={['coordenacao_geral']}>
+        <AuditoriaPage />
       </ExigePapel>
     ),
   },
