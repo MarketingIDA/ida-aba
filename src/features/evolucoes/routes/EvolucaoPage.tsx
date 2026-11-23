@@ -15,7 +15,10 @@ import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTi
 import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
 import { textoAnteriorOptions } from '@/features/evolucoes/api/anterior.api';
 import { lacunasOptions } from '@/features/evolucoes/api/lacunas.api';
-import { metasJaAlcancadasOptions } from '@/features/evolucoes/api/metasDoCadastro.api';
+import {
+  metasComProgramaOptions,
+  metasJaAlcancadasOptions,
+} from '@/features/evolucoes/api/metasDoCadastro.api';
 import type { ContextoDaConferencia } from '@/features/evolucoes/conferencia';
 import { evolucaoOptions, importacaoOptions } from '@/features/evolucoes/queries';
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
@@ -57,7 +60,7 @@ function useJaAlcancadas(assistidoId: number | null): readonly string[] {
 
 /**
  * O que a conferência lê fora da evolução: as metas já alcançadas (E12), as lacunas (E10), o texto
- * do mês anterior (P7) e a frequência do período (E04).
+ * do mês anterior (P7), a frequência do período (E04) e o programa de cada meta (E12).
  */
 function useContexto(evolucao: Evolucao): ContextoDaConferencia {
   const jaAlcancadas = useJaAlcancadas(evolucao.assistidoId);
@@ -68,6 +71,10 @@ function useContexto(evolucao: Evolucao): ContextoDaConferencia {
   });
   // A mesma consulta da importação do Tita: não busca de novo.
   const importacao = useQuery(importacaoOptions(evolucao.id));
+  const metasComPrograma = useQuery({
+    ...metasComProgramaOptions(evolucao.assistidoId ?? 0),
+    enabled: evolucao.assistidoId !== null,
+  });
   const { inicio, fim } = evolucao.periodo;
   const noPeriodo = (importacao.data?.analises ?? []).filter(
     (a) => a.data >= inicio && a.data <= fim,
@@ -77,6 +84,7 @@ function useContexto(evolucao: Evolucao): ContextoDaConferencia {
     lacunas: lacunas.data ?? [],
     anterior: anterior.data ?? null,
     frequencia: frequenciaDoPeriodo(noPeriodo),
+    metasComPrograma: metasComPrograma.data ?? [],
   };
 }
 
