@@ -675,6 +675,26 @@ describe('Escrita à mão (E26)', () => {
         pedidos.push(await request.json());
         return HttpResponse.json({ ok: true, mudou: true });
       }),
+      http.post(`${REST}/rpc/historico_da_parte`, () =>
+        HttpResponse.json([
+          {
+            id: 8,
+            autor: 'ia',
+            instrucao: null,
+            criado_em: '2026-11-06T15:00:00Z',
+            criado_por: null,
+            conteudo: { ...TRECHOS_VAZIOS, abertura: 'O assistido participou das sessões.' },
+          },
+          {
+            id: 6,
+            autor: 'coordenador',
+            instrucao: null,
+            criado_em: '2026-11-05T15:00:00Z',
+            criado_por: 'Coordenadora Demo',
+            conteudo: { ...TRECHOS_VAZIOS, abertura: 'Participou das sessões.' },
+          },
+        ]),
+      ),
     );
     const { user } = abrir();
 
@@ -683,6 +703,11 @@ describe('Escrita à mão (E26)', () => {
 
     expect(await screen.findByText(/Pronto. Confira a evolução mensal/)).toBeInTheDocument();
     expect(pedidos).toEqual([{ evolucao_id: ID }]);
+
+    // A aba Fontes mostra o que foi escrito à mão e o aprimoramento (E26).
+    await user.click(parte('Evolução mensal').getByText('Fontes: escrito à mão'));
+    expect(await screen.findByText(/Escrito à mão por Coordenadora Demo/)).toBeInTheDocument();
+    expect(screen.getByText(/Aprimorado pela IA em/)).toBeInTheDocument();
   });
 });
 

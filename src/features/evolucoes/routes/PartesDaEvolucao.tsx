@@ -171,7 +171,13 @@ export function PartesDaEvolucao({ evolucao, edicao, contexto }: Readonly<Props>
           <Lacunas evolucao={evolucao} edicao={edicao} lacunas={contexto.lacunas ?? []} />
         )}
         <CorpoDaParte evolucao={evolucao} edicao={edicao} numero={numero} />
-        {numero !== 1 && !editando && <Fontes evolucaoId={evolucao.id} numero={numero} />}
+        {numero !== 1 && !editando && (
+          <Fontes
+            evolucaoId={evolucao.id}
+            numero={numero}
+            manual={evolucao.origem === 'manual' && versaoDa(evolucao, numero) !== null}
+          />
+        )}
         {numero !== 1 && !editando && versaoDa(evolucao, numero) !== null && (
           <HistoricoDaParte evolucaoId={evolucao.id} numero={numero} />
         )}
