@@ -16,7 +16,11 @@ import {
   salvarParte,
 } from '@/features/evolucoes/api/evolucao.api';
 import { buscarCoordenadores, buscarEvolucoesDoMes } from '@/features/evolucoes/api/evolucoes.api';
-import { buscarImportacao, gravarImportacao } from '@/features/evolucoes/api/importacao.api';
+import {
+  buscarImportacao,
+  darCiencia,
+  gravarImportacao,
+} from '@/features/evolucoes/api/importacao.api';
 import { buscarLeituraDeNivel, lerNiveis } from '@/features/evolucoes/api/niveis.api';
 import {
   aprimorarTexto,
@@ -102,6 +106,16 @@ export function useImportarTita(evolucaoId: string) {
     mutationFn: ({ arquivo, leitura }: { arquivo: string; leitura: Leitura }) =>
       gravarImportacao(evolucaoId, arquivo, leitura),
     onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
+  });
+}
+
+/** Dar ciência dos alertas da importação (E19): a importação volta do banco, com a ciência. */
+export function useDarCiencia(evolucaoId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: darCiencia,
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: evolucoesKeys.importacao(evolucaoId) }),
   });
 }
 

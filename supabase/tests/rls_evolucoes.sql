@@ -420,6 +420,13 @@ begin
   insert into resultado (teste, ok) select 'importar de novo apaga o nível de apoio do PDF anterior (E27)',
     (select count(*) from evolucao.niveis_de_apoio where evolucao_id = nova) = 0
     and (select count(*) from evolucao.leituras_de_nivel where evolucao_id = nova) = 0;
+  -- Ciência dos alertas (E19, P16): da importação, com quem e quando vindos do banco.
+  insert into evolucao.ciencias_da_importacao (importacao_id)
+    select max(id) from evolucao.importacoes where evolucao_id = nova;
+  insert into resultado (teste, ok) select 'coordenador dá ciência dos alertas da importação (E19)',
+    (select evolucao_id = nova and dada_por_nome = 'Coordenadora A'
+       from evolucao.ciencias_da_importacao where importacao_id = (
+         select max(id) from evolucao.importacoes where evolucao_id = nova));
   execute 'set local role service_role';
   begin
     perform evolucao.gravar_niveis(imp, 'lida', '[]'::jsonb);
@@ -941,7 +948,8 @@ insert into resultado (teste, ok) select 'contas médicas não lê as dicas nem 
 insert into resultado (teste, ok) select 'contas médicas não lê os outros documentos (E25), as lacunas (E10) nem as fontes (E06)',
   (select count(*) from evolucao.documentos) = 0
   and (select count(*) from evolucao.lacunas_ignoradas) = 0
-  and (select count(*) from evolucao.fontes) = 0;
+  and (select count(*) from evolucao.fontes) = 0
+  and (select count(*) from evolucao.ciencias_da_importacao) = 0;
 insert into resultado (teste, ok) select 'contas médicas não lê o histórico das versões (E07)',
   (select count(*) from evolucao.evolucoes e
      cross join generate_series(2, 4) n

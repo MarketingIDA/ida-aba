@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
 import type { Importacao } from '@/features/evolucoes/api/importacao.api';
 import { CalendarioDoTita } from '@/features/evolucoes/components/CalendarioDoTita';
+import { CienciaDosAlertas } from '@/features/evolucoes/components/CienciaDosAlertas';
 import {
   AnalisesDoTita,
   AvisosDaLeitura,
@@ -99,6 +100,11 @@ function ImportacaoGravada({
         {dataEHora(importacao.importadoEm)}. {textoDaFrequencia(conferencia.noPeriodo)}.
       </p>
       <AvisosDaLeitura bloqueios={[]} alertas={conferencia.alertas} />
+      <CienciaDosAlertas
+        evolucao={evolucao}
+        importacao={importacao}
+        alertas={conferencia.alertas.length}
+      />
       <CalendarioDoTita evolucao={evolucao} importacao={importacao} />
       <AnalisesDoTita analises={conferencia.noPeriodo} />
     </>

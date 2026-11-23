@@ -39,6 +39,8 @@ export interface ContextoDaConferencia {
   frequencia?: number | null;
   /** As metas em desenvolvimento do cadastro, com o programa (E12). */
   metasComPrograma?: readonly MetaComPrograma[];
+  /** Os alertas da importação do Tita ainda sem ciência (E19, P16). */
+  alertasSemCiencia?: number;
 }
 
 export function linhasDa(evolucao: Evolucao): number {
