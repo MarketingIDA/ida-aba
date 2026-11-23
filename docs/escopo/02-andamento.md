@@ -1,6 +1,6 @@
 # Andamento das implementações
 
-Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #46.
+Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #47.
 
 Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao.md) e ficam para o fim, depois de todas as implementações.
 
@@ -39,7 +39,7 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 | E23 | Cadastro de metas e atualização no envio | No ar | #16, #31 | Melhoria sugerida: avisar no cadastro as metas sem programa ou com "Critério a definir". |
 | E24 | Envio do arquivo do mês, arquivos recebidos e busca por assistido | No ar | #12, #13, #45 | |
 | E25 | Outros documentos (PDF, Word e foto) | No ar | #23, #24, #35 | |
-| E26 | Escrita à mão e "Aprimorar com a IA" | Parcial | #10, #41 | Falta a aba Fontes da evolução escrita à mão. Só o texto (parte 2) é aprimorado; as metas não. |
+| E26 | Escrita à mão, "Aprimorar com a IA" e a aba Fontes | No ar | #10, #41, #47 | Só o texto (parte 2) é aprimorado; as metas seguem o cadastro. |
 | E27 | Evolução das metas em gráfico | No ar | #25, #26, #27 | |
 | E28 | Assistidos vindos da Tita | No ar | #18, #22 | A sincronização diária (cron) depende de configuração. |
 | E28 | Relatório de metas em PDF e compartilhar | No ar | #28, #29 | |
@@ -51,6 +51,6 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 
 ## Próximos passos
 
-1. Merge do PR #46 (alerta da E12).
-2. As pendências marcadas como "Parcial" acima.
+1. Merge do PR #47 (aba Fontes da escrita à mão, E26).
+2. A E19, que depende do teste à mão.
 3. O teste à mão de tudo, pelo roteiro.
