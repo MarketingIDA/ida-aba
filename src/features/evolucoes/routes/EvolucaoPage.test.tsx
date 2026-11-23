@@ -607,3 +607,52 @@ describe('Gerar uma parte de novo (E08)', () => {
     ]);
   });
 });
+
+describe('Versões da parte (E07)', () => {
+  it('mostra as versões com a instrução e compara o texto atual com o da IA', async () => {
+    banco.versoes = [
+      {
+        numero: 4,
+        conteudo: { metas: ['Meta revisada pela coordenadora'] },
+        autor: 'coordenador',
+        criado_em: '2026-11-05T15:00:00Z',
+        criado_por: 'Coordenadora Demo',
+      },
+    ];
+    const pedidos: unknown[] = [];
+    server.use(
+      http.post(`${REST}/rpc/historico_da_parte`, async ({ request }) => {
+        pedidos.push(await request.json());
+        return HttpResponse.json([
+          {
+            id: 9,
+            autor: 'coordenador',
+            instrucao: null,
+            criado_em: '2026-11-05T15:00:00Z',
+            criado_por: 'Coordenadora Demo',
+            conteudo: { metas: ['Meta revisada pela coordenadora'] },
+          },
+          {
+            id: 7,
+            autor: 'ia',
+            instrucao: 'Inclua a meta de rotina.',
+            criado_em: '2026-11-04T15:00:00Z',
+            criado_por: null,
+            conteudo: { metas: ['Meta fictícia da IA'] },
+          },
+        ]);
+      }),
+    );
+    const { user } = abrir();
+
+    await screen.findByRole('heading', { level: 1 });
+    await user.click(parte('Metas para o mês atual').getByText('Versões desta parte'));
+
+    expect(await screen.findByText('Instrução: Inclua a meta de rotina.')).toBeInTheDocument();
+    expect(pedidos).toEqual([{ p_evolucao: ID, p_numero: 4 }]);
+    await user.click(screen.getByRole('button', { name: 'Comparar com o texto da IA' }));
+    expect(
+      within(screen.getByRole('region', { name: 'Texto da IA' })).getByText('Meta fictícia da IA'),
+    ).toBeInTheDocument();
+  });
+});

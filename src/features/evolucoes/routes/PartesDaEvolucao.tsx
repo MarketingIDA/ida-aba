@@ -3,6 +3,7 @@ import { ContadorDeLinhas, ContadorDeMetas } from '@/features/evolucoes/componen
 import { DicaParaAIA } from '@/features/evolucoes/components/DicaParaAIA';
 import { Identificacao } from '@/features/evolucoes/components/Identificacao';
 import { GerarParteDeNovo } from '@/features/evolucoes/components/GerarParteDeNovo';
+import { HistoricoDaParte } from '@/features/evolucoes/components/HistoricoDaParte';
 import { Fontes } from '@/features/evolucoes/routes/Fontes';
 import { Lacunas } from '@/features/evolucoes/routes/Lacunas';
 import { EdicaoDasMetas, MetasDaParte } from '@/features/evolucoes/components/MetasDaParte';
@@ -168,6 +169,9 @@ export function PartesDaEvolucao({ evolucao, edicao, contexto }: Readonly<Props>
         )}
         <CorpoDaParte evolucao={evolucao} edicao={edicao} numero={numero} />
         {numero !== 1 && !editando && <Fontes evolucaoId={evolucao.id} numero={numero} />}
+        {numero !== 1 && !editando && versaoDa(evolucao, numero) !== null && (
+          <HistoricoDaParte evolucaoId={evolucao.id} numero={numero} />
+        )}
         {numero !== 1 && cabeParteDeNovo(evolucao, numero) && edicao.editando === null && (
           <GerarParteDeNovo evolucaoId={evolucao.id} numero={numero} ocupado={edicao.ocupado} />
         )}
