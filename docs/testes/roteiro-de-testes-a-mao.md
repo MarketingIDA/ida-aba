@@ -42,6 +42,7 @@ Entre com a conta da coordenadora pelo link do convite e crie a senha (no mínim
 - [ ] 2.1 **O que ela vê.** Em Evoluções, só os assistidos da carteira dela. No menu: Evoluções, Metas, Arquivo do mês e Assinatura. Não aparece Cadastros.
 - [ ] 2.2 **Assinatura.** Em Assinatura, envie a imagem do item 0.5. Se o CRP não estiver no cadastro, aparece o aviso. 📱 Teste também tirar a foto pelo celular.
 - [ ] 2.3 **Metas.** Em Metas, abra um assistido e use "Nova meta" 3 ou 4 vezes, com o **programa** igual ao nome usado no Tita. Sem programa, a meta não terá gráfico. Deixe uma meta suspensa. Os cards filtram por situação.
+- [ ] 2.3b **Metas a completar (E23).** Cadastre uma meta em desenvolvimento sem programa: ela mostra "Falta o programa", e na lista de Metas o assistido aparece com "1 meta a completar". Depois do envio do arquivo do mês (item 4.4), a meta nova da parte 4 chega com "Critério a definir no cadastro" e mostra o que falta. Complete o programa e o critério: o aviso some.
 - [ ] 2.4 **Nova evolução.** Em Evoluções, "Nova evolução mensal" lista só quem ainda não tem evolução no mês. Escolha o assistido da meta.
 - [ ] 2.5 **PDF do Tita, os bloqueios.** Em "Importar o PDF do Tita", tente o PDF do *outro* assistido: deve recusar e dizer por quê. Se tiver à mão, tente um de outro mês ou com filtro de profissional.
 - [ ] 2.6 **PDF do Tita, o certo.** Importe o PDF certo. Confira os Dados do Favorecido, o número de análises e de faltas, e o alerta das datas fora do período, se houver. Clique em "Usar esta leitura".

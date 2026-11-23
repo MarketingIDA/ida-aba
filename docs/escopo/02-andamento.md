@@ -1,6 +1,6 @@
 # Andamento das implementações
 
-Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #48.
+Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #49.
 
 Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao.md) e ficam para o fim, depois de todas as implementações.
 
@@ -36,7 +36,7 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 | E20 | Dias analisados no banco e calendário | No ar | #15, #43 | |
 | E21 | Dica para a IA | No ar | #21 | |
 | E22 | Curadoria e orientações da IA | No ar | #21 | |
-| E23 | Cadastro de metas e atualização no envio | No ar | #16, #31 | Melhoria sugerida: avisar no cadastro as metas sem programa ou com "Critério a definir". |
+| E23 | Cadastro de metas, atualização no envio e aviso das metas a completar | No ar | #16, #31, #49 | |
 | E24 | Envio do arquivo do mês, arquivos recebidos e busca por assistido | No ar | #12, #13, #45 | |
 | E25 | Outros documentos (PDF, Word e foto) | No ar | #23, #24, #35 | |
 | E26 | Escrita à mão, "Aprimorar com a IA" e a aba Fontes | No ar | #10, #41, #47 | Só o texto (parte 2) é aprimorado; as metas seguem o cadastro. |
@@ -51,6 +51,6 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 
 ## Próximos passos
 
-1. Merge do PR #48 (ciência dos alertas, E19).
-2. As melhorias fora das regras: o aviso no cadastro de metas (E23) e o detalhe da tela da evolução.
+1. Merge do PR #49 (aviso das metas a completar, E23).
+2. O detalhe da tela da evolução, no design do protótipo.
 3. O teste à mão de tudo, pelo roteiro.

@@ -1,14 +1,15 @@
-import { Pencil, Target } from 'lucide-react';
+import { Pencil, Target, TriangleAlert } from 'lucide-react';
 
 import { EmptyState } from '@/components/EmptyState';
 import { Situacao } from '@/components/Situacao';
 import { Button } from '@/components/ui/button';
 import type { Meta } from '@/features/cadastros/api/metas.api';
-import { SITUACAO_DA_META } from '@/features/cadastros/metas';
+import { oQueFaltaNaMeta, SITUACAO_DA_META } from '@/features/cadastros/metas';
 
 /** Uma meta do cadastro, como no protótipo: o programa, a situação, o texto e o critério. */
 function LinhaDaMeta({ meta, aoAlterar }: Readonly<{ meta: Meta; aoAlterar?: () => void }>) {
   const { rotulo, tom } = SITUACAO_DA_META[meta.situacao];
+  const falta = oQueFaltaNaMeta(meta);
   return (
     <li className="flex flex-col gap-1.5 border-b border-borda px-5 py-4 last:border-b-0 min-[861px]:px-[22px]">
       <span className="flex flex-wrap items-center justify-between gap-2">
@@ -19,6 +20,12 @@ function LinhaDaMeta({ meta, aoAlterar }: Readonly<{ meta: Meta; aoAlterar?: () 
       </span>
       <b className="text-[0.90625rem] leading-snug font-extrabold text-marinho">{meta.texto}</b>
       <span className="text-[0.78rem] font-semibold text-apagado">{meta.criterio}</span>
+      {falta !== null && (
+        <span className="flex items-center gap-1.5 text-[0.78rem] font-bold text-alerta-text">
+          <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0" />
+          {falta}
+        </span>
+      )}
       {aoAlterar !== undefined && (
         <span className="flex justify-end">
           <Button variant="ghost" size="sm" onClick={aoAlterar}>

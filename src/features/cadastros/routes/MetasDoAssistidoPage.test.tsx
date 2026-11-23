@@ -84,6 +84,8 @@ describe('Metas do assistido, coordenador', () => {
       criterio: 'Sem dica em duas sessões',
       situacao: 'desenvolvimento',
     });
+    // A meta em desenvolvimento sem programa pede para ser completada.
+    expect(within(lista).getByText(/^Falta o programa\./)).toBeInTheDocument();
   });
 });
 

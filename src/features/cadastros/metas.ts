@@ -75,3 +75,24 @@ export function contarMetas(metas: readonly Meta[]): Record<SituacaoDaMeta, numb
   for (const meta of metas) contagem[meta.situacao] += 1;
   return contagem;
 }
+
+/** O critério que a meta nova recebe quando entra pelo envio do arquivo do mês (E23). */
+export const CRITERIO_A_DEFINIR = 'Critério a definir no cadastro';
+
+const SEM_PROGRAMA = 'Sem o programa, a meta não gera lacuna nem alerta na evolução.';
+
+/**
+ * O que falta à meta em desenvolvimento: o programa (sem ele, a meta não gera lacuna nem o alerta
+ * da E12) ou o critério, que a meta nova do envio traz "a definir". `null` se nada falta.
+ */
+export function oQueFaltaNaMeta(meta: Meta): string | null {
+  if (meta.situacao !== 'desenvolvimento') return null;
+  const semPrograma = (meta.programa ?? '').trim() === '';
+  const semCriterio = meta.criterio.trim() === CRITERIO_A_DEFINIR;
+  if (semPrograma && semCriterio)
+    return `Falta o programa e o critério de alcance. ${SEM_PROGRAMA}`;
+  if (semPrograma) return `Falta o programa. ${SEM_PROGRAMA}`;
+  return semCriterio
+    ? 'Falta o critério de alcance: a meta veio do envio do arquivo do mês.'
+    : null;
+}
