@@ -39,3 +39,17 @@ export function textoDoAndamento(carteira: CarteiraDoMes): string {
 }
 
 export const evolucoes = (n: number) => plural(n, 'evolução', 'evoluções');
+
+const semAcento = (texto: string) =>
+  texto.normalize('NFD').replaceAll(/\p{M}/gu, '').toLowerCase().trim();
+
+/** A busca por assistido (E24): pelo nome, pelo código da evolução ou pelo plano, sem acento. */
+export function achaAEvolucao(
+  evolucao: { assistido: string; codigo: string; plano: string | null },
+  busca: string,
+): boolean {
+  const procurado = semAcento(busca);
+  return [evolucao.assistido, evolucao.codigo, evolucao.plano ?? ''].some((campo) =>
+    semAcento(campo).includes(procurado),
+  );
+}

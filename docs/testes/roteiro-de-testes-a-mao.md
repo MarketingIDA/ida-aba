@@ -96,6 +96,7 @@ Entre com a conta do item 1.3.
 
 - [ ] 5.1 **O que ela vê.** Só "Arquivos recebidos", com os cards de recebidos e a chegar.
 - [ ] 5.2 **O arquivo.** O arquivo da carteira de teste aparece. A lista mostra os assistidos, o código e o plano.
+- [ ] 5.2b **Por assistido (E24).** Em "Buscar por assistido, código ou plano", digite parte do nome sem acento: aparece a evolução, com o código, o plano e a carteira, sem abrir arquivo por arquivo. O código e o nome do plano também acham. Algo que não existe mostra "Nenhuma evolução nos arquivos…". O nome não é link para contas médicas; na coordenação geral, é.
 - [ ] 5.3 **Word.** "Baixar Word": Cambria 12, espaçamento 1,5, um bloco por assistido em ordem alfabética, e a assinatura com o nome e o CRP no fim.
 - [ ] 5.4 **O que não vê.** Não aparecem rascunhos, devoluções, gráfico das metas nem o registro do PDF. Se colar o endereço `/progresso/<número>`, a tela não abre para esse perfil.
 

@@ -99,4 +99,21 @@ describe('Arquivos recebidos, contas médicas', () => {
     // Contas médicas não abre a evolução: o nome não é link.
     expect(within(evolucoes).queryByRole('link')).not.toBeInTheDocument();
   });
+
+  it('busca o assistido em todos os arquivos que chegaram, pelo nome, código ou plano', async () => {
+    const { user } = renderWithProviders(<ArquivosPage />, {
+      usuario: usuarioDemo({ papel: 'contas_medicas' }),
+    });
+
+    const busca = await screen.findByLabelText('Buscar por assistido, código ou plano');
+    await user.type(busca, 'elisa ficticia');
+    const achadas = await screen.findByRole('list', { name: 'Evoluções achadas' });
+    expect(within(achadas).getByText('Elisa Fictícia Torres')).toBeInTheDocument();
+    expect(within(achadas).getByText('Unidade Fictícia · Manhã')).toBeInTheDocument();
+    expect(within(achadas).queryByText('Davi Fictício Nunes')).not.toBeInTheDocument();
+
+    await user.clear(busca);
+    await user.type(busca, 'UNA-2611-999');
+    expect(await screen.findByText(/Nenhuma evolução nos arquivos/)).toBeInTheDocument();
+  });
 });
