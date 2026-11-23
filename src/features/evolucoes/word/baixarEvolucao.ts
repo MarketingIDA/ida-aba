@@ -1,0 +1,41 @@
+import type { ConteudoDoArquivo } from '@/features/arquivo-do-mes/api/conteudo.api';
+import { gerarWord } from '@/features/arquivo-do-mes/word/gerarWord';
+import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
+import { TRECHOS_VAZIOS } from '@dominio/evolucao.ts';
+
+/**
+ * A evolução de um assistido em Word, só para conferência (E14): o mesmo formato do arquivo do
+ * mês, com um bloco só, o aviso no topo e sem a assinatura. Não vai a contas médicas.
+ */
+export function conteudoDaEvolucao(evolucao: Evolucao): ConteudoDoArquivo {
+  return {
+    unidade: evolucao.unidade,
+    unidadeSigla: evolucao.codigo.split('-')[0] ?? '',
+    turno: evolucao.turno,
+    mesRef: evolucao.mesRef,
+    enviadoEm: null,
+    coordenador: evolucao.coordenador,
+    crp: null,
+    assinatura: null,
+    conferencia: true,
+    evolucoes: [
+      {
+        codigo: evolucao.codigo,
+        assistido: evolucao.assistido,
+        plano: evolucao.plano,
+        texto: evolucao.texto?.conteudo ?? TRECHOS_VAZIOS,
+        metasAlcancadas: evolucao.metasAlcancadas?.conteudo.metas ?? [],
+        metasDoMes: evolucao.metasDoMes?.conteudo.metas ?? [],
+      },
+    ],
+  };
+}
+
+/** `Evolucao-UNA-2611-001-EV-conferencia.docx` */
+export const nomeDoWordDaEvolucao = (evolucao: Evolucao) =>
+  `Evolucao-${evolucao.codigo}-conferencia.docx`;
+
+/** Monta o Word da evolução no navegador. */
+export function wordDaEvolucao(evolucao: Evolucao): Promise<Blob> {
+  return gerarWord(conteudoDaEvolucao(evolucao), null);
+}

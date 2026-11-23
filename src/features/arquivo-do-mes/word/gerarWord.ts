@@ -22,6 +22,14 @@ const MARGEM = { top: 1417, bottom: 1417, left: 1134, right: 1134 };
 
 const PREVIA =
   'Prévia para conferência. O arquivo ainda não foi enviado a contas médicas pelo sistema.';
+const CONFERENCIA =
+  'Evolução de um assistido, só para conferência. Não vai a contas médicas: o que vai é o arquivo do mês da carteira.';
+
+/** O aviso no topo: a evolução sozinha, a prévia do arquivo ou nenhum, no arquivo enviado. */
+function avisoDo(conteudo: ConteudoDoArquivo): string | null {
+  if (conteudo.conferencia === true) return CONFERENCIA;
+  return conteudo.enviadoEm === null ? PREVIA : null;
+}
 
 /** "Novembro, 2026", como no modelo. */
 export function mesEAno(mesRef: string): string {
@@ -91,15 +99,16 @@ function marcadores(docx: Docx) {
 }
 
 function cabecalho(docx: Docx, conteudo: ConteudoDoArquivo): Paragraph[] {
+  const texto = avisoDo(conteudo);
   const aviso =
-    conteudo.enviadoEm === null
-      ? [
+    texto === null
+      ? []
+      : [
           new docx.Paragraph({
             spacing: { after: 240 },
-            children: [negrito(docx, PREVIA, 'B45309')],
+            children: [negrito(docx, texto, 'B45309')],
           }),
-        ]
-      : [];
+        ];
   return [
     ...aviso,
     campo(docx, 'Nome do profissional', conteudo.coordenador ?? ''),
@@ -143,6 +152,7 @@ function assinaturaNoFim(
   conteudo: ConteudoDoArquivo,
   imagem: ImagemDoWord | null,
 ): Paragraph[] {
+  if (conteudo.conferencia === true) return [];
   const centro = { alignment: docx.AlignmentType.CENTER, keepLines: true };
   const linhas = ['______________________________', conteudo.coordenador ?? ''];
   if (conteudo.crp !== null) linhas.push(`CRP ${conteudo.crp}`);
