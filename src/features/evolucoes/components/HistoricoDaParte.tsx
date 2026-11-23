@@ -90,9 +90,10 @@ function Versoes({ evolucaoId, numero }: Readonly<Props>) {
       </p>
     );
   }
-  const [atual] = consulta.data;
+  // A última da IA ao lado da última do coordenador, qualquer que seja a atual (E07, E26).
   const daIA = consulta.data.find((v) => v.autor === 'ia');
-  const podeComparar = atual !== undefined && daIA !== undefined && daIA.id !== atual.id;
+  const doCoordenador = consulta.data.find((v) => v.autor === 'coordenador');
+  const podeComparar = daIA !== undefined && doCoordenador !== undefined;
   return (
     <div className="mt-2 flex flex-col gap-3">
       {podeComparar && (
@@ -112,7 +113,7 @@ function Versoes({ evolucaoId, numero }: Readonly<Props>) {
       {podeComparar && comparando && (
         <div className="grid gap-3 md:grid-cols-2">
           <Coluna titulo="Texto da IA" versao={daIA} metas={numero !== 2} />
-          <Coluna titulo="Texto atual" versao={atual} metas={numero !== 2} />
+          <Coluna titulo="Texto do coordenador" versao={doCoordenador} metas={numero !== 2} />
         </div>
       )}
       <ListaDasVersoes versoes={consulta.data} />

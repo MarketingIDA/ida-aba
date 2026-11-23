@@ -18,7 +18,11 @@ import {
 import { buscarCoordenadores, buscarEvolucoesDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { buscarImportacao, gravarImportacao } from '@/features/evolucoes/api/importacao.api';
 import { buscarLeituraDeNivel, lerNiveis } from '@/features/evolucoes/api/niveis.api';
-import { gerarParteDeNovo, gerarRascunho } from '@/features/evolucoes/api/rascunho.api';
+import {
+  aprimorarTexto,
+  gerarParteDeNovo,
+  gerarRascunho,
+} from '@/features/evolucoes/api/rascunho.api';
 import type { Leitura } from '@/features/evolucoes/tita/leitura';
 import type { DocumentoConferido } from '@dominio/documentos.ts';
 
@@ -124,6 +128,15 @@ export function useGerarRascunho(evolucaoId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => gerarRascunho(evolucaoId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
+  });
+}
+
+/** Aprimorar com a IA (E26): a evolução, as versões e as lacunas voltam do banco. */
+export function useAprimorarTexto(evolucaoId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => aprimorarTexto(evolucaoId),
     onSettled: () => queryClient.invalidateQueries({ queryKey: evolucoesKeys.all }),
   });
 }

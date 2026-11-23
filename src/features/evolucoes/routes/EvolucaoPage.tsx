@@ -9,6 +9,7 @@ import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
 import { BarraDaEvolucao } from '@/features/evolucoes/components/BarraDaEvolucao';
 import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDaEvolucao';
 import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
+import { EscritaAMao } from '@/features/evolucoes/components/EscritaAMao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
 import { textoAnteriorOptions } from '@/features/evolucoes/api/anterior.api';
@@ -76,6 +77,7 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
         aoResolver={edicao.resolverDevolucao}
       />
       <ImportacaoDoTita evolucao={evolucao} bloqueioDoRascunho={documentos.bloqueio} />
+      <EscritaAMao evolucao={evolucao} ocupado={edicao.ocupado || edicao.editando !== null} />
       <OutrosDocumentos evolucao={evolucao} estado={documentos} />
       <PartesDaEvolucao evolucao={evolucao} edicao={edicao} contexto={contexto} />
       <BarraDaEvolucao

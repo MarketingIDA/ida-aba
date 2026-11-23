@@ -8,6 +8,7 @@ import { EvolucaoPage } from '@/features/evolucoes';
 import { usuarioDemo } from '@/testing/factories/usuario';
 import { renderWithProviders } from '@/testing/renderWithProviders';
 import { server } from '@/testing/server';
+import { TRECHOS_VAZIOS } from '@dominio/evolucao.ts';
 
 // O PDF, o Word e a foto são lidos pelo pdf.js, pelo mammoth e pelo OCR; aqui a leitura devolve
 // um texto pronto. A foto traz o nome da assistida, que sai do texto.
@@ -562,7 +563,7 @@ describe('Semelhança com o mês anterior (P7)', () => {
 
 describe('Gerar uma parte de novo (E08)', () => {
   it('o coordenador pede de novo só a parte da IA, com a instrução', async () => {
-    Object.assign(banco, { partes_da_ia: [4] });
+    Object.assign(banco, { partes_da_ia: [4], origem: 'tita' });
     banco.versoes = [
       {
         numero: 4,
@@ -654,5 +655,33 @@ describe('Versões da parte (E07)', () => {
     expect(
       within(screen.getByRole('region', { name: 'Texto da IA' })).getByText('Meta fictícia da IA'),
     ).toBeInTheDocument();
+  });
+});
+
+describe('Escrita à mão (E26)', () => {
+  it('mostra o alerta e pede o texto aprimorado pela IA', async () => {
+    banco.versoes = [
+      {
+        numero: 2,
+        conteudo: { ...TRECHOS_VAZIOS, abertura: 'Participou das sessões.' },
+        autor: 'coordenador',
+        criado_em: '2026-11-05T15:00:00Z',
+        criado_por: 'Coordenadora Demo',
+      },
+    ];
+    const pedidos: unknown[] = [];
+    server.use(
+      http.post(`${env.SUPABASE_URL}/functions/v1/aprimorar-texto`, async ({ request }) => {
+        pedidos.push(await request.json());
+        return HttpResponse.json({ ok: true, mudou: true });
+      }),
+    );
+    const { user } = abrir();
+
+    expect(await screen.findByText('Escrita à mão, sem o PDF do Tita')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Aprimorar com a IA' }));
+
+    expect(await screen.findByText(/Pronto. Confira a evolução mensal/)).toBeInTheDocument();
+    expect(pedidos).toEqual([{ evolucao_id: ID }]);
   });
 });

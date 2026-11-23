@@ -23,3 +23,15 @@ export function gerarParteDeNovo(
 ): Promise<void> {
   return chamarFuncaoDaEvolucao('gerar-rascunho', evolucaoId, INDISPONIVEL, { numero, instrucao });
 }
+
+/**
+ * "Aprimorar com a IA" na evolução escrita à mão (E26): a Edge Function `aprimorar-texto` melhora a
+ * linguagem da parte 2, sem fato novo, e grava a versão da IA; o texto do coordenador fica guardado.
+ */
+export function aprimorarTexto(evolucaoId: string): Promise<void> {
+  return chamarFuncaoDaEvolucao(
+    'aprimorar-texto',
+    evolucaoId,
+    'Não foi possível aprimorar o texto agora. Tente de novo em instantes.',
+  );
+}
