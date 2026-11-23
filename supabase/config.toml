@@ -14,6 +14,10 @@ verify_jwt = true
 [functions.ler-niveis]
 verify_jwt = true
 
+# "Aprimorar com a IA" na evolução escrita à mão (E26). Com o login do coordenador.
+[functions.aprimorar-texto]
+verify_jwt = true
+
 # Sincronização dos assistidos com a Tita (E28). Sem a checagem de JWT da plataforma porque o
 # agendamento (pg_cron) não tem login: a própria função confere o login da coordenação geral ou o
 # token do agendamento antes de qualquer coisa.

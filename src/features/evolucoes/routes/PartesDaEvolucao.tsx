@@ -59,9 +59,12 @@ const podeMudar = (evolucao: Evolucao) =>
 const cabeDica = (evolucao: Evolucao, numero: NumeroDaParte) =>
   evolucao.editavel && evolucao.partesDaIA.includes(numero);
 
-/** Gerar a parte de novo (E08): o coordenador, em conferência, numa parte que a IA já escreveu. */
+/**
+ * Gerar a parte de novo (E08): o coordenador, em conferência, numa parte que a IA já escreveu a
+ * partir do PDF do Tita (a evolução escrita à mão não tem análises para a IA).
+ */
 const cabeParteDeNovo = (evolucao: Evolucao, numero: NumeroDaParte) =>
-  podeMudar(evolucao) && evolucao.partesDaIA.includes(numero);
+  podeMudar(evolucao) && evolucao.origem === 'tita' && evolucao.partesDaIA.includes(numero);
 
 /** Parte 2 na leitura: o texto, os termos inadequados (E10) e a dica para a IA (E21). */
 function LeituraDoTexto({ evolucao, edicao }: Readonly<Omit<Props, 'contexto'>>) {
