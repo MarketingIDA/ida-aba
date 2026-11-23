@@ -31,6 +31,11 @@ export interface ConteudoDoArquivo {
   /** O caminho da imagem no bucket `assinaturas`. */
   assinatura: string | null;
   evolucoes: EvolucaoDoWord[];
+  /**
+   * A evolução de um assistido, baixada só para conferência (E14): sai com o aviso e sem a
+   * assinatura, porque não vai a contas médicas.
+   */
+  conferencia?: boolean;
 }
 
 const esquemaMetas = z

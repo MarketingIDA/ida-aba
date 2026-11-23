@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
+import { BaixarEvolucao } from '@/features/evolucoes/components/BaixarEvolucao';
 import { BarraDaEvolucao } from '@/features/evolucoes/components/BarraDaEvolucao';
 import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDaEvolucao';
 import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
@@ -86,6 +87,7 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   return (
     <>
       <CabecalhoDaEvolucao evolucao={evolucao} />
+      <BaixarEvolucao evolucao={evolucao} />
       <DevolucoesDaEvolucao
         evolucao={evolucao}
         ocupado={edicao.ocupado}
