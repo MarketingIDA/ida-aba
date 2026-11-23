@@ -37,3 +37,30 @@ export function metaJaAlcancada(
   const chaves = new Set(alcancadas.map(normalizarMeta).filter((c) => c !== ''));
   return doMes.find((m) => chaves.has(normalizarMeta(m))) ?? null;
 }
+
+export interface MetaComPrograma {
+  texto: string;
+  programa: string;
+}
+
+/**
+ * A primeira meta para o mês atual cujo programa, no cadastro, o texto da evolução mensal não
+ * cita (E12). É alerta, não bloqueio. A comparação é a das lacunas no banco: os dois normalizados,
+ * o programa procurado dentro do texto.
+ */
+export function metaSemProgramaNoTexto(
+  doMes: readonly string[],
+  doCadastro: readonly MetaComPrograma[],
+  texto: string,
+): MetaComPrograma | null {
+  const normalizado = normalizarMeta(texto);
+  const porMeta = new Map(doCadastro.map((m) => [normalizarMeta(m.texto), m]));
+  for (const linha of doMes) {
+    const meta = porMeta.get(normalizarMeta(linha));
+    const programa = normalizarMeta(meta?.programa ?? '');
+    if (meta !== undefined && programa !== '' && !normalizado.includes(programa)) {
+      return { texto: linha, programa: meta.programa };
+    }
+  }
+  return null;
+}

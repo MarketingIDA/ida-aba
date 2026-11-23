@@ -12,7 +12,7 @@ import {
 import { citaFrequencia, LIMITE_DA_FREQUENCIA } from '@dominio/frequencia.ts';
 import { nomeDoMes } from '@dominio/mes.ts';
 import { LIMITE_DE_SEMELHANCA, semelhanca } from '@dominio/semelhanca.ts';
-import { metaJaAlcancada } from '@dominio/metas.ts';
+import { type MetaComPrograma, metaJaAlcancada, metaSemProgramaNoTexto } from '@dominio/metas.ts';
 
 /** E11: menos de 4 metas alcançadas no mês é alerta, não bloqueio. */
 export const MINIMO_DE_ALCANCADAS = 4;
@@ -37,6 +37,8 @@ export interface ContextoDaConferencia {
   anterior?: TextoAnterior | null;
   /** A frequência do período, em %, pelo PDF do Tita (E04); `null` sem importação. */
   frequencia?: number | null;
+  /** As metas em desenvolvimento do cadastro, com o programa (E12). */
+  metasComPrograma?: readonly MetaComPrograma[];
 }
 
 export function linhasDa(evolucao: Evolucao): number {
@@ -103,7 +105,12 @@ export function avisoDaParte(
     ].filter((aviso) => aviso !== null);
     return avisos.length === 0 ? null : avisos.join(' ');
   }
-  if (numero === 4) return avisoDasMetasDoMes(evolucao, contexto.lacunas ?? []);
+  if (numero === 4) {
+    return (
+      avisoDasMetasDoMes(evolucao, contexto.lacunas ?? []) ??
+      avisoDoProgramaNoTexto(evolucao, contexto.metasComPrograma ?? [])
+    );
+  }
   if (numero !== 3) return null;
   const alcancadas = evolucao.metasAlcancadas?.conteudo.metas.length ?? 0;
   return alcancadas < MINIMO_DE_ALCANCADAS
@@ -140,6 +147,22 @@ function avisoDasMetasDoMes(evolucao: Evolucao, lacunas: readonly Lacuna[]): str
     }
   }
   return null;
+}
+
+/** E12: meta para o mês atual cujo programa o texto da evolução mensal não cita. */
+function avisoDoProgramaNoTexto(
+  evolucao: Evolucao,
+  metasComPrograma: readonly MetaComPrograma[],
+): string | null {
+  if (evolucao.texto === null) return null;
+  const meta = metaSemProgramaNoTexto(
+    evolucao.metasDoMes?.conteudo.metas ?? [],
+    metasComPrograma,
+    textoDaEvolucao(evolucao.texto.conteudo),
+  );
+  return meta === null
+    ? null
+    : `A meta "${meta.texto}" é do programa ${meta.programa}, que o texto da evolução mensal não cita. Não impede a conclusão.`;
 }
 
 export function conferidas(evolucao: Evolucao): number {

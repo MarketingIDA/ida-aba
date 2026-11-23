@@ -1,6 +1,6 @@
 # Andamento das implementações
 
-Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #45.
+Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #46.
 
 Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao.md) e ficam para o fim, depois de todas as implementações.
 
@@ -25,7 +25,7 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 | E09 | Identificação completa | No ar | #15 | |
 | E10 | 7 linhas, lacunas, semelhança (P7) e termos inadequados | No ar | #20, #33, #37 | |
 | E11 | Metas alcançadas, manutenção e aviso de menos de 4 | No ar | #31 | |
-| E12 | Metas para o mês atual: mínimo de 4 e meta já alcançada | Parcial | #31, #33 | O alerta de meta cujo programa o texto não cita existe só quando a lacuna foi ignorada. |
+| E12 | Metas para o mês atual: mínimo de 4, meta já alcançada e programa que o texto não cita | No ar | #31, #33, #46 | |
 | E13 | Fluxo, reabrir e devolução pela coordenação geral | No ar | #10, #17 | |
 | E14 | Word, assinatura, prévia e evolução sozinha para conferência | No ar | #11, #13, #44 | |
 | E15 | Prazo do dia 10 e o que falta | No ar | #12 | |
@@ -37,7 +37,7 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 | E21 | Dica para a IA | No ar | #21 | |
 | E22 | Curadoria e orientações da IA | No ar | #21 | |
 | E23 | Cadastro de metas e atualização no envio | No ar | #16, #31 | Melhoria sugerida: avisar no cadastro as metas sem programa ou com "Critério a definir". |
-| E24 | Envio do arquivo do mês e arquivos recebidos | No ar | #12, #13, #45 | Busca por assistido no PR #45 (aguarda o merge). |
+| E24 | Envio do arquivo do mês, arquivos recebidos e busca por assistido | No ar | #12, #13, #45 | |
 | E25 | Outros documentos (PDF, Word e foto) | No ar | #23, #24, #35 | |
 | E26 | Escrita à mão e "Aprimorar com a IA" | Parcial | #10, #41 | Falta a aba Fontes da evolução escrita à mão. Só o texto (parte 2) é aprimorado; as metas não. |
 | E27 | Evolução das metas em gráfico | No ar | #25, #26, #27 | |
@@ -51,6 +51,6 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 
 ## Próximos passos
 
-1. Merge do PR #45 (busca por assistido, E24).
+1. Merge do PR #46 (alerta da E12).
 2. As pendências marcadas como "Parcial" acima.
 3. O teste à mão de tudo, pelo roteiro.

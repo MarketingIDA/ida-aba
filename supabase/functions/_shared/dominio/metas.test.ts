@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { marcadaComoManutencao, metaJaAlcancada, normalizarMeta } from './metas.ts';
+import {
+  marcadaComoManutencao,
+  metaJaAlcancada,
+  metaSemProgramaNoTexto,
+  normalizarMeta,
+} from './metas.ts';
 
 describe('metas da evolução e do cadastro (E12, E23)', () => {
   it('normaliza como o banco', () => {
@@ -23,5 +28,19 @@ describe('metas da evolução e do cadastro (E12, E23)', () => {
       'parear FIGURAS iguais',
     );
     expect(metaJaAlcancada(['Nomear cores', ''], alcancadas)).toBeNull();
+  });
+
+  it('acha a meta para o mês atual cujo programa o texto não cita (E12)', () => {
+    const cadastro = [
+      { texto: 'Imitar três ações', programa: 'Imitação' },
+      { texto: 'Parear figuras', programa: 'Pareamento' },
+      { texto: 'Meta sem programa', programa: ' ' },
+    ];
+    const doMes = ['Meta nova', 'Meta sem programa', '- Imitar três ações.', 'Parear figuras'];
+    expect(metaSemProgramaNoTexto(doMes, cadastro, 'Trabalhou IMITACAO e pareamento.')).toBeNull();
+    expect(metaSemProgramaNoTexto(doMes, cadastro, 'Trabalhou imitação.')).toEqual({
+      texto: 'Parear figuras',
+      programa: 'Pareamento',
+    });
   });
 });

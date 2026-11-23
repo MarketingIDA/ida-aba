@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { erroDoBanco } from '@/lib/erroDoBanco';
 import { supabase } from '@/lib/supabase';
+import type { MetaComPrograma } from '@dominio/metas.ts';
 
 /**
  * As metas em desenvolvimento do cadastro de metas do assistido (E23): o ponto de partida das
@@ -60,4 +61,28 @@ export const metasJaAlcancadasOptions = (assistidoId: number) =>
   queryOptions({
     queryKey: ['metas', assistidoId, 'ja-alcancadas'] as const,
     queryFn: () => buscarMetasJaAlcancadas(assistidoId),
+  });
+
+/** As metas em desenvolvimento com o programa: para o alerta da meta que o texto não cita (E12). */
+export async function buscarMetasComPrograma(assistidoId: number): Promise<MetaComPrograma[]> {
+  const { data, error } = await supabase
+    .schema('cadastro')
+    .from('metas')
+    .select('texto, programa')
+    .eq('assistido_id', assistidoId)
+    .eq('situacao', 'desenvolvimento')
+    .not('programa', 'is', null)
+    .order('id');
+  if (error !== null) {
+    throw erroDoBanco(error, {
+      indisponivel: 'Não foi possível carregar as metas do cadastro agora.',
+    });
+  }
+  return z.array(z.object({ texto: z.string(), programa: z.string() })).parse(data);
+}
+
+export const metasComProgramaOptions = (assistidoId: number) =>
+  queryOptions({
+    queryKey: ['metas', assistidoId, 'com-programa'] as const,
+    queryFn: () => buscarMetasComPrograma(assistidoId),
   });
