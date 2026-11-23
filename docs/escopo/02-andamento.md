@@ -1,6 +1,6 @@
 # Andamento das implementações
 
-Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #47.
+Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #48.
 
 Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao.md) e ficam para o fim, depois de todas as implementações.
 
@@ -32,7 +32,7 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 | E16 | Código da evolução | No ar | #1 | |
 | E17 | Turno integral num arquivo só | No ar | #6, #12 | A carteira de turno integral é uma carteira só; não há tela própria. |
 | E18 | Período analisado | No ar | #14 | |
-| E19 | Datas divergentes | Parcial | #14, #43 | Calendário e motivo de cada data no ar. Falta confirmar no teste se os avisos da importação seguem nas conferências até a ciência (P16). |
+| E19 | Datas divergentes, calendário e ciência dos alertas | No ar | #14, #43, #48 | |
 | E20 | Dias analisados no banco e calendário | No ar | #15, #43 | |
 | E21 | Dica para a IA | No ar | #21 | |
 | E22 | Curadoria e orientações da IA | No ar | #21 | |
@@ -51,6 +51,6 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 
 ## Próximos passos
 
-1. Merge do PR #47 (aba Fontes da escrita à mão, E26).
-2. A E19, que depende do teste à mão.
+1. Merge do PR #48 (ciência dos alertas, E19).
+2. As melhorias fora das regras: o aviso no cadastro de metas (E23) e o detalhe da tela da evolução.
 3. O teste à mão de tudo, pelo roteiro.

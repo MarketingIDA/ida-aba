@@ -420,6 +420,7 @@ describe('Nível de apoio', () => {
     server.use(
       http.get(`${REST}/importacoes`, () =>
         HttpResponse.json({
+          id: 3,
           arquivo_nome: 'Relatorio ficticio.pdf',
           criado_em: '2026-11-04T15:00:00Z',
           favorecido: {
@@ -725,6 +726,7 @@ describe('Frequência abaixo de 75% (E04)', () => {
     server.use(
       http.get(`${REST}/importacoes`, () =>
         HttpResponse.json({
+          id: 3,
           arquivo_nome: 'Relatorio ficticio.pdf',
           criado_em: '2026-11-04T15:00:00Z',
           favorecido: {
@@ -753,6 +755,7 @@ describe('Calendário dos dias analisados (E19, E20)', () => {
     server.use(
       http.get(`${REST}/importacoes`, () =>
         HttpResponse.json({
+          id: 3,
           arquivo_nome: 'Relatorio ficticio.pdf',
           criado_em: '2026-11-04T15:00:00Z',
           favorecido: {
@@ -780,5 +783,39 @@ describe('Calendário dos dias analisados (E19, E20)', () => {
     expect(
       await screen.findByText(/antes do período: já entrou na evolução de outubro/),
     ).toBeInTheDocument();
+  });
+
+  it('mantém os alertas na barra até o coordenador dar ciência (E19, P16)', async () => {
+    const pedidos: unknown[] = [];
+    server.use(
+      http.get(`${REST}/importacoes`, () =>
+        HttpResponse.json({
+          id: 3,
+          arquivo_nome: 'Relatorio ficticio.pdf',
+          criado_em: '2026-11-04T15:00:00Z',
+          favorecido: {
+            nome: 'Alice Fictícia Moura',
+            periodo_inicio: '2026-09-30',
+            periodo_fim: '2026-10-31',
+          },
+          analises: [
+            { data: '2026-09-30', texto: 'Sessão fictícia antiga.', falta: false },
+            { data: '2026-10-05', texto: 'Sessão fictícia.', falta: false },
+          ],
+          ciencias_da_importacao: null,
+        }),
+      ),
+      http.post(`${REST}/ciencias_da_importacao`, async ({ request }) => {
+        pedidos.push(await request.json());
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+    const { user } = abrir();
+
+    expect(await screen.findByText(/do PDF do Tita sem ciência/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Dar ciência dos alertas' }));
+    await vi.waitFor(() => {
+      expect(pedidos).toEqual([{ importacao_id: 3 }]);
+    });
   });
 });

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
+import type { Importacao } from '@/features/evolucoes/api/importacao.api';
 import { BaixarEvolucao } from '@/features/evolucoes/components/BaixarEvolucao';
 import { BarraDaEvolucao } from '@/features/evolucoes/components/BarraDaEvolucao';
 import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDaEvolucao';
@@ -24,6 +25,7 @@ import { evolucaoOptions, importacaoOptions } from '@/features/evolucoes/queries
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
 import { useEdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
 import { useOutrosDocumentos } from '@/features/evolucoes/routes/useOutrosDocumentos';
+import { conferirLeitura } from '@/features/evolucoes/tita/leitura';
 import { ehErroApp } from '@/lib/erroApp';
 import { frequenciaDoPeriodo } from '@dominio/frequencia.ts';
 
@@ -62,6 +64,12 @@ function useJaAlcancadas(assistidoId: number | null): readonly string[] {
  * O que a conferência lê fora da evolução: as metas já alcançadas (E12), as lacunas (E10), o texto
  * do mês anterior (P7), a frequência do período (E04) e o programa de cada meta (E12).
  */
+/** Os alertas da importação atual que ainda esperam a ciência do coordenador (E19, P16). */
+function alertasSemCiencia(importacao: Importacao | null, evolucao: Evolucao): number {
+  if (importacao?.ciencia !== null) return 0;
+  return conferirLeitura(importacao, evolucao.assistido, evolucao.mesRef).alertas.length;
+}
+
 function useContexto(evolucao: Evolucao): ContextoDaConferencia {
   const jaAlcancadas = useJaAlcancadas(evolucao.assistidoId);
   const lacunas = useQuery(lacunasOptions(evolucao.id));
@@ -85,6 +93,7 @@ function useContexto(evolucao: Evolucao): ContextoDaConferencia {
     anterior: anterior.data ?? null,
     frequencia: frequenciaDoPeriodo(noPeriodo),
     metasComPrograma: metasComPrograma.data ?? [],
+    alertasSemCiencia: alertasSemCiencia(importacao.data ?? null, evolucao),
   };
 }
 

@@ -10,10 +10,13 @@ import { supabase } from '@/lib/supabase';
  * última. Quem pode o quê e o que é recusado são do banco; aqui só se traduzem as recusas.
  */
 export interface Importacao {
+  id: number;
   arquivo: string;
   importadoEm: string;
   favorecido: Favorecido;
   analises: AnaliseLida[];
+  /** Quem deu ciência dos alertas desta importação e quando (E19, P16), ou `null`. */
+  ciencia: { por: string; em: string } | null;
 }
 
 const esquemaFavorecido = z
@@ -44,16 +47,26 @@ const esquemaFavorecido = z
 
 const esquemaImportacao = z
   .object({
+    id: z.number().int(),
     arquivo_nome: z.string(),
     criado_em: z.string(),
     favorecido: esquemaFavorecido,
     analises: z.array(z.object({ data: z.string(), texto: z.string(), falta: z.boolean() })),
+    ciencias_da_importacao: z
+      .object({ dada_por_nome: z.string(), dada_em: z.string() })
+      .nullable()
+      .default(null),
   })
   .transform((i): Importacao => ({
+    id: i.id,
     arquivo: i.arquivo_nome,
     importadoEm: i.criado_em,
     favorecido: i.favorecido,
     analises: i.analises,
+    ciencia:
+      i.ciencias_da_importacao === null
+        ? null
+        : { por: i.ciencias_da_importacao.dada_por_nome, em: i.ciencias_da_importacao.dada_em },
   }));
 
 const MENSAGENS: MensagensDoBanco = {
@@ -74,7 +87,9 @@ export async function buscarImportacao(evolucaoId: string): Promise<Importacao |
   const { data, error } = await supabase
     .schema('evolucao')
     .from('importacoes')
-    .select('arquivo_nome, criado_em, favorecido, analises')
+    .select(
+      'id, arquivo_nome, criado_em, favorecido, analises, ciencias_da_importacao(dada_por_nome, dada_em)',
+    )
     .eq('evolucao_id', evolucaoId)
     .order('id', { ascending: false })
     .limit(1)
@@ -114,4 +129,20 @@ export async function gravarImportacao(
       analises,
     });
   if (error !== null) throw erroDoBanco(error, MENSAGENS);
+}
+
+/** Dá ciência dos alertas da importação (E19, P16): quem e quando são do banco. */
+export async function darCiencia(importacaoId: number): Promise<void> {
+  const { error } = await supabase
+    .schema('evolucao')
+    .from('ciencias_da_importacao')
+    .insert({ importacao_id: importacaoId });
+  if (error !== null) {
+    throw erroDoBanco(error, {
+      duplicado: 'A ciência destes alertas já foi dada. Atualize a tela.',
+      sem_permissao: 'Só o coordenador da carteira dá ciência dos alertas.',
+      indisponivel: 'Não foi possível gravar a ciência agora. Tente de novo em instantes.',
+      regras: { evolucao_fechada: 'A evolução não está em conferência. Reabra antes.' },
+    });
+  }
 }

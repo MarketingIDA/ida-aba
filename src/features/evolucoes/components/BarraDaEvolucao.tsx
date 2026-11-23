@@ -21,7 +21,7 @@ interface Props {
   contexto: ContextoDaConferencia;
 }
 
-function Resumo({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
+function Resumo({ evolucao, alertas }: Readonly<{ evolucao: Evolucao; alertas: number }>) {
   if (evolucao.situacao === 'em_conferencia') {
     const n = conferidas(evolucao);
     return (
@@ -29,6 +29,8 @@ function Resumo({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
         <Info aria-hidden="true" className="size-4 shrink-0 text-azul" />
         {n} de 4 partes conferidas
         {devolucaoAberta(evolucao) !== null && ' · devolução a resolver'}
+        {alertas > 0 &&
+          ` · ${String(alertas)} ${alertas === 1 ? 'alerta' : 'alertas'} do PDF do Tita sem ciência`}
       </span>
     );
   }
@@ -73,7 +75,7 @@ export function BarraDaEvolucao({
         </p>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Resumo evolucao={evolucao} />
+        <Resumo evolucao={evolucao} alertas={contexto.alertasSemCiencia ?? 0} />
         {evolucao.editavel && evolucao.situacao === 'em_conferencia' && (
           <Button
             size="lg"
