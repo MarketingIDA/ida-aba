@@ -13,5 +13,7 @@ describe('cabecalhoDaAuditoria', () => {
     });
     expect(cabecalhoDaAuditoria(token({ sub: "1' or 1=1" }))).toEqual({});
     expect(cabecalhoDaAuditoria('Bearer lixo')).toEqual({});
+    expect(cabecalhoDaAuditoria('Bearer a.%%%.c')).toEqual({});
+    expect(cabecalhoDaAuditoria(`Bearer a.${btoa('null')}.c`)).toEqual({});
   });
 });

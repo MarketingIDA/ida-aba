@@ -62,6 +62,11 @@ export const handlersDeRest = [
   ),
 
   // A carteira do coordenador demo tem evoluções só no mês dos testes.
+  // A auditoria das ações (abrir, baixar): o banco só grava, não devolve nada.
+  http.post(
+    `${env.SUPABASE_URL}/rest/v1/rpc/registrar_acao`,
+    () => new HttpResponse(null, { status: 204 }),
+  ),
   http.post(`${env.SUPABASE_URL}/rest/v1/rpc/evolucoes_do_mes`, async ({ request }) => {
     if (request.headers.get('content-profile') !== 'evolucao') return schemaErrado();
     const corpo = (await request.json()) as { p_mes?: string };
