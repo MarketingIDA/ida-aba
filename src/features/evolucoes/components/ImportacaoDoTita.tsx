@@ -4,10 +4,7 @@ import { useId, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
 import type { Importacao } from '@/features/evolucoes/api/importacao.api';
-import { CalendarioDoTita } from '@/features/evolucoes/components/CalendarioDoTita';
-import { CienciaDosAlertas } from '@/features/evolucoes/components/CienciaDosAlertas';
 import {
-  AnalisesDoTita,
   AvisosDaLeitura,
   DadosDoFavorecido,
   textoDaFrequencia,
@@ -87,7 +84,10 @@ function LeituraParaConferir({
   );
 }
 
-/** A importação gravada: de onde veio, a frequência, os alertas que seguem e as análises. */
+/**
+ * A importação gravada: de onde veio e a frequência. Os alertas e a ciência ficam nas Conferências
+ * do painel; o calendário e as análises, nas Fontes.
+ */
 function ImportacaoGravada({
   importacao,
   evolucao,
@@ -99,14 +99,15 @@ function ImportacaoGravada({
         Importado de <b className="text-marinho">{importacao.arquivo}</b> em{' '}
         {dataEHora(importacao.importadoEm)}. {textoDaFrequencia(conferencia.noPeriodo)}.
       </p>
-      <AvisosDaLeitura bloqueios={[]} alertas={conferencia.alertas} />
-      <CienciaDosAlertas
-        evolucao={evolucao}
-        importacao={importacao}
-        alertas={conferencia.alertas.length}
-      />
-      <CalendarioDoTita evolucao={evolucao} importacao={importacao} />
-      <AnalisesDoTita analises={conferencia.noPeriodo} />
+      {conferencia.alertas.length > 0 && (
+        <p className="text-sm font-semibold text-alerta-text">
+          A leitura tem{' '}
+          {conferencia.alertas.length === 1
+            ? '1 alerta'
+            : `${String(conferencia.alertas.length)} alertas`}
+          : veja em Conferências, no painel ao lado.
+        </p>
+      )}
     </>
   );
 }

@@ -16,6 +16,7 @@ import { EtapasDaEvolucao } from '@/features/evolucoes/components/EtapasDaEvoluc
 import { EscritaAMao } from '@/features/evolucoes/components/EscritaAMao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
+import { GradeDaEvolucao } from '@/features/evolucoes/components/painel/PainelDaEvolucao';
 import { SituacaoDaEvolucao } from '@/features/evolucoes/components/SituacaoDaEvolucao';
 import { textoAnteriorOptions } from '@/features/evolucoes/api/anterior.api';
 import { lacunasOptions } from '@/features/evolucoes/api/lacunas.api';
@@ -135,7 +136,9 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
       <ImportacaoDoTita evolucao={evolucao} bloqueioDoRascunho={documentos.bloqueio} />
       <EscritaAMao evolucao={evolucao} ocupado={ocupado} />
       <OutrosDocumentos evolucao={evolucao} estado={documentos} />
-      <PartesDaEvolucao evolucao={evolucao} edicao={edicao} contexto={contexto} />
+      <GradeDaEvolucao evolucao={evolucao} contexto={contexto} importacao={importacao}>
+        <PartesDaEvolucao evolucao={evolucao} edicao={edicao} contexto={contexto} />
+      </GradeDaEvolucao>
       <BarraDaEvolucao
         evolucao={evolucao}
         ocupado={ocupado}
