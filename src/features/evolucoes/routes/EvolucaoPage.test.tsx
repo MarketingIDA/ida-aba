@@ -721,3 +721,39 @@ describe('Frequência abaixo de 75% (E04)', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('Calendário dos dias analisados (E19, E20)', () => {
+  it('marca sessões e faltas no mês e diz onde entrou a data de antes do período', async () => {
+    Object.assign(banco, { assistido_id: 5 });
+    server.use(
+      http.get(`${REST}/importacoes`, () =>
+        HttpResponse.json({
+          arquivo_nome: 'Relatorio ficticio.pdf',
+          criado_em: '2026-11-04T15:00:00Z',
+          favorecido: {
+            nome: 'Alice Fictícia Moura',
+            periodo_inicio: '2026-09-30',
+            periodo_fim: '2026-10-31',
+          },
+          analises: [
+            { data: '2026-09-30', texto: 'Sessão fictícia antiga.', falta: false },
+            { data: '2026-10-05', texto: 'Sessão fictícia.', falta: false },
+            { data: '2026-10-07', texto: 'Não compareceu.', falta: true },
+          ],
+        }),
+      ),
+      http.get(`${REST}/dias_analisados`, () =>
+        HttpResponse.json([{ data: '2026-09-30', mes_ref: '2026-10-01', evolucao_id: 'outra' }]),
+      ),
+    );
+    const { user } = abrir();
+
+    await user.click(await screen.findByText(/Calendário dos dias analisados/));
+
+    expect(screen.getByLabelText('05/10: 1 sessão')).toBeInTheDocument();
+    expect(screen.getByLabelText('07/10: falta')).toBeInTheDocument();
+    expect(
+      await screen.findByText(/antes do período: já entrou na evolução de outubro/),
+    ).toBeInTheDocument();
+  });
+});

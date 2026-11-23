@@ -45,6 +45,7 @@ Entre com a conta da coordenadora pelo link do convite e crie a senha (no mínim
 - [ ] 2.4 **Nova evolução.** Em Evoluções, "Nova evolução mensal" lista só quem ainda não tem evolução no mês. Escolha o assistido da meta.
 - [ ] 2.5 **PDF do Tita, os bloqueios.** Em "Importar o PDF do Tita", tente o PDF do *outro* assistido: deve recusar e dizer por quê. Se tiver à mão, tente um de outro mês ou com filtro de profissional.
 - [ ] 2.6 **PDF do Tita, o certo.** Importe o PDF certo. Confira os Dados do Favorecido, o número de análises e de faltas, e o alerta das datas fora do período, se houver. Clique em "Usar esta leitura".
+- [ ] 2.6b **Calendário dos dias analisados.** Depois de importar, abra "Calendário dos dias analisados": o mês do período mostra as sessões e as faltas. Se o PDF trouxer datas fora do período, elas aparecem com o motivo: depois do período fica para a evolução seguinte; antes, diz em que evolução o dia já entrou, se entrou.
 - [ ] 2.7 **Nível de apoio.** Logo depois, a tela do PDF mostra a leitura dos níveis em andamento e, em 1 a 2 minutos, "lida". Se falhar, use "Ler de novo". Anote quanto tempo levou.
 - [ ] 2.8 **Outros documentos.** Em "Juntar documentos", junte o PDF ou Word do item 0.4. Se o nome não estiver no texto, ele espera "É de <nome>". Corrija a data ou o tipo se a sugestão vier errada.
 - [ ] 2.9 📱 **Foto.** No celular, "Tirar foto" de um documento impresso. O texto lido sempre espera "Conferi: é de <nome>". Letra de mão é mal lida.
