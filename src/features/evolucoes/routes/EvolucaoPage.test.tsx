@@ -685,3 +685,39 @@ describe('Escrita à mão (E26)', () => {
     expect(pedidos).toEqual([{ evolucao_id: ID }]);
   });
 });
+
+describe('Frequência abaixo de 75% (E04)', () => {
+  it('avisa quando a abertura não cita a frequência do período', async () => {
+    banco.versoes = [
+      {
+        numero: 2,
+        conteudo: { ...TRECHOS_VAZIOS, abertura: 'Participou das sessões.' },
+        autor: 'coordenador',
+        criado_em: '2026-11-05T15:00:00Z',
+        criado_por: 'Coordenadora Demo',
+      },
+    ];
+    server.use(
+      http.get(`${REST}/importacoes`, () =>
+        HttpResponse.json({
+          arquivo_nome: 'Relatorio ficticio.pdf',
+          criado_em: '2026-11-04T15:00:00Z',
+          favorecido: {
+            nome: 'Alice Fictícia Moura',
+            periodo_inicio: '2026-10-01',
+            periodo_fim: '2026-10-31',
+          },
+          analises: [
+            { data: '2026-10-05', texto: 'Sessão fictícia.', falta: false },
+            { data: '2026-10-07', texto: 'Não compareceu.', falta: true },
+          ],
+        }),
+      ),
+    );
+    abrir();
+
+    expect(
+      await screen.findByText(/A frequência do período foi de 50%, abaixo de 75%/),
+    ).toBeInTheDocument();
+  });
+});
