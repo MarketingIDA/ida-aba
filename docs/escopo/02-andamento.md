@@ -1,6 +1,6 @@
 # Andamento das implementações
 
-Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #49.
+Onde está cada regra do escopo ([01-dominio.md](01-dominio.md), E01 a E28) no sistema. Atualizado em 23/11/2026, com o PR #50.
 
 Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao.md) e ficam para o fim, depois de todas as implementações.
 
@@ -46,11 +46,11 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 
 ## Fora das regras
 
-- **Design igual ao protótipo:** no ar (#32, #34, #36, #39). Falta o detalhe da tela da evolução.
+- **Design igual ao protótipo:** no ar (#32, #34, #36, #39). Detalhe da tela da evolução: o topo, as etapas, a caixa de situação, as etiquetas das partes e a barra de baixo no PR #50; falta o painel lateral com as abas (Conferências, Fontes, Mês anterior, Histórico).
 - **Cadastros da coordenação geral** (unidades, planos, pessoas, carteiras e assistidos): no ar (#3 a #9).
 
 ## Próximos passos
 
-1. Merge do PR #49 (aviso das metas a completar, E23).
-2. O detalhe da tela da evolução, no design do protótipo.
+1. Merge do PR #50 (detalhe da evolução, parte 1: topo, etapas e caixa de situação).
+2. O painel lateral da evolução, com as abas, no design do protótipo.
 3. O teste à mão de tudo, pelo roteiro.

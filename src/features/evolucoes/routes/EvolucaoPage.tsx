@@ -11,17 +11,21 @@ import { BaixarEvolucao } from '@/features/evolucoes/components/BaixarEvolucao';
 import { BarraDaEvolucao } from '@/features/evolucoes/components/BarraDaEvolucao';
 import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDaEvolucao';
 import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
+import { DevolverEvolucao } from '@/features/evolucoes/components/DevolverEvolucao';
+import { EtapasDaEvolucao } from '@/features/evolucoes/components/EtapasDaEvolucao';
 import { EscritaAMao } from '@/features/evolucoes/components/EscritaAMao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
+import { SituacaoDaEvolucao } from '@/features/evolucoes/components/SituacaoDaEvolucao';
 import { textoAnteriorOptions } from '@/features/evolucoes/api/anterior.api';
 import { lacunasOptions } from '@/features/evolucoes/api/lacunas.api';
 import {
   metasComProgramaOptions,
   metasJaAlcancadasOptions,
 } from '@/features/evolucoes/api/metasDoCadastro.api';
-import type { ContextoDaConferencia } from '@/features/evolucoes/conferencia';
+import { type ContextoDaConferencia, prontaParaConcluir } from '@/features/evolucoes/conferencia';
 import { evolucaoOptions, importacaoOptions } from '@/features/evolucoes/queries';
+import { resumoDaConferencia } from '@/features/evolucoes/resumo';
 import { PartesDaEvolucao } from '@/features/evolucoes/routes/PartesDaEvolucao';
 import { useEdicaoDaEvolucao } from '@/features/evolucoes/routes/useEdicaoDaEvolucao';
 import { useOutrosDocumentos } from '@/features/evolucoes/routes/useOutrosDocumentos';
@@ -101,9 +105,27 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   const edicao = useEdicaoDaEvolucao(evolucao);
   const documentos = useOutrosDocumentos(evolucao);
   const contexto = useContexto(evolucao);
+  const importacao = useQuery(importacaoOptions(evolucao.id)).data ?? null;
+  const resumo = resumoDaConferencia(evolucao, contexto);
+  const ocupado = edicao.ocupado || edicao.editando !== null;
   return (
     <>
-      <CabecalhoDaEvolucao evolucao={evolucao} />
+      <CabecalhoDaEvolucao
+        evolucao={evolucao}
+        importacao={importacao}
+        documentos={documentos.documentos.length}
+      >
+        <EtapasDaEvolucao evolucao={evolucao} resumo={resumo} />
+      </CabecalhoDaEvolucao>
+      <SituacaoDaEvolucao
+        evolucao={evolucao}
+        resumo={resumo}
+        ocupado={ocupado}
+        aoConcluir={() => {
+          edicao.mudarSituacao('concluida');
+        }}
+      />
+      {evolucao.podeDevolver && <DevolverEvolucao evolucaoId={evolucao.id} />}
       <BaixarEvolucao evolucao={evolucao} />
       <DevolucoesDaEvolucao
         evolucao={evolucao}
@@ -111,20 +133,17 @@ function ConteudoDaEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
         aoResolver={edicao.resolverDevolucao}
       />
       <ImportacaoDoTita evolucao={evolucao} bloqueioDoRascunho={documentos.bloqueio} />
-      <EscritaAMao evolucao={evolucao} ocupado={edicao.ocupado || edicao.editando !== null} />
+      <EscritaAMao evolucao={evolucao} ocupado={ocupado} />
       <OutrosDocumentos evolucao={evolucao} estado={documentos} />
       <PartesDaEvolucao evolucao={evolucao} edicao={edicao} contexto={contexto} />
       <BarraDaEvolucao
         evolucao={evolucao}
-        ocupado={edicao.ocupado || edicao.editando !== null}
+        ocupado={ocupado}
         erro={edicao.erro}
-        contexto={contexto}
-        aoConcluir={() => {
-          edicao.mudarSituacao('concluida');
-        }}
-        aoReabrir={() => {
-          edicao.mudarSituacao('em_conferencia');
-        }}
+        resumo={resumo}
+        pronta={prontaParaConcluir(evolucao, contexto)}
+        alertasDoTita={contexto.alertasSemCiencia ?? 0}
+        aoMudar={edicao.mudarSituacao}
       />
     </>
   );
