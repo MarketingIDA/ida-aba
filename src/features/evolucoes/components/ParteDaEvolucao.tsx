@@ -144,7 +144,7 @@ export function ParteDaEvolucao(props: Readonly<Props>) {
       tabIndex={-1}
       aria-labelledby={`parte-${String(numero)}`}
       className={cn(
-        'scroll-mt-20 rounded-xl border bg-superficie shadow-md outline-none',
+        'scroll-mt-28 rounded-xl border bg-superficie shadow-md outline-none',
         conferida ? 'border-ok-border' : 'border-borda',
       )}
     >

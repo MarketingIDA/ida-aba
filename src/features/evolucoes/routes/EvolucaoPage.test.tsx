@@ -749,11 +749,20 @@ describe('Frequência abaixo de 75% (E04)', () => {
         }),
       ),
     );
-    abrir();
+    const { user } = abrir();
 
+    await screen.findByRole('region', { name: 'Evolução mensal' });
     expect(
-      await screen.findByText(/A frequência do período foi de 50%, abaixo de 75%/),
+      await parte('Evolução mensal').findByText(
+        /A frequência do período foi de 50%, abaixo de 75%/,
+      ),
     ).toBeInTheDocument();
+    // O painel ao lado repete o alerta em Conferências e troca de aba.
+    const abertas = screen.getByRole('list', { name: 'Conferências abertas' });
+    expect(within(abertas).getByText(/A frequência do período foi de 50%/)).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Fontes' }));
+    expect(screen.getByRole('tab', { name: 'Fontes' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('list', { name: 'Conferências abertas' })).not.toBeInTheDocument();
   });
 });
 
@@ -784,6 +793,7 @@ describe('Calendário dos dias analisados (E19, E20)', () => {
     );
     const { user } = abrir();
 
+    await user.click(await screen.findByRole('tab', { name: 'Fontes' }));
     await user.click(await screen.findByText(/Calendário dos dias analisados/));
 
     expect(screen.getByLabelText('05/10: 1 sessão')).toBeInTheDocument();
