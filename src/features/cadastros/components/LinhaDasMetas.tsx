@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import type { Assistido } from '@/features/cadastros/api/assistidos.api';
 import type { Meta } from '@/features/cadastros/api/metas.api';
-import { contarMetas } from '@/features/cadastros/metas';
+import { contarMetas, oQueFaltaNaMeta } from '@/features/cadastros/metas';
 import { carteirasOptions, unidadesOptions } from '@/features/cadastros/queries';
 import { iniciais } from '@/utils/iniciais';
 import { plural } from '@/utils/textos';
@@ -21,6 +21,18 @@ export function useLocalDasCarteiras(): ReadonlyMap<number, string> {
       `${sigla.get(c.unidadeId) ?? '?'} · ${ROTULO_DO_TURNO[c.turno]}`,
     ]),
   );
+}
+
+/** "BOV · Tarde · 2 metas a completar": o local, se não há metas e as que faltam completar. */
+function detalheDaLinha(metas: readonly Meta[], local: string | undefined): string {
+  const aCompletar = metas.filter((meta) => oQueFaltaNaMeta(meta) !== null).length;
+  return [
+    local,
+    metas.length === 0 && 'sem metas cadastradas',
+    aCompletar > 0 && plural(aCompletar, 'meta a completar', 'metas a completar'),
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 const COLUNA = 'hidden truncate text-[0.8125rem] font-bold text-apagado min-[861px]:block';
@@ -52,7 +64,7 @@ export function LinhaDasMetas({
           </Link>
         </b>
         <span className="truncate text-[0.78rem] font-semibold text-apagado">
-          {[local, metas.length === 0 && 'sem metas cadastradas'].filter(Boolean).join(' · ')}
+          {detalheDaLinha(metas, local)}
         </span>
       </span>
       <span className={COLUNA}>{n.desenvolvimento} em desenvolvimento</span>
