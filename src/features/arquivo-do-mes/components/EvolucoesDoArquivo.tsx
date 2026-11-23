@@ -16,7 +16,15 @@ interface Props {
   comLink: boolean;
 }
 
-function Linha({ evolucao, comLink }: Readonly<{ evolucao: EvolucaoDoArquivo; comLink: boolean }>) {
+interface PropsDaLinha {
+  evolucao: EvolucaoDoArquivo;
+  comLink: boolean;
+  /** Na busca por assistido, de que carteira é o arquivo. */
+  carteira?: string;
+}
+
+/** Uma evolução do arquivo: o nome (com link, para quem abre), o código e o plano. */
+export function LinhaDaEvolucao({ evolucao, comLink, carteira }: Readonly<PropsDaLinha>) {
   return (
     <li className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5 text-sm">
       <b className="text-marinho">
@@ -32,6 +40,7 @@ function Linha({ evolucao, comLink }: Readonly<{ evolucao: EvolucaoDoArquivo; co
       <span className="text-caption font-semibold text-apagado">
         {evolucao.plano ?? 'plano em branco'}
       </span>
+      {carteira !== undefined && <span className="text-caption text-texto-2">{carteira}</span>}
     </li>
   );
 }
@@ -77,7 +86,7 @@ export function EvolucoesDoArquivo({ arquivoId, total, comLink }: Readonly<Props
         {consulta.isSuccess && (
           <ul aria-label="Evoluções do arquivo" className="divide-y divide-borda">
             {consulta.data.map((evolucao) => (
-              <Linha key={evolucao.id} evolucao={evolucao} comLink={comLink} />
+              <LinhaDaEvolucao key={evolucao.id} evolucao={evolucao} comLink={comLink} />
             ))}
           </ul>
         )}

@@ -7,6 +7,7 @@ import { type CartaoDeDestaque, CartoesDeDestaque } from '@/components/CartoesDe
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import type { CarteiraDoMes } from '@/features/arquivo-do-mes/api/arquivos.api';
+import { BuscaPorAssistido } from '@/features/arquivo-do-mes/components/BuscaPorAssistido';
 import { LinhaDoArquivo } from '@/features/arquivo-do-mes/components/LinhaDoArquivo';
 import { arquivosDoMesOptions } from '@/features/arquivo-do-mes/queries';
 import { useMesDaUrl } from '@/features/arquivo-do-mes/routes/useMesDaUrl';
@@ -113,6 +114,9 @@ function ListaDosArquivos({ carteiras, mes, aberto, geral }: Readonly<PropsDaLis
         aoEscolher={setFiltro}
         cartoes={cartoesDe(carteiras, textos.enviado, aberto)}
       />
+      {carteiras.some((c) => c.arquivo !== null) && (
+        <BuscaPorAssistido carteiras={carteiras} comLink={geral} />
+      )}
       {lista.length === 0 ? (
         <ListaVazia todosChegaram={filtro === 'a_chegar'} />
       ) : (
