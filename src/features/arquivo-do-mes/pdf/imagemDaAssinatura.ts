@@ -1,34 +1,34 @@
-/** A imagem como o Word aceita: PNG ou JPEG (ele não lê WebP), com o tamanho em pixels na folha. */
-export interface ImagemDoWord {
+/** A imagem como o PDF aceita: PNG ou JPEG (ele não lê WebP), com o tamanho da caixa em pixels. */
+export interface ImagemDaAssinatura {
   dados: Uint8Array;
   tipo: 'png' | 'jpg';
   largura: number;
   altura: number;
 }
 
-/** A caixa da assinatura no fim do arquivo, em pixels do Word (96 por polegada). */
+/** A caixa da assinatura no fim do arquivo, em pixels (96 por polegada). */
 const CAIXA = { largura: 220, altura: 60 };
 
 /** O quadro em que a imagem é redesenhada: o dobro da caixa e um pouco mais, para sair nítida. */
 const QUADRO = { largura: 520, altura: 142 };
 
-const TIPO_DO_WORD: Record<string, ImagemDoWord['tipo'] | undefined> = {
+const TIPO_ACEITO: Record<string, ImagemDaAssinatura['tipo'] | undefined> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
 };
 
 /** Onde o navegador não redesenha, o PNG e o JPEG vão como vieram; o WebP fica de fora. */
-async function comoVeio(imagem: Blob): Promise<ImagemDoWord | null> {
-  const tipo = TIPO_DO_WORD[imagem.type];
+async function comoVeio(imagem: Blob): Promise<ImagemDaAssinatura | null> {
+  const tipo = TIPO_ACEITO[imagem.type];
   if (tipo === undefined) return null;
   return { dados: new Uint8Array(await imagem.arrayBuffer()), tipo, ...CAIXA };
 }
 
 /**
- * A assinatura pronta para o Word: redesenhada num PNG de fundo branco, inteira e centralizada,
+ * A assinatura pronta para o PDF: redesenhada num PNG de fundo branco, inteira e centralizada,
  * sem distorcer. Serve para qualquer formato gravado (PNG com transparência, JPEG ou WebP).
  */
-export async function imagemParaOWord(imagem: Blob): Promise<ImagemDoWord | null> {
+export async function imagemDaAssinatura(imagem: Blob): Promise<ImagemDaAssinatura | null> {
   if (typeof createImageBitmap !== 'function') return comoVeio(imagem);
 
   const bitmap = await createImageBitmap(imagem);

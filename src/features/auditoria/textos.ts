@@ -35,6 +35,8 @@ export const NOME_DA_ACAO: Record<string, string> = {
   abriu_metas: 'Abriu as metas do assistido',
   baixou_evolucao_word: 'Baixou a evolução em Word',
   baixou_arquivo_word: 'Baixou o arquivo do mês em Word',
+  baixou_evolucao_pdf: 'Baixou a evolução em PDF',
+  baixou_arquivo_pdf: 'Baixou o arquivo do mês em PDF',
 };
 
 const VERBO = { I: 'Criou', U: 'Alterou', D: 'Excluiu' } as const;
