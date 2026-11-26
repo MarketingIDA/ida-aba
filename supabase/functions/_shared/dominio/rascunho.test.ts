@@ -49,6 +49,14 @@ const RASCUNHO = {
 const resposta = (content: unknown) => ({ choices: [{ message: { content } }] });
 
 describe('pedido do rascunho à IA', () => {
+  it('a partir de 75%, a frequência não vai para a IA (E04)', () => {
+    const conteudo = conteudoDoPedido({
+      ...PEDIDO,
+      analises: PEDIDO.analises.map((a) => ({ ...a, falta: false })),
+    });
+    expect(conteudo).not.toContain('Frequência');
+  });
+
   it('leva o mês, o tratamento, a frequência e as análises, com a falta marcada', () => {
     expect(conteudoDoPedido(PEDIDO)).toBe(
       [
@@ -154,11 +162,14 @@ describe('orientações da IA (E22)', () => {
     expect(instrucoesDoRascunho([])).toBe(INSTRUCOES_DO_RASCUNHO);
   });
 
-  it('as orientações ativas entram depois das instruções fixas, cada uma com o campo', () => {
+  it('as orientações ativas entram depois das instruções fixas, por campo, e prevalecem', () => {
     const instrucoes = instrucoesDoRascunho(ORIENTACOES);
     expect(instrucoes.startsWith(INSTRUCOES_DO_RASCUNHO)).toBe(true);
-    expect(instrucoes).toContain('- programas: Cite o nível de ajuda de cada programa.');
-    expect(instrucoes).toContain('- metas_do_mes: Escreva cada meta com o verbo no infinitivo.');
+    expect(instrucoes).toContain('PREVALECEM sobre as regras acima e sobre os dados recebidos');
+    expect(instrucoes).toContain('- programas:\n  - Cite o nível de ajuda de cada programa.');
+    expect(instrucoes).toContain(
+      '- metas_do_mes:\n  - Escreva cada meta com o verbo no infinitivo.',
+    );
     expect(
       montarPedido('modelo-ficticio', { ...PEDIDO, orientacoes: ORIENTACOES }).messages[0],
     ).toEqual({ role: 'system', content: instrucoes });

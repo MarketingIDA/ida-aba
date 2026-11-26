@@ -1,6 +1,7 @@
 import { TRECHOS, type Trechos } from './evolucao.ts';
 import { situacaoDaData, TIPOS_DE_DOCUMENTO, type TipoDeDocumento } from './documentos.ts';
 import type { FraseDoCampo } from './fontes.ts';
+import { LIMITE_DA_FREQUENCIA } from './frequencia.ts';
 import { formatarData, formatarMesLongo, periodoAnalisado } from './mes.ts';
 
 /**
@@ -71,11 +72,13 @@ export const INSTRUCOES_DO_RASCUNHO = [
   '- Use somente o que está nas análises e nos outros documentos. Não invente fatos, programas, números nem datas. Se não há base para um trecho, devolva esse trecho vazio.',
   '- As análises são a base do texto. Os outros documentos complementam. O documento marcado como contexto é de fora do período ou sem data: use para entender o assistido, não como fato do período.',
   '- Não cite a data de cada sessão.',
+  '- Não cite o nome do mês nem o ano. Para falar do período, escreva "no mês atual" (por exemplo, a abertura começa com "No mês atual, …").',
+  '- Não cite a quantidade de sessões. Cite a frequência só quando ela vier informada.',
   '',
   'Fontes: cada análise tem um número de sessão (S1, S2, …) e cada outro documento um número (D1, D2, …). Escreva cada trecho como uma lista de frases e, em cada frase e em cada meta, informe em "sessoes" os números das sessões e em "documentos" os números dos documentos que a sustentam (só o número, sem a letra). Não indique fonte que não sustenta a frase.',
   '',
   'O texto tem 5 trechos, nesta ordem:',
-  '- abertura: visão geral do período e da participação nas sessões. Se a frequência informada for menor que 75%, cite a frequência.',
+  '- abertura: visão geral do período e da participação nas sessões. Se a frequência vier informada, cite a frequência (ela só vem quando está abaixo de 75%).',
   '- programas: os programas e as habilidades trabalhados e o desempenho observado.',
   '- comportamentos: os comportamentos que interferiram nas sessões e o manejo adotado.',
   '- recursos: os recursos, as estratégias e os reforçadores usados.',
@@ -87,15 +90,28 @@ export const INSTRUCOES_DO_RASCUNHO = [
   '- metas_do_mes: 4 ou mais metas para o mês seguinte, uma por item. Comece pelas metas do plano terapêutico em desenvolvimento, com o texto como está no plano, tirando as que alcançou neste período; acrescente meta nova só para dar continuidade ao que foi trabalhado. Nunca repita uma meta alcançada, nem as já alcançadas do plano.',
 ].join('\n');
 
-/** As instruções fixas e, depois delas, as orientações ativas, cada uma com o seu campo (E22). */
+/**
+ * As orientações ativas (E22), agrupadas por campo, com a regra de que prevalecem. Sem a regra, a
+ * IA ficava com a instrução fixa ou com o dado do pedido quando os dois diziam o contrário (a
+ * abertura seguia citando as sessões e a frequência mesmo com a orientação de tirá-las).
+ */
+export function blocoDasOrientacoes(orientacoes: readonly Orientacao[]): string[] {
+  const campos = [...new Set(orientacoes.map((o) => o.campo))];
+  return [
+    '',
+    'Orientações da coordenação geral (valem para todas as evoluções):',
+    'Elas PREVALECEM sobre as regras acima e sobre os dados recebidos. Quando uma orientação mandar tirar, resumir ou mudar algo num campo, faça isso, mesmo que uma regra acima ou um dado diga o contrário. Antes de responder, confira cada campo contra as orientações dele.',
+    ...campos.flatMap((campo) => [
+      `- ${campo}:`,
+      ...orientacoes.filter((o) => o.campo === campo).map((o) => `  - ${o.texto}`),
+    ]),
+  ];
+}
+
+/** As instruções fixas e, depois delas, as orientações ativas, que prevalecem (E22). */
 export function instrucoesDoRascunho(orientacoes: readonly Orientacao[]): string {
   if (orientacoes.length === 0) return INSTRUCOES_DO_RASCUNHO;
-  return [
-    INSTRUCOES_DO_RASCUNHO,
-    '',
-    'Orientações da coordenação geral, que valem para todas as evoluções. Siga cada uma no campo indicado:',
-    ...orientacoes.map((o) => `- ${o.campo}: ${o.texto}`),
-  ].join('\n');
+  return [INSTRUCOES_DO_RASCUNHO, ...blocoDasOrientacoes(orientacoes)].join('\n');
 }
 
 const TEXTO = { type: 'string' } as const;
@@ -167,10 +183,17 @@ export function conteudoDoPedido({
   const { inicio, fim } = periodoAnalisado(mesRef);
   const sessoes = analises.filter((a) => !a.falta).length;
   const frequencia = Math.round((sessoes / analises.length) * 100);
+  // A frequência só vai quando o texto deve citá-la (E04): com a linha pronta, a IA a copiava
+  // para a abertura mesmo acima do limite. Sem análise, a conta dá NaN e a linha não vai.
+  const citarFrequencia = frequencia < LIMITE_DA_FREQUENCIA;
   return [
     `Evolução de ${formatarMesLongo(mesRef)}. Período analisado: ${formatarData(inicio)} a ${formatarData(fim)}.`,
     `Tratamento: ${tratamento}.`,
-    `Frequência: ${String(sessoes)} sessões realizadas em ${String(analises.length)} evoluções diárias (${String(frequencia)}%).`,
+    ...(citarFrequencia
+      ? [
+          `Frequência: ${String(sessoes)} sessões realizadas em ${String(analises.length)} evoluções diárias (${String(frequencia)}%).`,
+        ]
+      : []),
     '',
     'Análises do atendimento:',
     ...analises.map(

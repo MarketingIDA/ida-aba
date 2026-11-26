@@ -25,7 +25,7 @@ describe('aprimorar com a IA (E26)', () => {
         { campo: 'metas_do_mes', texto: 'Fica de fora.' },
       ],
     });
-    expect(pedido.messages[0]?.content).toContain('- abertura: Cite a frequência.');
+    expect(pedido.messages[0]?.content).toContain('- abertura:\n  - Cite a frequência.');
     expect(pedido.messages[0]?.content).not.toContain('Fica de fora.');
     expect(pedido.messages[1]?.content).toContain('- Comunicação funcional');
     expect(pedido.messages[1]?.content).toContain('birra → comportamento disruptivo');
