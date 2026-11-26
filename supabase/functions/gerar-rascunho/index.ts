@@ -10,6 +10,7 @@
 // de quem chama antes de a função rodar (verify_jwt, o padrão).
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 
+import { cabecalhoDaAuditoria } from '../_shared/dominio/autorDoPedido.ts';
 import { type Fonte, fontesDasFrases } from '../_shared/dominio/fontes.ts';
 import {
   lerPedidoDaParte,
@@ -294,9 +295,11 @@ async function gerar(pedido: Request): Promise<Response> {
 
   // As versões da IA não têm autor humano: só a chave de serviço grava `autor = 'ia'`. Os triggers
   // continuam valendo (evolução em conferência e formato de cada parte).
+  // Quem pediu vai no cabeçalho, para a auditoria registrar a pessoa e não o sistema.
   const servico = createClient(
     lido.url,
     chave('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY'),
+    { global: { headers: cabecalhoDaAuditoria(autorizacao) } },
   );
   // Na parte de novo, só ela é gravada, com a instrução usada (E07); as outras não mudam.
   const linhas = [

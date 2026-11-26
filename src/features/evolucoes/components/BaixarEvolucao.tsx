@@ -4,6 +4,7 @@ import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
 import { nomeDoWordDaEvolucao, wordDaEvolucao } from '@/features/evolucoes/word/baixarEvolucao';
+import { registrarAcao } from '@/lib/auditoria';
 import { salvarArquivo } from '@/utils/salvarArquivo';
 
 /**
@@ -15,6 +16,7 @@ export function BaixarEvolucao({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
     mutationFn: async () => {
       const nome = nomeDoWordDaEvolucao(evolucao);
       salvarArquivo(await wordDaEvolucao(evolucao), nome);
+      registrarAcao('baixou_evolucao_word', evolucao.id, { arquivo: nome });
       return nome;
     },
   });

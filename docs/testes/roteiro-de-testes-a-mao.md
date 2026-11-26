@@ -110,3 +110,14 @@ Entre com a conta do item 1.3.
 - [ ] 6.1 **Esqueci a senha.** Com um e-mail da equipe, o link chega e troca a senha.
 - [ ] 6.2 **Desativar.** Na coordenação geral, desative a pessoa de contas médicas. Ela perde o acesso na hora. Reative depois.
 - [ ] 6.3 **Link de outra carteira.** Com a coordenadora, cole o link do gráfico de um assistido de outra carteira: aparece "Assistido não encontrado".
+
+## 7. Auditoria
+
+Entre com a coordenação geral.
+
+- [ ] 7.1 **O menu.** Aparece "Auditoria" no menu. Com a coordenadora e com contas médicas, não aparece, e o endereço `/auditoria` não abre.
+- [ ] 7.2 **Entrar e sair.** Os logins e saídas deste roteiro aparecem como "Entrou no sistema" e "Saiu do sistema", com o nome de cada pessoa.
+- [ ] 7.3 **Mudanças.** Uma meta alterada no item 1 aparece como "Alterou · Meta do assistido"; "Ver o que mudou" mostra o antes e o depois.
+- [ ] 7.4 **IA.** O rascunho gerado no item 2 aparece como "Criou · Versão de uma parte" com o nome da coordenadora (e não "Sistema"), sem o texto.
+- [ ] 7.5 **Ações.** Abrir a evolução e baixar o Word (itens 2 e 5) aparecem como "Abriu a evolução" e "Baixou o arquivo do mês em Word".
+- [ ] 7.6 **Filtros.** Período, pessoa e "O quê" filtram a lista; "Carregar mais" traz os mais antigos.

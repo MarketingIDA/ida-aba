@@ -27,6 +27,7 @@ import {
 import { assistidosOptions } from '@/features/cadastros/queries';
 import { useGaveta } from '@/features/cadastros/routes/useGaveta';
 import { useUsuario } from '@/hooks/useUsuario';
+import { useRegistrarAbertura } from '@/lib/auditoria';
 import { ehErroApp } from '@/lib/erroApp';
 
 const SEM_FORMATO =
@@ -118,6 +119,7 @@ function MetasDoAssistido({ assistidoId, metas, podeAlterar }: Readonly<PropsDas
 /** O cadastro de metas de um assistido (E23). */
 export function MetasDoAssistidoPage() {
   const assistidoId = Number(useParams().assistidoId);
+  useRegistrarAbertura('abriu_metas', String(assistidoId));
   const valido = Number.isInteger(assistidoId) && assistidoId > 0;
   const podeAlterar = useUsuario()?.papel === 'coordenador';
   const assistidos = useQuery({ ...assistidosOptions(), enabled: valido });

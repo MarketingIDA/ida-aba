@@ -47,9 +47,10 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 ## Fora das regras
 
 - **Design igual ao protótipo:** no ar (#32, #34, #36, #39, #50). O painel ao lado das partes, com as abas Conferências, Fontes, Mês anterior e Histórico, no PR #51. Com ele, todas as telas seguem o protótipo.
+- **Auditoria (rastreabilidade):** aguarda o merge. Tela "Auditoria", só para a coordenação geral: quem criou, alterou ou excluiu cada registro, as entradas e saídas do sistema, a abertura da evolução, da evolução das metas e das metas do assistido, e os downloads em Word. As versões, as importações do Tita e os outros documentos entram resumidas (sem copiar o texto clínico). As gravações da IA ficam com o nome de quem pediu.
 - **Cadastros da coordenação geral** (unidades, planos, pessoas, carteiras e assistidos): no ar (#3 a #9).
 
 ## Próximos passos
 
-1. Merge do PR #51 (painel ao lado das partes da evolução).
+1. Merge do PR da auditoria.
 2. O teste à mão de tudo, pelo roteiro.

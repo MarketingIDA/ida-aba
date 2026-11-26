@@ -1,6 +1,7 @@
 import {
   FileText,
   FolderOpen,
+  History,
   Inbox,
   type LucideIcon,
   PenLine,
@@ -57,13 +58,16 @@ const ORIENTACOES: ItemDoMenu = {
   icone: Sparkles,
 };
 
+// A trilha de quem fez o quê e quando. Só a coordenação geral vê.
+const AUDITORIA: ItemDoMenu = { rota: '/auditoria', rotulo: 'Auditoria', icone: History };
+
 /**
  * O menu de cada papel mostra só as telas que já existem, na ordem do protótipo. Esconder um item
  * é só UX: quem decide o que cada papel lê é o RLS do banco.
  */
 export const MENU_DO_PAPEL: Record<Papel, readonly ItemDoMenu[]> = {
   coordenador: [EVOLUCOES, ARQUIVO, METAS, ASSINATURA],
-  coordenacao_geral: [EVOLUCOES, ENVIADOS, METAS, PESSOAS, ORIENTACOES],
+  coordenacao_geral: [EVOLUCOES, ENVIADOS, METAS, PESSOAS, ORIENTACOES, AUDITORIA],
   contas_medicas: [RECEBIDOS],
 };
 
