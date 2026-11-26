@@ -106,4 +106,21 @@ describe('Leitura do PDF do Tita', () => {
       'O PDF é de Alice Fictícia Moura, não de Bento Fictício Prado.',
     );
   });
+
+  it('aceita a terapia escrita "Terapia ABA" e, sem filtro, o favorecido só com ABA', () => {
+    const leitura = lerRelatorio(RELATORIO);
+    if (leitura === null) throw new Error('o relatório fictício tem de ser lido');
+    const comTerapia = (filtroTerapia: string, terapias: string) =>
+      conferirLeitura(
+        { ...leitura, favorecido: { ...leitura.favorecido, filtroTerapia, terapias } },
+        'Alice Fictícia Moura',
+        '2026-11-01',
+      ).bloqueios;
+
+    expect(comTerapia('Terapia ABA', 'Terapia ABA')).toEqual([]);
+    expect(comTerapia('', 'Terapia ABA')).toEqual([]);
+    expect(comTerapia('Fonoaudiologia', 'Terapia ABA')).toEqual([
+      'O PDF não é da terapia ABA. Exporte no Tita com a terapia ABA.',
+    ]);
+  });
 });

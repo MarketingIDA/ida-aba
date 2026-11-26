@@ -77,20 +77,26 @@ function Partes({ linha }: Readonly<{ linha: LinhaDoMes }>) {
   );
 }
 
+/** O assistido já é o da linha: abre o começo pelo PDF do Tita dele, sem escolher de novo (E01). */
+function ImportarDoTita({ linha }: Readonly<{ linha: LinhaDoMes }>) {
+  return (
+    <Link
+      to={`/evolucoes?nova=1&assistido=${String(linha.assistidoId)}`}
+      aria-label={`Importar do Tita a evolução de ${linha.nome}`}
+      className="relative z-10 inline-flex h-[34px] items-center gap-1.5 rounded-[10px] border-[1.5px] border-borda-forte bg-superficie px-3 text-caption font-extrabold text-marinho foco-anel hover:border-azul hover:text-azul active:scale-[0.97]"
+    >
+      <FileUp aria-hidden="true" className="size-[15px]" />
+      Importar do Tita
+    </Link>
+  );
+}
+
 function Andamento({ linha, visaoGeral, noMesAberto }: Readonly<Props>) {
   const situacao = situacaoDe(linha);
   if (situacao === 'em_conferencia') return <Partes linha={linha} />;
   if (situacao === 'sem') {
     if (visaoGeral || !noMesAberto) return null;
-    return (
-      <Link
-        to="/evolucoes?nova=1"
-        className="relative z-10 inline-flex h-[34px] items-center gap-1.5 rounded-[10px] border-[1.5px] border-borda-forte bg-superficie px-3 text-caption font-extrabold text-marinho foco-anel hover:border-azul hover:text-azul active:scale-[0.97]"
-      >
-        <FileUp aria-hidden="true" className="size-[15px]" />
-        Importar do Tita
-      </Link>
-    );
+    return <ImportarDoTita linha={linha} />;
   }
   return (
     <span className="text-[0.78rem] font-bold text-apagado">

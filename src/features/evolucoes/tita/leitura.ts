@@ -140,6 +140,22 @@ export interface Conferencia {
 const semAcento = (texto: string) =>
   texto.normalize('NFD').replaceAll(/\p{M}/gu, '').toLowerCase().replaceAll(/\s+/g, ' ').trim();
 
+/** "ABA", "Terapia ABA" ou "Terapia ABA.": o Tita escreve a terapia das duas formas. */
+const ehAba = (texto: string) =>
+  semAcento(texto)
+    .replace(/\.$/, '')
+    .replace(/^terapia /, '') === 'aba';
+
+/**
+ * O PDF é da terapia ABA: o filtro diz ABA ou, sem filtro de terapia ("Todas" ou ausente), o
+ * favorecido só tem ABA. O banco confere do mesmo jeito (`interno.do_tita_da_terapia_aba`).
+ */
+function daTerapiaAba(favorecido: Favorecido): boolean {
+  const filtro = semAcento(favorecido.filtroTerapia);
+  if (filtro === '' || filtro === 'todas') return ehAba(favorecido.terapias);
+  return ehAba(favorecido.filtroTerapia);
+}
+
 const diaEMes = (data: string) => formatarData(data, true);
 
 /** As análises cujo texto cita um dia diferente do dia do registro (E19). */
@@ -165,7 +181,7 @@ function bloqueiosDa(leitura: Leitura, assistido: string, mesRef: string, noPeri
       `O período avaliado do PDF (${diaEMes(favorecido.periodoInicio)} a ${formatarData(favorecido.periodoFim)}) não cobre o período analisado inteiro, de ${diaEMes(inicio)} a ${formatarData(fim)}. Exporte de novo no Tita.`,
     );
   }
-  if (semAcento(favorecido.filtroTerapia) !== 'aba') {
+  if (!daTerapiaAba(favorecido)) {
     bloqueios.push('O PDF não é da terapia ABA. Exporte no Tita com a terapia ABA.');
   }
   if (semAcento(favorecido.filtroProfissional) !== 'todos') {

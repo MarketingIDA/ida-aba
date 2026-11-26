@@ -77,6 +77,34 @@ describe('Evoluções do mês, coordenador', () => {
     expect(card(/Carteira/)).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('Importar do Tita na linha pede o PDF daquele assistido; só a escrita à mão cria sem PDF', async () => {
+    const corpos: unknown[] = [];
+    server.use(
+      http.post(`${env.SUPABASE_URL}/rest/v1/evolucoes`, async ({ request }) => {
+        corpos.push(await request.json());
+        return HttpResponse.json({ id: 'evo-nova' }, { status: 201 });
+      }),
+    );
+    const { user } = abrir();
+    await screen.findByRole('list', { name: 'Evoluções de novembro' });
+
+    await user.click(
+      screen.getByRole('link', { name: 'Importar do Tita a evolução de Alice Fictícia Moura' }),
+    );
+
+    const folha = await screen.findByRole('dialog', { name: 'Nova evolução mensal' });
+    expect(
+      within(folha).getByRole('heading', { name: 'Alice Fictícia Moura' }),
+    ).toBeInTheDocument();
+    expect(within(folha).getByRole('button', { name: 'Escolher o PDF do Tita' })).toBeEnabled();
+    expect(corpos).toEqual([]);
+
+    await user.click(within(folha).getByRole('button', { name: 'Escrever à mão' }));
+    await vi.waitFor(() => {
+      expect(corpos).toEqual([{ assistido_id: 1 }]);
+    });
+  });
+
   it('busca por nome sem acento e oferece tirar os filtros quando nada bate', async () => {
     const { user } = abrir();
     const busca = await screen.findByRole('searchbox', { name: 'Buscar assistido ou código' });

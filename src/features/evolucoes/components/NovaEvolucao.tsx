@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, CircleCheck, Lock, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/sheet';
 import type { LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { SITUACAO, situacaoDe } from '@/features/evolucoes/logica';
-import { evolucoesDoMesOptions, useCriarEvolucao } from '@/features/evolucoes/queries';
-import { ehErroApp } from '@/lib/erroApp';
+import { ComecarPeloTita } from '@/features/evolucoes/components/ComecarPeloTita';
+import { evolucoesDoMesOptions } from '@/features/evolucoes/queries';
 import { iniciais } from '@/utils/iniciais';
 import { formatarData, formatarMesLongo, nomeDoMes, periodoAnalisado } from '@dominio/mes.ts';
 
@@ -73,36 +73,39 @@ function Aviso({ total, livres, mes }: Readonly<{ total: number; livres: number;
   );
 }
 
-function Escolha({ mesAberto }: Readonly<{ mesAberto: string }>) {
+function Escolha({
+  mesAberto,
+  assistidoPedido,
+}: Readonly<{ mesAberto: string; assistidoPedido: number | null }>) {
   const lista = useQuery(evolucoesDoMesOptions(mesAberto));
-  const criar = useCriarEvolucao();
-  const navigate = useNavigate();
+  const [escolhido, setEscolhido] = useState<number | null>(assistidoPedido);
   const linhas = lista.data ?? [];
   const livres = linhas.filter((l) => l.evolucao === null);
   const incluidas = linhas.filter((l) => l.evolucao !== null);
-  const escolher = (assistidoId: number) => {
-    criar.mutate(assistidoId, { onSuccess: (id) => void navigate(`/evolucoes/${id}`) });
-  };
+  const linhaEscolhida = livres.find((l) => l.assistidoId === escolhido);
+  if (linhaEscolhida !== undefined) {
+    return (
+      <ComecarPeloTita
+        key={linhaEscolhida.assistidoId}
+        linha={linhaEscolhida}
+        mesAberto={mesAberto}
+        aoVoltar={() => {
+          setEscolhido(null);
+        }}
+      />
+    );
+  }
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-5">
       {lista.isPending && <p role="status">Carregando a carteira…</p>}
-      {criar.isError && (
-        <p role="alert" className="text-sm font-bold text-bloq-text">
-          {ehErroApp(criar.error) ? criar.error.message : 'Não foi possível criar agora.'}
-        </p>
-      )}
       {lista.isSuccess && <Aviso total={linhas.length} livres={livres.length} mes={mesAberto} />}
-      <ul
-        className="flex flex-col gap-2"
-        aria-label="Sem evolução neste mês"
-        aria-busy={criar.isPending}
-      >
+      <ul className="flex flex-col gap-2" aria-label="Sem evolução neste mês">
         {livres.map((l) => (
           <Item
             key={l.assistidoId}
             linha={l}
             aoEscolher={() => {
-              escolher(l.assistidoId);
+              setEscolhido(l.assistidoId);
             }}
           />
         ))}
@@ -117,25 +120,31 @@ function Escolha({ mesAberto }: Readonly<{ mesAberto: string }>) {
   );
 }
 
-/** Aberta pelo botão da tela ou pelo do menu, que chega com `?nova=1`; fechar tira o pedido da URL. */
-function useAberta(): [boolean, (aberta: boolean) => void] {
+/**
+ * Aberta pelo botão da tela, pelo do menu (`?nova=1`) ou pelo "Importar do Tita" da linha, que já
+ * traz o assistido (`&assistido=`); fechar tira o pedido da URL.
+ */
+function useAberta(): [boolean, (aberta: boolean) => void, number | null] {
   const [estado, setEstado] = useState(false);
   const [params, setParams] = useSearchParams();
   const pedida = params.get('nova') === '1';
+  const assistido = Number(params.get('assistido'));
   const mudar = (aberta: boolean) => {
     setEstado(aberta);
     if (!aberta && pedida) {
       const sem = new URLSearchParams(params);
       sem.delete('nova');
+      sem.delete('assistido');
       setParams(sem, { replace: true });
     }
   };
-  return [estado || pedida, mudar];
+  const pedido = pedida && Number.isInteger(assistido) && assistido > 0 ? assistido : null;
+  return [estado || pedida, mudar, pedido];
 }
 
 /** "Nova evolução mensal": o coordenador escolhe um assistido da carteira sem evolução (E01). */
 export function NovaEvolucao({ mesAberto }: Readonly<{ mesAberto: string }>) {
-  const [aberta, setAberta] = useAberta();
+  const [aberta, setAberta, assistidoPedido] = useAberta();
   const { inicio, fim } = periodoAnalisado(mesAberto);
   return (
     <>
@@ -159,10 +168,10 @@ export function NovaEvolucao({ mesAberto }: Readonly<{ mesAberto: string }>) {
             </SheetTitle>
             <SheetDescription className="text-sm font-semibold text-texto-2">
               Evolução de {formatarMesLongo(mesAberto)}, com as sessões de{' '}
-              {formatarData(inicio, true)} a {formatarData(fim)}. Escolha o assistido.
+              {formatarData(inicio, true)} a {formatarData(fim)}. Comece pelo PDF do Tita.
             </SheetDescription>
           </SheetHeader>
-          {aberta && <Escolha mesAberto={mesAberto} />}
+          {aberta && <Escolha mesAberto={mesAberto} assistidoPedido={assistidoPedido} />}
         </SheetContent>
       </Sheet>
     </>
