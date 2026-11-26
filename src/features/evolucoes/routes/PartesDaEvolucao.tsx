@@ -7,6 +7,7 @@ import { HistoricoDaParte } from '@/features/evolucoes/components/HistoricoDaPar
 import { Fontes } from '@/features/evolucoes/routes/Fontes';
 import { Lacunas } from '@/features/evolucoes/routes/Lacunas';
 import { EdicaoDasMetas, MetasDaParte } from '@/features/evolucoes/components/MetasDaParte';
+import { useSugestaoDeMeta } from '@/features/evolucoes/components/SugestaoDeMeta';
 import { ParteDaEvolucao } from '@/features/evolucoes/components/ParteDaEvolucao';
 import { TextoComTermos } from '@/features/evolucoes/components/TermosNoTexto';
 import { EdicaoDoTexto } from '@/features/evolucoes/components/TextoDaEvolucao';
@@ -87,9 +88,16 @@ function LeituraDoTexto({ evolucao, edicao }: Readonly<Omit<Props, 'contexto'>>)
 
 /** Partes 3 e 4 na leitura: as metas e a dica para a IA (E21). */
 function LeituraDasMetas({ evolucao, numero }: Readonly<{ evolucao: Evolucao; numero: 3 | 4 }>) {
+  // Só quem coordena a carteira cadastra metas: é para ele a sugestão de levar a meta ao cadastro.
+  const sugestao = useSugestaoDeMeta(evolucao.editavel ? evolucao.assistidoId : null, numero === 3);
   return (
     <div className="flex flex-col gap-3">
-      <MetasDaParte metas={metasDa(evolucao, numero)} doMes={numero === 4} />
+      <MetasDaParte
+        metas={metasDa(evolucao, numero)}
+        doMes={numero === 4}
+        depoisDaMeta={sugestao.botao}
+      />
+      {sugestao.janela}
       {cabeDica(evolucao, numero) && (
         <DicaParaAIA
           evolucao={evolucao}

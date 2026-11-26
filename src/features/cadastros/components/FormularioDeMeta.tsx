@@ -14,6 +14,8 @@ import { esquemaMeta, SITUACAO_DA_META } from '@/features/cadastros/metas';
 interface Props {
   /** `null`: meta nova, que nasce em desenvolvimento. */
   meta: Meta | null;
+  /** Na meta nova, o que já vem escrito: a meta sugerida pela evolução mensal. */
+  inicial?: Partial<DadosDaMeta>;
   aoSalvar: (dados: DadosDaMeta) => Promise<unknown>;
   aoCancelar: () => void;
 }
@@ -41,16 +43,18 @@ const CAMPOS = [
   },
 ] as const;
 
+const valoresDePartida = (partida: Partial<DadosDaMeta> | undefined) => ({
+  programa: partida?.programa ?? '',
+  texto: partida?.texto ?? '',
+  criterio: partida?.criterio ?? '',
+  situacao: partida?.situacao ?? ('desenvolvimento' as const),
+});
+
 /** O programa, o texto da meta, o critério de alcance e, na alteração, a situação. */
-export function FormularioDeMeta({ meta, aoSalvar, aoCancelar }: Readonly<Props>) {
+export function FormularioDeMeta({ meta, inicial, aoSalvar, aoCancelar }: Readonly<Props>) {
   const { register, handleSubmit, formState } = useForm({
     resolver: zodResolver(esquemaMeta),
-    defaultValues: {
-      programa: meta?.programa ?? '',
-      texto: meta?.texto ?? '',
-      criterio: meta?.criterio ?? '',
-      situacao: meta?.situacao ?? 'desenvolvimento',
-    },
+    defaultValues: valoresDePartida(meta ?? inicial),
   });
   const { erro, enviar } = useEnvio(aoSalvar);
   const { errors, isSubmitting } = formState;
@@ -73,7 +77,7 @@ export function FormularioDeMeta({ meta, aoSalvar, aoCancelar }: Readonly<Props>
             {...register(nome)}
           />
         ))}
-        {meta !== null && (
+        {(meta !== null || inicial?.situacao !== undefined) && (
           <CampoDeSelecao
             id="meta-situacao"
             rotulo="Situação"
