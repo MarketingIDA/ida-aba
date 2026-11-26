@@ -145,7 +145,8 @@ export function ImportacaoDoTita({
       {tita.pendente === null && tita.importacao !== null && (
         <>
           <ImportacaoGravada importacao={tita.importacao} evolucao={evolucao} />
-          <NivelDeApoio niveis={tita.niveis} podeLer={podeImportar} />
+          {/* A leitura dos níveis não muda a evolução: quem coordena pede de novo mesmo concluída. */}
+          <NivelDeApoio niveis={tita.niveis} podeLer={evolucao.editavel} />
         </>
       )}
       {tita.erro !== null && (

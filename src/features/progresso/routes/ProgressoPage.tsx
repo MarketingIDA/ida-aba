@@ -1,16 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { ChartLine } from 'lucide-react';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { EmptyState } from '@/components/EmptyState';
 import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
-import { buttonVariants } from '@/components/ui/button';
 import type { Meta } from '@/features/cadastros/api/metas.api';
 import { metasDoAssistidoOptions } from '@/features/cadastros/metas';
 import type { DadosDoProgresso } from '@/features/progresso/api/progresso.api';
 import { VoltarParaEvolucoes } from '@/features/progresso/components/AcoesDoProgresso';
+import { SemNiveis } from '@/features/progresso/components/SemNiveis';
 import { ProgressoDoAssistido } from '@/features/progresso/components/ProgressoDoAssistido';
 import { progressoOptions } from '@/features/progresso/queries';
+import { useUsuario } from '@/hooks/useUsuario';
 import { useRegistrarAbertura } from '@/lib/auditoria';
 import { ehErroApp } from '@/lib/erroApp';
 import { useAssistidosDaCarteira } from '@/features/cadastros/useAssistidosDaCarteira';
@@ -18,37 +19,14 @@ import { useAssistidosDaCarteira } from '@/features/cadastros/useAssistidosDaCar
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise a coordenação geral.';
 
-const RELER =
-  'A IA lê o nível de apoio logo depois da importação do PDF do Tita. Na evolução, "Ler os níveis" pede a leitura de novo.';
-
-/** Sem evolução, ou sem nenhum mês com os níveis lidos: não há o que desenhar ainda. */
-function SemNiveis({ dados }: Readonly<{ dados: DadosDoProgresso }>) {
-  const ultima = dados.periodos[0];
-  if (ultima === undefined) {
-    return (
-      <EmptyState
-        icone={ChartLine}
-        titulo="Nenhuma evolução ainda"
-        descricao="O gráfico nasce das evoluções: crie a evolução do mês e importe o PDF do Tita."
-      />
-    );
-  }
-  return (
-    <EmptyState
-      icone={ChartLine}
-      titulo="Os níveis de apoio ainda não foram lidos"
-      descricao={RELER}
-      acao={
-        <Link
-          to={`/evolucoes/${ultima.evolucaoId}`}
-          className={buttonVariants({ variant: 'secondary' })}
-        >
-          Abrir a evolução mais recente
-        </Link>
-      }
-    />
-  );
-}
+/** Sem evolução nenhuma, não há o que desenhar nem o que ler. */
+const SEM_EVOLUCAO = (
+  <EmptyState
+    icone={ChartLine}
+    titulo="Nenhuma evolução ainda"
+    descricao="O gráfico nasce das evoluções: crie a evolução do mês e importe o PDF do Tita."
+  />
+);
 
 function Conteudo({
   nome,
@@ -61,12 +39,18 @@ function Conteudo({
   metas: readonly Meta[];
   dados: DadosDoProgresso;
 }>) {
+  const podeLer = useUsuario()?.papel === 'coordenador';
+  const ultima = dados.periodos[0];
   if (!dados.periodos.some((p) => p.lido)) {
     return (
       <>
         <VoltarParaEvolucoes />
         <h1>{nome}</h1>
-        <SemNiveis dados={dados} />
+        {ultima === undefined ? (
+          SEM_EVOLUCAO
+        ) : (
+          <SemNiveis assistidoId={assistidoId} ultima={ultima} metas={metas} podeLer={podeLer} />
+        )}
       </>
     );
   }

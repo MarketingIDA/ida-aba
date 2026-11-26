@@ -156,3 +156,35 @@ describe('Evolução das metas em gráfico (E27)', () => {
     vi.restoreAllMocks();
   });
 });
+
+describe('Evolução das metas sem os níveis lidos', () => {
+  it('pede a leitura daqui mesmo quando as metas entraram no cadastro depois', async () => {
+    servirProgresso();
+    const leituras = [{ evolucao_id: EVOLUCAO, situacao: 'sem_metas' }];
+    server.use(
+      http.get(`${REST}/leituras_de_nivel`, () => HttpResponse.json(leituras)),
+      http.post(`${env.SUPABASE_URL}/functions/v1/ler-niveis`, () => {
+        leituras[0] = { evolucao_id: EVOLUCAO, situacao: 'lida' };
+        return HttpResponse.json({ ok: true, situacao: 'lida' });
+      }),
+    );
+    const { user } = renderWithProviders(
+      <Routes>
+        <Route path="/progresso/:assistidoId" element={<ProgressoPage />} />
+      </Routes>,
+      { rota: '/progresso/1', usuario: usuarioDemo() },
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Os níveis de apoio precisam ser lidos de novo' }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Ler os níveis agora' }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: 'Os níveis de apoio precisam ser lidos de novo' }),
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: 'Ler os níveis agora' })).not.toBeInTheDocument();
+  });
+});

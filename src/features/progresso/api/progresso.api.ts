@@ -19,6 +19,8 @@ export interface PeriodoDaEvolucao extends PeriodoDoProgresso {
   /** O código da evolução (E16): o relatório de metas leva o do mês mais recente. */
   codigo: string;
   mesRef: string;
+  /** A situação da leitura dos níveis: `lida`, `sem_metas`, `falhou` ou `null` (ainda não lida). */
+  leitura: string | null;
 }
 
 export interface DadosDoProgresso {
@@ -78,12 +80,11 @@ export async function buscarDadosDoProgresso(assistidoId: number): Promise<Dados
   ]);
   const erro = leituras.error ?? niveis.error;
   if (erro !== null) throw erroDoBanco(erro, { indisponivel: INDISPONIVEL });
-  const lidas = new Set(
+  const situacoes = new Map(
     z
       .array(esquemaLeitura)
       .parse(leituras.data)
-      .filter((l) => l.situacao === 'lida')
-      .map((l) => l.evolucao_id),
+      .map((l) => [l.evolucao_id, l.situacao]),
   );
   return {
     periodos: lista.map((e) => ({
@@ -92,7 +93,8 @@ export async function buscarDadosDoProgresso(assistidoId: number): Promise<Dados
       mesRef: e.mes_ref,
       inicio: e.periodo_inicio,
       fim: e.periodo_fim,
-      lido: lidas.has(e.id),
+      lido: situacoes.get(e.id) === 'lida',
+      leitura: situacoes.get(e.id) ?? null,
     })),
     pontos: z.array(esquemaNivel).parse(niveis.data),
   };
