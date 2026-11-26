@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router';
 
-import { useUsuario } from '@/hooks/useUsuario';
 import { cn } from '@/lib/utils';
 
 export const ABAS = [
@@ -14,8 +13,6 @@ export const ABAS = [
 
 /** As partes do cadastro, cada uma com o seu endereço (dá para voltar e mandar o link). */
 export function AbasDoCadastro() {
-  // O coordenador chega só aos assistidos, pelo menu; as abas são da coordenação geral.
-  if (useUsuario()?.papel !== 'coordenacao_geral') return null;
   return (
     <nav aria-label="Cadastros" className="max-w-full overflow-x-auto">
       <ul className="flex w-max gap-1.5 rounded-full border border-borda bg-white p-[5px] shadow-sm">

@@ -20,7 +20,7 @@ const ehSecao = (aba: string | undefined): aba is keyof typeof SECOES =>
   aba !== undefined && Object.hasOwn(SECOES, aba);
 
 /**
- * Cadastros da coordenação geral, uma parte por endereço (`/cadastros/unidades`,
+ * Cadastros da coordenação geral e do coordenador, uma parte por endereço (`/cadastros/unidades`,
  * `/cadastros/planos`, `/cadastros/pessoas`, `/cadastros/carteiras`, `/cadastros/assistidos`,
  * `/cadastros/termos`). Endereço sem parte conhecida vai para as unidades.
  */

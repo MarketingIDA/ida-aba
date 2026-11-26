@@ -27,9 +27,6 @@ const EvolucoesPage = lazy(() =>
 const EvolucaoPage = lazy(() =>
   import('@/features/evolucoes').then((m) => ({ default: m.EvolucaoPage })),
 );
-const AssistidosSecao = lazy(() =>
-  import('@/features/cadastros').then((m) => ({ default: m.AssistidosSecao })),
-);
 const CadastrosPage = lazy(() =>
   import('@/features/cadastros').then((m) => ({ default: m.CadastrosPage })),
 );
@@ -124,18 +121,15 @@ const TELAS = [
     ),
   },
   {
+    // O endereço antigo dos assistidos do coordenador: agora é uma aba dos cadastros.
     rota: '/assistidos',
-    tela: (
-      <ExigePapel papeis={['coordenador']}>
-        <AssistidosSecao />
-      </ExigePapel>
-    ),
+    tela: <Navigate to="/cadastros/assistidos" replace />,
   },
   { rota: '/cadastros', tela: <Navigate to="/cadastros/unidades" replace /> },
   {
     rota: '/cadastros/:aba',
     tela: (
-      <ExigePapel papeis={['coordenacao_geral']}>
+      <ExigePapel papeis={['coordenador', 'coordenacao_geral']}>
         <CadastrosPage />
       </ExigePapel>
     ),

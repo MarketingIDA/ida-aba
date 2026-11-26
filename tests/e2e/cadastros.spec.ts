@@ -106,15 +106,15 @@ test.describe('Cadastros', () => {
     expect((await new AxeBuilder({ page }).withTags(TAGS).analyze()).violations).toEqual([]);
   });
 
-  test('o coordenador não tem Cadastros no menu nem entra pelo endereço', async ({ page }) => {
+  test('o coordenador tem os cadastros no menu e entra em todas as abas', async ({ page }) => {
     await entrar(page);
     const menu = await abrirMenu(page);
-    await expect(menu.getByRole('link', { name: 'Evoluções' })).toBeVisible();
-    await expect(menu.getByRole('link', { name: 'Unidades e pessoas' })).toHaveCount(0);
+    await menu.getByRole('link', { name: 'Unidades e pessoas' }).click();
 
-    await page.goto('/cadastros/unidades');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Esta tela não é do seu perfil',
-    );
+    await expect(page).toHaveURL(/\/cadastros\/unidades$/);
+    const abas = page.getByRole('navigation', { name: 'Cadastros' });
+    for (const aba of ['Unidades', 'Planos de saúde', 'Pessoas', 'Carteiras', 'Assistidos']) {
+      await expect(abas.getByRole('link', { name: aba })).toBeVisible();
+    }
   });
 });

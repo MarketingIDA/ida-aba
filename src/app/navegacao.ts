@@ -7,7 +7,6 @@ import {
   PenLine,
   Sparkles,
   Target,
-  UserRound,
   Users,
 } from 'lucide-react';
 
@@ -50,9 +49,8 @@ const METAS: ItemDoMenu = {
   icone: Target,
   secao: 'Cadastros',
 };
-// O coordenador cadastra e altera assistidos como a coordenação geral, fora das abas do cadastro.
-const ASSISTIDOS: ItemDoMenu = { rota: '/assistidos', rotulo: 'Assistidos', icone: UserRound };
 const ASSINATURA: ItemDoMenu = { rota: '/assinatura', rotulo: 'Minha assinatura', icone: PenLine };
+// Todos os cadastros, em abas: o coordenador e a coordenação geral cadastram e alteram.
 const PESSOAS: ItemDoMenu = { rota: '/cadastros', rotulo: 'Unidades e pessoas', icone: Users };
 // A curadoria das dicas dos coordenadores e as orientações que a IA lê (E22).
 const ORIENTACOES: ItemDoMenu = {
@@ -69,7 +67,7 @@ const AUDITORIA: ItemDoMenu = { rota: '/auditoria', rotulo: 'Auditoria', icone: 
  * é só UX: quem decide o que cada papel lê é o RLS do banco.
  */
 export const MENU_DO_PAPEL: Record<Papel, readonly ItemDoMenu[]> = {
-  coordenador: [EVOLUCOES, ARQUIVO, METAS, ASSISTIDOS, ASSINATURA],
+  coordenador: [EVOLUCOES, ARQUIVO, METAS, PESSOAS, ASSINATURA],
   coordenacao_geral: [EVOLUCOES, ENVIADOS, METAS, PESSOAS, ORIENTACOES, AUDITORIA],
   contas_medicas: [RECEBIDOS],
 };
