@@ -37,8 +37,14 @@ export function GavetaDoCadastro({
       }}
     >
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-[39] bg-marinho/42 transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[720px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl bg-background text-sm shadow-lg transition duration-200 ease-out data-ending-style:scale-[0.97] data-ending-style:opacity-0 data-starting-style:scale-[0.97] data-starting-style:opacity-0 motion-reduce:transition-none">
+        <Dialog.Backdrop
+          data-slot="sheet-overlay"
+          className="fixed inset-0 z-[39] bg-marinho/42 transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none"
+        />
+        <Dialog.Popup
+          data-slot="sheet-content"
+          className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[720px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl bg-background text-sm shadow-lg transition duration-200 ease-out data-ending-style:scale-[0.97] data-ending-style:opacity-0 data-starting-style:scale-[0.97] data-starting-style:opacity-0 motion-reduce:transition-none"
+        >
           <div className="flex flex-col gap-1 border-b border-borda bg-superficie py-5 pr-14 pl-6">
             <Dialog.Title className="font-display text-2xl font-bold text-marinho">
               {titulo}

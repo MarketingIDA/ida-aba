@@ -43,10 +43,13 @@ interface PropsDaGaveta {
   idDoUsuario: number | undefined;
   /** Sem valor: as carteiras ainda não chegaram, e o formulário espera por elas. */
   carteiras: readonly CarteiraNaTela[] | undefined;
+  /** As carteiras não vieram: a janela diz isso em vez de esperar para sempre. */
+  semCarteiras: boolean;
   aoSalvar: (valores: PessoaDoFormulario) => Promise<unknown>;
 }
 
-function GavetaDaPessoa({ gaveta, idDoUsuario, carteiras, aoSalvar }: Readonly<PropsDaGaveta>) {
+function GavetaDaPessoa(props: Readonly<PropsDaGaveta>) {
+  const { gaveta, idDoUsuario, carteiras, semCarteiras, aoSalvar } = props;
   const editando = gaveta.item;
   return (
     <GavetaDoCadastro
@@ -58,7 +61,9 @@ function GavetaDaPessoa({ gaveta, idDoUsuario, carteiras, aoSalvar }: Readonly<P
     >
       {carteiras === undefined ? (
         <p role="status" className="px-5 py-5 text-sm font-semibold text-texto-2">
-          Carregando as carteiras…
+          {semCarteiras
+            ? 'Não foi possível carregar as carteiras. Feche e tente de novo em instantes.'
+            : 'Carregando as carteiras…'}
         </p>
       ) : (
         <FormularioDePessoa
@@ -76,7 +81,7 @@ function GavetaDaPessoa({ gaveta, idDoUsuario, carteiras, aoSalvar }: Readonly<P
 /** Quem usa o sistema e com qual papel: a lista, o cadastro e a alteração. */
 export function PessoasSecao() {
   const consulta = useQuery(pessoasOptions());
-  const { dados } = useCarteiras();
+  const { dados, consulta: carteiras } = useCarteiras();
   const salvar = useSalvarPessoa();
   const gaveta = useGaveta<Pessoa>();
   const idDoUsuario = useUsuario()?.id;
@@ -115,6 +120,7 @@ export function PessoasSecao() {
           gaveta={gaveta}
           idDoUsuario={idDoUsuario}
           carteiras={dados?.carteiras}
+          semCarteiras={carteiras.isError}
           aoSalvar={aoSalvar}
         />
       }
