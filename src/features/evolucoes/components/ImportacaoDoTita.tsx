@@ -21,7 +21,7 @@ import { dataEHora } from '@/utils/textos';
 type Tita = ReturnType<typeof useImportacaoDoTita>;
 
 /** O botão que abre a escolha do arquivo; o `input` fica fora da tela, com rótulo para leitores. */
-function EscolhaDoPdf({
+export function EscolhaDoPdf({
   rotulo,
   lendo,
   aoEscolher,
@@ -58,10 +58,13 @@ function EscolhaDoPdf({
 }
 
 /** O PDF lido, antes de gravar: o que o sistema leu, o que bloqueia e o que só alerta (E03). */
-function LeituraParaConferir({
+export function LeituraParaConferir({
   pendente,
   tita,
-}: Readonly<{ pendente: LeituraPendente; tita: Tita }>) {
+}: Readonly<{
+  pendente: LeituraPendente;
+  tita: Pick<Tita, 'salvando' | 'confirmar' | 'cancelar'>;
+}>) {
   const { conferencia, leitura } = pendente;
   const bloqueada = conferencia.bloqueios.length > 0;
   return (

@@ -24,10 +24,15 @@ export interface LeituraPendente {
   conferencia: Conferencia;
 }
 
-const mensagemDe = (erro: unknown, padrao: string) => (ehErroApp(erro) ? erro.message : padrao);
+export const mensagemDe = (erro: unknown, padrao: string) =>
+  ehErroApp(erro) ? erro.message : padrao;
 
 /** Lê o PDF no navegador e confere a leitura com o assistido e o mês da evolução (E03). */
-async function lerEConferir(arquivo: File, evolucao: Evolucao): Promise<LeituraPendente> {
+export async function lerEConferir(
+  arquivo: File,
+  assistido: string,
+  mesRef: string,
+): Promise<LeituraPendente> {
   const leitura = lerRelatorio(await lerPdf(arquivo));
   if (leitura === null) {
     throw new ErroApp(
@@ -38,7 +43,7 @@ async function lerEConferir(arquivo: File, evolucao: Evolucao): Promise<LeituraP
   return {
     arquivo: arquivo.name,
     leitura,
-    conferencia: conferirLeitura(leitura, evolucao.assistido, evolucao.mesRef),
+    conferencia: conferirLeitura(leitura, assistido, mesRef),
   };
 }
 
@@ -73,7 +78,7 @@ export function useImportacaoDoTita(evolucao: Evolucao) {
     setErro(null);
     setLendo(true);
     try {
-      setPendente(await lerEConferir(arquivo, evolucao));
+      setPendente(await lerEConferir(arquivo, evolucao.assistido, evolucao.mesRef));
     } catch (causa) {
       setErro(mensagemDe(causa, 'Não foi possível ler este PDF.'));
     } finally {
