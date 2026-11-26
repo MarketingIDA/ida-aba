@@ -13,6 +13,7 @@ import { CabecalhoDaEvolucao } from '@/features/evolucoes/components/CabecalhoDa
 import { DevolucoesDaEvolucao } from '@/features/evolucoes/components/DevolucoesDaEvolucao';
 import { DevolverEvolucao } from '@/features/evolucoes/components/DevolverEvolucao';
 import { EtapasDaEvolucao } from '@/features/evolucoes/components/EtapasDaEvolucao';
+import { EscreverAMao, escrevendoAMao } from '@/features/evolucoes/components/EscreverAMao';
 import { EscritaAMao } from '@/features/evolucoes/components/EscritaAMao';
 import { ImportacaoDoTita } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { OutrosDocumentos } from '@/features/evolucoes/components/OutrosDocumentos';
@@ -178,9 +179,13 @@ export function EvolucaoPage() {
         />
       )}
       {consulta.isSuccess && consulta.data === null && NAO_ENCONTRADA}
-      {consulta.isSuccess && consulta.data !== null && (
-        <ConteudoDaEvolucao evolucao={consulta.data} />
-      )}
+      {consulta.isSuccess &&
+        consulta.data !== null &&
+        (escrevendoAMao(consulta.data) ? (
+          <EscreverAMao evolucao={consulta.data} />
+        ) : (
+          <ConteudoDaEvolucao evolucao={consulta.data} />
+        ))}
     </section>
   );
 }

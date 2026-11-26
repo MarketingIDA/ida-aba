@@ -112,9 +112,6 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
   const analises: AnaliseDoPeriodo[] = (
     (importacao.data?.analises ?? []) as AnaliseDoPeriodo[]
   ).filter((analise) => analise.data >= inicio && analise.data <= fim);
-  if (analises.length === 0) {
-    throw new Recusa(422, 'sem_importacao', 'Importe o PDF do Tita antes de gerar o rascunho.');
-  }
   const documentos = await usuario
     .schema('evolucao')
     .from('documentos')
@@ -124,6 +121,15 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
     .order('id');
   if (documentos.error !== null) {
     throw new Recusa(502, 'indisponivel', 'Não foi possível ler os outros documentos.');
+  }
+  // Sem o PDF do Tita, o rascunho sai só dos documentos (escrita à mão, E26); sem nenhum dos dois,
+  // a IA não tem o que ler.
+  if (analises.length === 0 && documentos.data.length === 0) {
+    throw new Recusa(
+      422,
+      'sem_importacao',
+      'Importe o PDF do Tita ou carregue um arquivo antes de gerar o rascunho.',
+    );
   }
   // O plano terapêutico (E23): o ponto de partida das metas para o mês atual. A suspensa fica fora.
   const metas = await usuario

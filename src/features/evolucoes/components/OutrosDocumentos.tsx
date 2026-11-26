@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { type ReactNode, useId } from 'react';
 
 import { Button } from '@/components/ui/button';
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
@@ -100,7 +100,16 @@ function ListaDeDocumentos({
 export function OutrosDocumentos({
   evolucao,
   estado,
-}: Readonly<{ evolucao: Evolucao; estado: Estado }>) {
+  escritaAMao = false,
+  children,
+}: Readonly<{
+  evolucao: Evolucao;
+  estado: Estado;
+  /** Na escrita à mão, antes do texto: o arquivo é a fonte da IA, sem o PDF do Tita (E26). */
+  escritaAMao?: boolean;
+  /** Abaixo da escolha dos arquivos: o pedido à IA. */
+  children?: ReactNode;
+}>) {
   const titulo = useId();
   const podeMudar = evolucao.editavel && evolucao.situacao === 'em_conferencia';
   const vazio = estado.documentos.length === 0 && estado.pendentes.length === 0;
@@ -113,12 +122,15 @@ export function OutrosDocumentos({
     >
       <div className="flex flex-col gap-1">
         <h2 id={titulo}>
-          Outros documentos <span className="text-sm font-bold text-apagado">opcional</span>
+          {escritaAMao ? 'Carregar arquivo' : 'Outros documentos'}{' '}
+          <span className="text-sm font-bold text-apagado">opcional</span>
         </h2>
         <p className="max-w-[72ch] text-sm text-texto-2">
-          Relatório da escola, de outra terapia, registro da família, avaliação, PEI. A IA lê todos
-          junto com as análises do Tita. O arquivo é lido neste computador e não é guardado; o nome
-          do assistido sai do texto antes de gravar.
+          {escritaAMao
+            ? 'Relatório, registro ou anotação do mês. A IA lê o arquivo e preenche os campos abaixo para você conferir.'
+            : 'Relatório da escola, de outra terapia, registro da família, avaliação, PEI. A IA lê todos junto com as análises do Tita.'}{' '}
+          O arquivo é lido neste computador e não é guardado; o nome do assistido sai do texto antes
+          de gravar.
         </p>
       </div>
       {!vazio && <ListaDeDocumentos evolucao={evolucao} estado={estado} podeMudar={podeMudar} />}
@@ -128,6 +140,7 @@ export function OutrosDocumentos({
         </p>
       ))}
       {podeMudar && <EscolhaDosDocumentos estado={estado} />}
+      {children}
     </section>
   );
 }

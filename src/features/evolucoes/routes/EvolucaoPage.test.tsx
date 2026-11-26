@@ -40,7 +40,7 @@ function evolucaoNoBanco() {
     codigo: 'UNA-2611-001-EV',
     mes_ref: '2026-11-01',
     situacao: 'em_conferencia',
-    origem: 'manual',
+    origem: 'tita' as 'tita' | 'manual',
     concluida_em: null as string | null,
     periodo_inicio: '2026-10-01',
     periodo_fim: '2026-10-31',
@@ -668,7 +668,33 @@ describe('Versões da parte (E07)', () => {
 });
 
 describe('Escrita à mão (E26)', () => {
+  it('abre só com o arquivo, a IA e os 5 campos; depois de salvar, segue para a conferência', async () => {
+    banco.origem = 'manual';
+    const { user } = abrir();
+
+    expect(await screen.findByRole('heading', { name: /Carregar arquivo/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Preencher com a IA' })).toBeDisabled();
+    for (const campo of [
+      'Abertura',
+      'Programas trabalhados',
+      'Comportamentos e manejo',
+      'Recursos e reforçadores',
+      'Fechamento',
+    ]) {
+      expect(screen.getByLabelText(campo)).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('heading', { name: 'PDF do Tita' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Identificação' })).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Abertura'), 'Participou das sessões.');
+    await user.click(screen.getByRole('button', { name: 'Salvar o texto' }));
+
+    expect(await screen.findByRole('region', { name: 'Identificação' })).toBeInTheDocument();
+    expect(parte('Evolução mensal').getByText('Participou das sessões.')).toBeInTheDocument();
+  });
+
   it('mostra o alerta e pede o texto aprimorado pela IA', async () => {
+    banco.origem = 'manual';
     banco.versoes = [
       {
         numero: 2,
