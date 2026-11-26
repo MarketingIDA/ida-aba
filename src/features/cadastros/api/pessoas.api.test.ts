@@ -36,7 +36,7 @@ describe('API das pessoas', () => {
   it.each([
     ['ultima_coordenacao_geral', 'O sistema precisa de ao menos uma coordenação geral ativa.'],
     ['email_com_conta', 'Esta pessoa já tem conta e entra com este e-mail.'],
-    ['coordenador_com_carteira', 'Esta pessoa tem carteira ativa.'],
+    ['coordenador_com_carteira', 'Esta pessoa ainda tem carteira ativa.'],
   ])('a regra "%s" do banco vira mensagem própria', async (hint, comeco) => {
     server.use(http.patch(USUARIOS, () => regraDoBanco(hint)));
     const falha = salvarPessoa(VALORES, 2);

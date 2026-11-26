@@ -15,13 +15,22 @@ interface Props extends UseFormRegisterReturn {
   legenda: string;
   opcoes: readonly OpcaoEmCartao[];
   erro?: string | undefined;
+  /** `checkbox`: mais de uma escolha (ex.: as carteiras de quem coordena). Padrão: uma só. */
+  tipo?: 'radio' | 'checkbox';
 }
 
 /**
- * Uma escolha em cartões de rádio. O cartão inteiro é o alvo do toque; o nome do rádio é só o
+ * Uma escolha em cartões de rádio (ou várias, em caixas). O cartão inteiro é o alvo do toque; o nome do rádio é só o
  * rótulo, e a descrição vem à parte. O erro fica ligado ao grupo (`fieldset`), não a cada rádio.
  */
-export function EscolhaEmCartoes({ id, legenda, opcoes, erro, ...radio }: Readonly<Props>) {
+export function EscolhaEmCartoes({
+  id,
+  legenda,
+  opcoes,
+  erro,
+  tipo = 'radio',
+  ...radio
+}: Readonly<Props>) {
   const idDoErro = `${id}-erro`;
   return (
     <fieldset
@@ -35,7 +44,7 @@ export function EscolhaEmCartoes({ id, legenda, opcoes, erro, ...radio }: Readon
           className="flex cursor-pointer items-start gap-3 rounded-md border border-borda bg-superficie p-3 hover:border-borda-forte has-checked:border-azul has-checked:bg-info-soft has-focus-visible:shadow-[0_0_0_4px_var(--info-soft)] has-disabled:cursor-not-allowed has-disabled:bg-neutro-suave has-disabled:hover:border-borda"
         >
           <input
-            type="radio"
+            type={tipo}
             value={valor}
             aria-labelledby={`${id}-${valor}`}
             aria-describedby={descricao === undefined ? undefined : `${id}-${valor}-dica`}

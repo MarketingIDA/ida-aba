@@ -29,7 +29,7 @@ A produção hoje tem só a conta da coordenação geral, os 1.022 assistidos vi
 - [ ] 1.1 **Unidade.** Abra Cadastros → Unidades, escolha a unidade da carteira de teste e confira o CNPJ e o endereço. Tente salvar um CNPJ com o último dígito trocado: deve recusar.
 - [ ] 1.2 **Pessoa.** Em Cadastros → Pessoas, cadastre a coordenadora (papel: coordenação de unidade, com o CRP) com o e-mail do item 0.1. Ela aparece como "Sem conta".
 - [ ] 1.3 **Contas médicas.** Cadastre uma pessoa com o papel contas médicas e o e-mail do item 0.2.
-- [ ] 1.4 **Carteira.** Em Cadastros → Carteiras, crie a carteira (unidade, turno, coordenadora). Tente criar uma segunda carteira ativa na mesma unidade e turno: deve recusar.
+- [ ] 1.4 **Carteira.** Em Cadastros → Carteiras, as carteiras de manhã e tarde de cada unidade já existem (Ipojuca, integral), sem coordenador; para outra, crie só com unidade e turno. Em Cadastros → Pessoas, abra a coordenadora e marque a carteira dela: a lista de Carteiras passa a mostrar o nome. Marque a mesma carteira para uma segunda coordenadora: as duas aparecem, e cada uma vê só os próprios assistidos.
 - [ ] 1.5 **Assistidos.** Em Cadastros → Assistidos, filtre por "Rascunhos, sem carteira" e ponha 2 ou 3 na carteira. Escolha o plano de saúde. Busque um nome sem acento: deve achar. Quem está sem plano aparece com aviso.
 - [ ] 1.6 **Sincronizar com a Tita.** Em Assistidos, use "Sincronizar com a Tita". Primeiro vêm só os números, sem gravar. Confirme e confira as pendências (unidade não ligada, nome sem sobrenome, possível duplicado).
 - [ ] 1.7 **Termos.** Em Cadastros → Termos, inclua um termo inadequado e o substituto técnico (ex.: "birra" → "comportamento de recusa"). A lista começa vazia.

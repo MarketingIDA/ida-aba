@@ -58,7 +58,9 @@ export function ListaDeEvolucoes({ linhas, coordenadores, ...props }: Readonly<P
           key={linha.assistidoId}
           linha={linha}
           visaoGeral={props.visaoGeral}
-          coordenador={coordenadores.get(linha.coordenadorId) ?? null}
+          coordenador={
+            linha.coordenadorId === null ? null : (coordenadores.get(linha.coordenadorId) ?? null)
+          }
           nomeDoMes={props.nomeDoMes}
           noMesAberto={props.noMesAberto}
         />

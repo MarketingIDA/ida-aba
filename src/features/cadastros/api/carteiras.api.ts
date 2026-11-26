@@ -5,19 +5,23 @@ import { supabase } from '@/lib/supabase';
 import { type Turno, TURNOS } from '@/utils/turno';
 
 /**
- * Carteira: os assistidos de um coordenador numa unidade e num turno. Só uma carteira ativa por
- * unidade e turno (índice único do banco). Todo usuário ativo lê; só a coordenação geral cadastra
- * e altera (RLS). Quem coordena a carteira vê os assistidos e as evoluções dela.
+ * Carteira: os assistidos de um coordenador numa unidade e num turno. Nasce só com a unidade e o
+ * turno, sem coordenador; quem coordena entra pelo cadastro da pessoa. A mesma unidade e turno
+ * podem ter mais de um coordenador: cada um tem a sua linha, com os seus assistidos e o seu
+ * arquivo do mês. Todo usuário ativo lê; a coordenação cadastra e altera (RLS).
  */
 export interface Carteira {
   id: number;
   unidadeId: number;
   turno: Turno;
-  coordenadorId: number;
+  /** `null`: a carteira ainda espera alguém, no cadastro da pessoa. */
+  coordenadorId: number | null;
   ativa: boolean;
 }
 
-export type NovaCarteira = Omit<Carteira, 'id' | 'ativa'>;
+export type NovaCarteira = Pick<Carteira, 'unidadeId' | 'turno'> & {
+  coordenadorId?: number | null;
+};
 
 /** Na alteração, só a coordenação e o "ativa" mudam: unidade e turno ficam como nasceram. */
 export type AlteracaoDaCarteira = Pick<Carteira, 'coordenadorId' | 'ativa'>;
@@ -29,7 +33,7 @@ const esquemaCarteira = z
     id: z.number().int(),
     unidade_id: z.number().int(),
     turno: z.enum(TURNOS),
-    coordenador_id: z.number().int(),
+    coordenador_id: z.number().int().nullable(),
     ativa: z.boolean(),
   })
   .transform(({ unidade_id: unidadeId, coordenador_id: coordenadorId, ...carteira }): Carteira => ({
@@ -39,13 +43,13 @@ const esquemaCarteira = z
   }));
 
 const MENSAGENS = {
-  duplicado: 'Esta unidade já tem carteira ativa neste turno. Passe a que existe ou desative-a.',
+  duplicado: 'Esta unidade já tem carteira ativa neste turno.',
   // O trigger `conferir_coordenador`: a pessoa escolhida não tem (mais) o papel de coordenador.
   regra_violada: 'A carteira precisa de alguém com o papel de coordenação de unidade.',
-  sem_permissao: 'Só a coordenação geral cadastra e altera carteiras.',
+  sem_permissao: 'Só a coordenação cadastra e altera carteiras.',
   regras: {
     carteira_com_assistidos:
-      'Esta carteira tem assistidos ativos. Passe cada um para outra carteira, na aba Assistidos, antes de desativar.',
+      'Esta carteira tem assistidos ativos. Passe cada um para outra carteira, na aba Assistidos, antes de tirar o coordenador ou desativar.',
   },
 };
 
@@ -59,7 +63,11 @@ export async function buscarCarteiras(): Promise<Carteira[]> {
 
 export async function cadastrarCarteira(nova: NovaCarteira): Promise<Carteira> {
   const { data, error } = await tabela()
-    .insert({ unidade_id: nova.unidadeId, turno: nova.turno, coordenador_id: nova.coordenadorId })
+    .insert({
+      unidade_id: nova.unidadeId,
+      turno: nova.turno,
+      coordenador_id: nova.coordenadorId ?? null,
+    })
     .select(COLUNAS)
     .single();
   if (error !== null) throw erroDoBanco(error, MENSAGENS);
@@ -81,4 +89,18 @@ export async function alterarCarteira(
     .single();
   if (error !== null) throw erroDoBanco(error, MENSAGENS);
   return esquemaCarteira.parse(data);
+}
+
+/** Um passo da atribuição: preencher ou esvaziar uma linha, desativá-la ou criar outra. */
+export type PassoDaAtribuicao =
+  | { tipo: 'alterar'; id: number; valores: AlteracaoDaCarteira }
+  | { tipo: 'cadastrar'; valores: NovaCarteira };
+
+/** Aplica os passos em ordem; o primeiro que o banco recusar interrompe, com o motivo. */
+export async function aplicarAtribuicao(passos: readonly PassoDaAtribuicao[]): Promise<void> {
+  for (const passo of passos) {
+    await (passo.tipo === 'alterar'
+      ? alterarCarteira(passo.id, passo.valores)
+      : cadastrarCarteira(passo.valores));
+  }
 }

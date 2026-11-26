@@ -12,7 +12,7 @@ A base desta versão são três documentos do cliente, que ficam fora do reposit
 |---|---|
 | **ABA** | Análise do Comportamento Aplicada. A intervenção ensina habilidades por programas estruturados e reduz comportamentos que atrapalham. |
 | **Assistido** | A criança ou o adolescente atendido. Tem nome completo, gênero, plano de saúde e uma unidade. |
-| **Coordenador(a) de unidade** | Psicólogo(a) responsável pela ABA de uma unidade num turno. Tem uma **carteira** de assistidos, é o autor técnico da evolução mensal e a assina com o CRP. Cadastra e altera assistidos de qualquer carteira, como a coordenação geral (26/11/2026); as evoluções e as metas seguem só da carteira dele. |
+| **Coordenador(a) de unidade** | Psicólogo(a) responsável pela ABA de uma unidade num turno. Tem uma **carteira** de assistidos (a carteira nasce com a unidade e o turno, e o coordenador a recebe no cadastro da pessoa; o mesmo turno pode ter mais de um coordenador, cada um com os seus assistidos e o seu arquivo do mês, desde 26/11/2026), é o autor técnico da evolução mensal e a assina com o CRP. Cadastra e altera assistidos de qualquer carteira, como a coordenação geral (26/11/2026); as evoluções e as metas seguem só da carteira dele. |
 | **Tita** | Sistema em que a equipe registra a evolução diária de cada sessão. O cadastro de assistidos vem da API da Tita (E28); as evoluções diárias, do PDF exportado. |
 | **Relatório de Evoluções Diárias** | PDF que o Tita exporta por assistido e por período. Traz o bloco **Dados do Favorecido** e, para cada evolução diária, os campos do SOAP. |
 | **Análise do Atendimento** | O texto livre de cada evolução diária. É a única parte da evolução diária que o sistema lê. |
@@ -117,7 +117,7 @@ flowchart LR
 | **P5** | A frequência vem do Tita ou da agenda? A partir de que percentual entra no texto? | Do Tita; abaixo de 75% |
 | **P6** | Quantos meses seguidos uma meta pode ficar em manutenção? Qual o mínimo de metas alcançadas? | Alerta no segundo mês seguido; mínimo de 4, como alerta |
 | **P7** | A semelhança com a evolução anterior bloqueia ou só alerta? Qual o limite? | Alerta a partir de 60% |
-| **P8** | O que é o "PM" de "turno integral: um arquivo só, exceto PM"? ~~Cada coordenador corresponde a uma unidade e um turno?~~ Respondida em parte: o arquivo do mês é um por carteira (unidade e turno), e quem coordena duas carteiras envia dois arquivos. | Um coordenador por unidade e turno; PM em aberto |
+| **P8** | O que é o "PM" de "turno integral: um arquivo só, exceto PM"? ~~Cada coordenador corresponde a uma unidade e um turno?~~ Respondida em parte: o arquivo do mês é um por carteira (unidade e turno), e quem coordena duas carteiras envia dois arquivos. | Um ou mais coordenadores por unidade e turno, cada um com os seus assistidos e o seu arquivo (26/11/2026); PM em aberto |
 | **P9** | O Tita exporta em Excel ou tem API? A equipe passaria a preencher "Habilidades trabalhadas" e "Alcance", que hoje vêm vazios? | PDF por assistido, como no exemplo |
 | **P10** | A IA é a API da OpenAI contratada pela clínica, com garantia de que os dados não treinam modelos? Qual modelo? | API contratada, chamada só pelo servidor |
 | **P11** | Contas médicas só baixa o Word, ou o sistema integra com o de contas médicas (cadastro de assistidos, planos e unidades em comum)? | Só baixa; cadastro a integrar |

@@ -14,11 +14,11 @@ import {
   salvarAssistido,
 } from '@/features/cadastros/api/assistidos.api';
 import {
-  type AlteracaoDaCarteira,
-  alterarCarteira,
+  aplicarAtribuicao,
   buscarCarteiras,
   cadastrarCarteira,
   type NovaCarteira,
+  type PassoDaAtribuicao,
 } from '@/features/cadastros/api/carteiras.api';
 import {
   buscarPessoas,
@@ -31,6 +31,7 @@ import {
   ligarUnidadeDaTita,
   sincronizarComATita,
 } from '@/features/cadastros/api/tita.api';
+import { planoDeAtribuicao } from '@/features/cadastros/carteiras';
 
 export const cadastrosKeys = {
   all: ['cadastros'] as const,
@@ -44,16 +45,40 @@ export const cadastrosKeys = {
 export const pessoasOptions = () =>
   queryOptions({ queryKey: cadastrosKeys.pessoas(), queryFn: buscarPessoas });
 
+export interface SalvamentoDaPessoa {
+  valores: DadosDaPessoa;
+  /** As carteiras (unidade e turno) que a pessoa coordena; só vale para a coordenação de unidade. */
+  carteiras: readonly string[];
+  id?: number | undefined;
+}
+
+/**
+ * Salva a pessoa e deixa as carteiras como foram escolhidas. Quem deixa de coordenar solta as
+ * carteiras antes (o banco não muda o papel de quem ainda tem uma); quem coordena recebe as dela
+ * depois de salva (a carteira só aceita quem já tem o papel).
+ */
+async function salvarPessoaComCarteiras({ valores, carteiras, id }: SalvamentoDaPessoa) {
+  const coordena = valores.papel === 'coordenador';
+  if (!coordena && id !== undefined) {
+    await aplicarAtribuicao(planoDeAtribuicao(await buscarCarteiras(), id, []));
+  }
+  const salva = await salvarPessoa(valores, id);
+  if (coordena) {
+    await aplicarAtribuicao(planoDeAtribuicao(await buscarCarteiras(), salva.id, carteiras));
+  }
+  return salva;
+}
+
 /**
  * A pessoa aparece em outras telas: o nome no topo, o filtro de coordenadores, o próprio acesso.
- * Depois de salvar, tudo o que está na tela volta do banco, não só a lista.
+ * Depois de salvar (mesmo se as carteiras falharem no meio), tudo o que está na tela volta do
+ * banco, não só a lista.
  */
 export function useSalvarPessoa() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ valores, id }: { valores: DadosDaPessoa; id?: number | undefined }) =>
-      salvarPessoa(valores, id),
-    onSuccess: () => queryClient.invalidateQueries(),
+    mutationFn: salvarPessoaComCarteiras,
+    onSettled: () => queryClient.invalidateQueries(),
   });
 }
 
@@ -89,22 +114,24 @@ export function useSalvarPlano() {
 export const carteirasOptions = () =>
   queryOptions({ queryKey: cadastrosKeys.carteiras(), queryFn: buscarCarteiras });
 
-/** Cadastro (sem `id`) ou alteração (com `id`) de uma carteira. */
-export type SalvamentoDaCarteira =
-  { id?: undefined; valores: NovaCarteira } | { id: number; valores: AlteracaoDaCarteira };
-
-/**
- * Passar a carteira muda quem vê os assistidos e as evoluções dela: depois de salvar, tudo o que
- * está na tela volta do banco, inclusive a lista do mês.
- */
+/** A carteira nova entra nas escolhas do assistido e da pessoa: tudo volta do banco. */
 export function useSalvarCarteira() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (salvamento: SalvamentoDaCarteira) =>
-      salvamento.id === undefined
-        ? cadastrarCarteira(salvamento.valores)
-        : alterarCarteira(salvamento.id, salvamento.valores),
+    mutationFn: ({ valores }: { valores: NovaCarteira }) => cadastrarCarteira(valores),
     onSuccess: () => queryClient.invalidateQueries(),
+  });
+}
+
+/**
+ * Desativar ou reativar a carteira muda quem vê os assistidos e as evoluções dela: depois, tudo
+ * o que está na tela volta do banco, inclusive a lista do mês.
+ */
+export function useAtribuirCarteiras() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (passos: readonly PassoDaAtribuicao[]) => aplicarAtribuicao(passos),
+    onSettled: () => queryClient.invalidateQueries(),
   });
 }
 

@@ -28,7 +28,8 @@ export interface LinhaDoMes {
   unidadeSigla: string;
   unidadeNome: string;
   turno: Turno;
-  coordenadorId: number;
+  /** Sem valor: a carteira do assistido ainda não tem coordenador. */
+  coordenadorId: number | null;
   evolucao: EvolucaoDoMes | null;
 }
 
@@ -45,7 +46,7 @@ const esquemaLinha = z
     unidade_sigla: z.string(),
     unidade_nome: z.string(),
     turno: z.enum(TURNOS),
-    coordenador_id: z.number().int(),
+    coordenador_id: z.number().int().nullable(),
     evolucao_id: z.string().nullable(),
     codigo: z.string().nullable(),
     situacao: z.enum(['em_conferencia', 'concluida', 'enviada']).nullable(),

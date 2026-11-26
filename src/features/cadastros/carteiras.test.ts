@@ -1,29 +1,37 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Pessoa } from '@/features/cadastros/api/pessoas.api';
-import { opcoesDeCoordenacao } from '@/features/cadastros/carteiras';
-import { pessoasDemo } from '@/testing/factories/cadastros';
+import type { Carteira } from '@/features/cadastros/api/carteiras.api';
+import { planoDeAtribuicao } from '@/features/cadastros/carteiras';
 
-const pessoas = (): Pessoa[] =>
-  pessoasDemo().map(({ auth_user_id: conta, ...pessoa }) => ({
-    ...pessoa,
-    temConta: conta !== null,
-  }));
+const carteira = (
+  id: number,
+  turno: Carteira['turno'],
+  coordenadorId: number | null,
+): Carteira => ({
+  id,
+  unidadeId: 1,
+  turno,
+  coordenadorId,
+  ativa: true,
+});
 
-describe('escolhas da carteira', () => {
-  it('na alteração, quem coordena hoje aparece mesmo desativada ou sem o papel', () => {
-    // Sem a opção, o select ficaria em branco ou sugeriria uma troca que ninguém pediu.
-    expect(opcoesDeCoordenacao(pessoas())).toEqual([
-      { valor: '4', rotulo: 'Bruno Fictício Novo' },
-      { valor: '2', rotulo: 'Carla Fictícia Coordenadora' },
+describe('atribuição das carteiras de quem coordena', () => {
+  it('preenche a carteira vazia, divide a que já tem alguém e solta a que não quer mais', () => {
+    const carteiras = [
+      carteira(1, 'manha', null),
+      carteira(2, 'tarde', 7),
+      carteira(3, 'integral', 5),
+      carteira(4, 'integral', 7),
+    ];
+    // A pessoa 5 tinha a integral (com a 7 ao lado) e passa a ter manhã e tarde.
+    expect(planoDeAtribuicao(carteiras, 5, ['1:manha', '1:tarde'])).toEqual([
+      { tipo: 'alterar', id: 3, valores: { coordenadorId: 5, ativa: false } },
+      { tipo: 'alterar', id: 1, valores: { coordenadorId: 5, ativa: true } },
+      { tipo: 'cadastrar', valores: { unidadeId: 1, turno: 'tarde', coordenadorId: 5 } },
     ]);
-    expect(opcoesDeCoordenacao(pessoas(), 3)).toContainEqual({
-      valor: '3',
-      rotulo: 'Caio Fictício Contas (desativada)',
-    });
-    expect(opcoesDeCoordenacao(pessoas(), 1)).toContainEqual({
-      valor: '1',
-      rotulo: 'Gabriela Fictícia Geral (sem o papel de coordenação)',
-    });
+    // Sozinha na carteira, a 7 sai e a carteira segue, sem coordenador.
+    expect(planoDeAtribuicao(carteiras, 7, ['1:integral'])).toEqual([
+      { tipo: 'alterar', id: 2, valores: { coordenadorId: null, ativa: true } },
+    ]);
   });
 });

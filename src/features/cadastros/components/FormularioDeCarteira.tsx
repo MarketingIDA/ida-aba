@@ -1,17 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  type Control,
-  useForm,
-  type UseFormRegister,
-  type UseFormRegisterReturn,
-  useWatch,
-} from 'react-hook-form';
+import { type Control, useForm, type UseFormRegister, useWatch } from 'react-hook-form';
 
-import type { AlteracaoDaCarteira, NovaCarteira } from '@/features/cadastros/api/carteiras.api';
+import type { NovaCarteira } from '@/features/cadastros/api/carteiras.api';
 import {
-  type CarteiraNaTela,
+  type CarteiraDaLista,
+  coordenadoresDa,
   type OpcaoDoSeletor,
   opcoesDeTurno,
+  SEM_COORDENADOR,
 } from '@/features/cadastros/carteiras';
 import {
   CaixaDeAtivo,
@@ -32,11 +28,13 @@ import { ROTULO_DO_TURNO, type Turno } from '@/utils/turno';
 
 const CLASSE_DO_FORM = 'flex min-h-0 flex-1 flex-col';
 
+const ONDE_SE_ESCOLHE =
+  'Quem coordena se escolhe na aba Pessoas, no cadastro de cada coordenador. O mesmo turno pode ter mais de um.';
+
 interface PropsDaNova {
   unidades: readonly OpcaoDoSeletor[];
-  coordenacoes: readonly OpcaoDoSeletor[];
-  /** Turnos da unidade que já têm carteira ativa, com quem coordena cada um. */
-  ocupadosNa: (unidadeId: number) => ReadonlyMap<Turno, string>;
+  /** Turnos da unidade que já têm carteira ativa. */
+  ocupadosNa: (unidadeId: number) => ReadonlySet<Turno>;
   aoSalvar: (valores: NovaCarteira) => Promise<unknown>;
   aoCancelar: () => void;
 }
@@ -48,7 +46,7 @@ interface PropsDoTurno {
   ocupadosNa: PropsDaNova['ocupadosNa'];
 }
 
-/** Os turnos; escolhida a unidade, cada um diz se está livre ou com quem já está. */
+/** Os turnos; escolhida a unidade, cada um diz se está livre ou se já tem carteira. */
 function TurnoDaCarteira({ control, register, erro, ocupadosNa }: Readonly<PropsDoTurno>) {
   const unidadeId = useWatch({ control, name: 'unidadeId' });
   return (
@@ -62,34 +60,16 @@ function TurnoDaCarteira({ control, register, erro, ocupadosNa }: Readonly<Props
   );
 }
 
-interface PropsDaCoordenacao extends UseFormRegisterReturn<'coordenadorId'> {
-  opcoes: readonly OpcaoDoSeletor[];
-  dica: string;
-  erro: string | undefined;
-}
-
-/** Quem coordena a carteira, no cadastro e na passagem. */
-function CampoDaCoordenacao(props: Readonly<PropsDaCoordenacao>) {
-  return (
-    <CampoDeSelecao
-      id="carteira-coordenacao"
-      rotulo="Coordenação"
-      vazio="Escolha quem coordena"
-      {...props}
-    />
-  );
-}
-
-/** Carteira nova: a unidade, o turno (o que já tem carteira não se escolhe) e quem coordena. */
+/** Carteira nova: a unidade e o turno (o que já tem carteira não se escolhe). Sem coordenador. */
 export function FormularioDeNovaCarteira(props: Readonly<PropsDaNova>) {
-  const { unidades, coordenacoes, ocupadosNa, aoSalvar, aoCancelar } = props;
+  const { unidades, ocupadosNa, aoSalvar, aoCancelar } = props;
   const { register, handleSubmit, formState, control } = useForm<
     CamposDaNovaCarteira,
     unknown,
     NovaCarteira
   >({
     resolver: zodResolver(esquemaNovaCarteira),
-    defaultValues: { unidadeId: '', coordenadorId: '' },
+    defaultValues: { unidadeId: '' },
   });
   const { erro, enviar } = useEnvio(aoSalvar);
   const { errors, isSubmitting } = formState;
@@ -115,12 +95,9 @@ export function FormularioDeNovaCarteira(props: Readonly<PropsDaNova>) {
           erro={errors.turno?.message}
           ocupadosNa={ocupadosNa}
         />
-        <CampoDaCoordenacao
-          opcoes={coordenacoes}
-          dica="Quem coordena vê os assistidos e as evoluções da carteira."
-          erro={errors.coordenadorId?.message}
-          {...register('coordenadorId')}
-        />
+        <p className="text-xs font-semibold text-apagado">
+          A carteira nasce sem coordenador. {ONDE_SE_ESCOLHE}
+        </p>
       </CorpoDoFormulario>
       <RodapeDoFormulario
         rotulo="Cadastrar carteira"
@@ -133,26 +110,21 @@ export function FormularioDeNovaCarteira(props: Readonly<PropsDaNova>) {
 }
 
 interface PropsDaAlteracao {
-  carteira: CarteiraNaTela;
-  coordenacoes: readonly OpcaoDoSeletor[];
-  aoSalvar: (valores: AlteracaoDaCarteira) => Promise<unknown>;
+  carteira: CarteiraDaLista;
+  aoSalvar: (valores: { ativa: boolean }) => Promise<unknown>;
   aoCancelar: () => void;
 }
 
-/** Carteira existente: passa para outra coordenação ou é desativada. Unidade e turno ficam. */
+/** Carteira existente: mostra quem coordena e deixa desativar ou reativar. Unidade e turno ficam. */
 export function FormularioDaCarteira(props: Readonly<PropsDaAlteracao>) {
-  const { carteira, coordenacoes, aoSalvar, aoCancelar } = props;
-  const { register, handleSubmit, formState } = useForm<
-    CamposDaAlteracaoDaCarteira,
-    unknown,
-    AlteracaoDaCarteira
-  >({
+  const { carteira, aoSalvar, aoCancelar } = props;
+  const { register, handleSubmit, formState } = useForm<CamposDaAlteracaoDaCarteira>({
     resolver: zodResolver(esquemaAlteracaoDaCarteira),
-    defaultValues: { coordenadorId: String(carteira.coordenadorId), ativa: carteira.ativa },
+    defaultValues: { ativa: carteira.ativa },
   });
   const { erro, enviar } = useEnvio(aoSalvar);
-  const { errors, isSubmitting } = formState;
   const turno = ROTULO_DO_TURNO[carteira.turno].toLowerCase();
+  const coordenadores = coordenadoresDa(carteira);
 
   return (
     <form
@@ -164,23 +136,22 @@ export function FormularioDaCarteira(props: Readonly<PropsDaAlteracao>) {
         <CampoTravado
           rotulo="Unidade e turno"
           valor={`${carteira.unidade.sigla} · ${carteira.unidade.nome}, ${turno}`}
-          explicacao="Para outra unidade ou outro turno, desative esta carteira e cadastre outra."
+          explicacao="Para outra unidade ou outro turno, cadastre outra carteira."
         />
-        <CampoDaCoordenacao
-          opcoes={coordenacoes}
-          dica="Passar a carteira muda quem vê os assistidos e as evoluções dela."
-          erro={errors.coordenadorId?.message}
-          {...register('coordenadorId')}
+        <CampoTravado
+          rotulo="Coordenação"
+          valor={coordenadores.length === 0 ? SEM_COORDENADOR : coordenadores.join(', ')}
+          explicacao={ONDE_SE_ESCOLHE}
         />
         <CaixaDeAtivo
           rotulo="Carteira ativa"
-          dica="Desativada, ela libera a unidade e o turno para outra carteira. Antes, os assistidos ativos dela passam para outra, na aba Assistidos. Nada se apaga."
+          dica="Desativada, ela sai das escolhas. Antes, os assistidos ativos dela passam para outra, na aba Assistidos. Nada se apaga."
           {...register('ativa')}
         />
       </CorpoDoFormulario>
       <RodapeDoFormulario
         rotulo="Salvar alterações"
-        enviando={isSubmitting}
+        enviando={formState.isSubmitting}
         erro={erro}
         aoCancelar={aoCancelar}
       />

@@ -8,7 +8,12 @@ import {
   useWatch,
 } from 'react-hook-form';
 
-import type { DadosDaPessoa, Pessoa } from '@/features/cadastros/api/pessoas.api';
+import type { Pessoa } from '@/features/cadastros/api/pessoas.api';
+import {
+  type CarteiraNaTela,
+  carteirasDaPessoa,
+  opcoesDeCarteiraDaPessoa,
+} from '@/features/cadastros/carteiras';
 import {
   CaixaDeAtivo,
   CampoDeTexto,
@@ -17,20 +22,27 @@ import {
   useEnvio,
 } from '@/features/cadastros/components/CamposDoFormulario';
 import { EscolhaDoPapel, PapelTravado } from '@/features/cadastros/components/EscolhaDoPapel';
-import { type CamposDaPessoa, esquemaPessoa } from '@/features/cadastros/esquemas';
+import { EscolhaEmCartoes } from '@/features/cadastros/components/EscolhaEmCartoes';
+import {
+  type CamposDaPessoa,
+  esquemaPessoa,
+  type PessoaDoFormulario,
+} from '@/features/cadastros/esquemas';
 
 interface Props {
   /** `null`: cadastro de uma pessoa nova. */
   pessoa: Pessoa | null;
   /** A própria linha de quem está editando: papel e "ativa" não aparecem para mudar. */
   ehVoce: boolean;
-  aoSalvar: (valores: DadosDaPessoa) => Promise<unknown>;
+  /** Todas as carteiras: quem coordena unidade escolhe as dela (unidade e turno). */
+  carteiras: readonly CarteiraNaTela[];
+  aoSalvar: (valores: PessoaDoFormulario) => Promise<unknown>;
   aoCancelar: () => void;
 }
 
 interface PropsDosCampos extends Omit<Props, 'aoSalvar' | 'aoCancelar'> {
   register: UseFormRegister<CamposDaPessoa>;
-  control: Control<CamposDaPessoa, unknown, DadosDaPessoa>;
+  control: Control<CamposDaPessoa, unknown, PessoaDoFormulario>;
   errors: FieldErrors<CamposDaPessoa>;
 }
 
@@ -39,17 +51,43 @@ const DICA_DO_EMAIL = {
   comConta: 'A pessoa já entra com este e-mail; ele não muda pelo cadastro.',
 };
 
-const valoresIniciais = (pessoa: Pessoa | null): DefaultValues<CamposDaPessoa> => ({
+const valoresIniciais = (
+  pessoa: Pessoa | null,
+  carteiras: readonly CarteiraNaTela[],
+): DefaultValues<CamposDaPessoa> => ({
   nome: pessoa?.nome ?? '',
   email: pessoa?.email ?? '',
   // Pessoa nova começa sem papel: a escolha é obrigatória, porque decide o que ela vê.
   ...(pessoa === null ? {} : { papel: pessoa.papel }),
   crp: pessoa?.crp ?? '',
   ativo: pessoa?.ativo ?? true,
+  carteiras: pessoa === null ? [] : carteirasDaPessoa(carteiras, pessoa.id),
 });
 
-/** O papel (travado na própria linha) e, para quem coordena unidade, o CRP. */
-function PapelECrp({ pessoa, ehVoce, register, control, errors }: Readonly<PropsDosCampos>) {
+/** As carteiras de quem coordena: uma ou mais, e o mesmo turno pode ter mais de um coordenador. */
+function CarteirasDaPessoa({ pessoa, carteiras, register }: Readonly<PropsDosCampos>) {
+  const opcoes = opcoesDeCarteiraDaPessoa(carteiras, pessoa?.id);
+  if (opcoes.length === 0) {
+    return (
+      <p className="text-xs font-semibold text-apagado">
+        Nenhuma carteira ativa para escolher. Cadastre as carteiras na aba Carteiras.
+      </p>
+    );
+  }
+  return (
+    <EscolhaEmCartoes
+      id="pessoa-carteiras"
+      legenda="Carteiras (unidade e turno)"
+      tipo="checkbox"
+      opcoes={opcoes}
+      {...register('carteiras')}
+    />
+  );
+}
+
+/** O papel (travado na própria linha) e, para quem coordena unidade, o CRP e as carteiras. */
+function PapelECrp(props: Readonly<PropsDosCampos>) {
+  const { pessoa, ehVoce, register, control, errors } = props;
   const papel = useWatch({ control, name: 'papel' });
   return (
     <>
@@ -70,6 +108,7 @@ function PapelECrp({ pessoa, ehVoce, register, control, errors }: Readonly<Props
           {...register('crp')}
         />
       )}
+      {papel === 'coordenador' && <CarteirasDaPessoa {...props} />}
     </>
   );
 }
@@ -111,12 +150,13 @@ function CorpoDaPessoa(props: Readonly<PropsDosCampos>) {
   );
 }
 
-export function FormularioDePessoa({ pessoa, ehVoce, aoSalvar, aoCancelar }: Readonly<Props>) {
+export function FormularioDePessoa(props: Readonly<Props>) {
+  const { pessoa, ehVoce, carteiras, aoSalvar, aoCancelar } = props;
   const { register, handleSubmit, formState, control } = useForm<
     CamposDaPessoa,
     unknown,
-    DadosDaPessoa
-  >({ resolver: zodResolver(esquemaPessoa), defaultValues: valoresIniciais(pessoa) });
+    PessoaDoFormulario
+  >({ resolver: zodResolver(esquemaPessoa), defaultValues: valoresIniciais(pessoa, carteiras) });
   const { erro, enviar } = useEnvio(aoSalvar);
 
   return (
@@ -128,6 +168,7 @@ export function FormularioDePessoa({ pessoa, ehVoce, aoSalvar, aoCancelar }: Rea
       <CorpoDaPessoa
         pessoa={pessoa}
         ehVoce={ehVoce}
+        carteiras={carteiras}
         register={register}
         control={control}
         errors={formState.errors}
