@@ -56,7 +56,7 @@ export function textoAtualDaParte(numero: ParteDaIA, conteudo: unknown): string 
 /** O que vai para a IA depois do pedido do rascunho: a parte, o texto atual e a instrução. */
 export function pedidoDaParteDeNovo(pedido: PedidoDaParte, textoAtual: string): string {
   return [
-    `Gere de novo só ${NOME_DA_PARTE[pedido.numero]}. As outras partes da resposta serão descartadas.`,
+    `Gere de novo só ${NOME_DA_PARTE[pedido.numero]}. As outras partes da resposta serão descartadas: devolva-as como listas vazias.`,
     'Siga as mesmas regras: use só o que está nas análises e nos documentos, sem inventar fato.',
     '',
     'Texto atual desta parte:',

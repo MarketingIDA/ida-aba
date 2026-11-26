@@ -172,7 +172,7 @@ async function lerComoUsuario(autorizacao: string, evolucaoId: string) {
 }
 
 /** Pede o rascunho à OpenAI. Do erro, só o status vai para o log: nunca o texto. */
-async function pedirRascunho(corpo: unknown) {
+async function pedirRascunho(corpo: unknown, parte: 2 | 3 | 4 | null) {
   const apiKey = Deno.env.get('OPENAI_API_KEY');
   if (apiKey === undefined)
     throw new Recusa(500, 'sem_configuracao', 'Falta configurar a chave da IA.');
@@ -189,7 +189,8 @@ async function pedirRascunho(corpo: unknown) {
       'A IA não respondeu agora. Tente de novo em instantes.',
     );
   }
-  const rascunho = lerRespostaDaIA(await resposta.json());
+  // Na parte de novo (E08), as outras partes voltam vazias: só a pedida é conferida.
+  const rascunho = lerRespostaDaIA(await resposta.json(), parte);
   if (rascunho === null) {
     throw new Recusa(
       502,
@@ -297,7 +298,7 @@ async function gerar(pedido: Request): Promise<Response> {
       content: semNome(pedidoDaParteDeNovo(parte, textoAtualDaParte(parte.numero, atual ?? null))),
     });
   }
-  const rascunho = await pedirRascunho(corpoDoPedido);
+  const rascunho = await pedirRascunho(corpoDoPedido, parte?.numero ?? null);
 
   // As versões da IA não têm autor humano: só a chave de serviço grava `autor = 'ia'`. Os triggers
   // continuam valendo (evolução em conferência e formato de cada parte).

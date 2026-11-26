@@ -172,6 +172,25 @@ describe('leitura do rascunho da IA', () => {
   });
 });
 
+describe('leitura da parte gerada de novo (E08)', () => {
+  it('aceita as metas do mês com o texto vazio, que no rascunho inteiro é recusado', () => {
+    const vazia: never[] = [];
+    const soMetas = {
+      abertura: vazia,
+      programas: vazia,
+      comportamentos: vazia,
+      recursos: vazia,
+      fechamento: vazia,
+      metas_alcancadas: vazia,
+      metas_do_mes: [{ texto: 'Pedir ajuda com gesto', sessoes: [1], documentos: [] }],
+    };
+    expect(lerRascunho(soMetas)).toBeNull();
+    expect(lerRascunho(soMetas, 2)).toBeNull();
+    expect(lerRascunho(soMetas, 4)?.metasDoMes).toEqual(['Pedir ajuda com gesto']);
+    expect(lerRascunho({ ...soMetas, metas_do_mes: vazia }, 4)).toBeNull();
+  });
+});
+
 describe('orientações da IA (E22)', () => {
   it('sem orientação, as instruções são só as fixas', () => {
     expect(instrucoesDoRascunho([])).toBe(INSTRUCOES_DO_RASCUNHO);

@@ -29,8 +29,14 @@ function metasDe(valor: unknown): FraseLida[] | null {
 const noCampo = (campo: string, frases: readonly FraseLida[]): FraseDoCampo[] =>
   frases.map((frase, ordem) => ({ ...frase, campo, ordem }));
 
-/** Confere o formato do rascunho e o deixa como o banco aceita; `null` se não serve. */
-export function lerRascunho(valor: unknown): Rascunho | null {
+/**
+ * Confere o formato do rascunho e o deixa como o banco aceita; `null` se não serve.
+ *
+ * `parte` é a parte gerada de novo (E08), ou `null` no rascunho inteiro. Só a parte pedida é
+ * gravada, e a IA devolve as outras vazias: o texto vazio só invalida a resposta quando é o texto
+ * (ou o rascunho inteiro) que foi pedido, e as metas do mês vazias, quando são elas as pedidas.
+ */
+export function lerRascunho(valor: unknown, parte: 2 | 3 | 4 | null = null): Rascunho | null {
   if (!ehObjeto(valor)) return null;
   const alcancadas = metasDe(valor.metas_alcancadas);
   const doMes = metasDe(valor.metas_do_mes);
@@ -46,7 +52,9 @@ export function lerRascunho(valor: unknown): Rascunho | null {
       .slice(0, MAXIMO_DO_TRECHO);
     frases.push(...noCampo(trecho, lidas));
   }
-  if (TRECHOS.every((trecho) => texto[trecho] === '')) return null;
+  const semTexto = TRECHOS.every((trecho) => texto[trecho] === '');
+  if (semTexto && (parte === null || parte === 2)) return null;
+  if (parte === 4 && doMes.length === 0) return null;
   frases.push(...noCampo('metas_alcancadas', alcancadas), ...noCampo('metas_do_mes', doMes));
   return {
     texto,
@@ -57,14 +65,17 @@ export function lerRascunho(valor: unknown): Rascunho | null {
 }
 
 /** O rascunho dentro da resposta da API: o JSON em `choices[0].message.content`. */
-export function lerRespostaDaIA(resposta: unknown): Rascunho | null {
+export function lerRespostaDaIA(
+  resposta: unknown,
+  parte: 2 | 3 | 4 | null = null,
+): Rascunho | null {
   const escolha: unknown =
     ehObjeto(resposta) && Array.isArray(resposta.choices) ? resposta.choices[0] : null;
   const mensagem = ehObjeto(escolha) ? escolha.message : null;
   const conteudo = ehObjeto(mensagem) ? mensagem.content : null;
   if (typeof conteudo !== 'string') return null;
   try {
-    return lerRascunho(JSON.parse(conteudo));
+    return lerRascunho(JSON.parse(conteudo), parte);
   } catch {
     return null;
   }
