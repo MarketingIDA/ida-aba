@@ -77,6 +77,27 @@ describe('Evoluções do mês, coordenador', () => {
     expect(card(/Carteira/)).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('Importar do Tita na linha cria a evolução daquele assistido, sem pedir para escolher de novo', async () => {
+    let corpo: unknown = null;
+    server.use(
+      http.post(`${env.SUPABASE_URL}/rest/v1/evolucoes`, async ({ request }) => {
+        corpo = await request.json();
+        return HttpResponse.json({ id: 'evo-nova' }, { status: 201 });
+      }),
+    );
+    const { user } = abrir();
+    await screen.findByRole('list', { name: 'Evoluções de novembro' });
+
+    await user.click(
+      screen.getByRole('button', { name: 'Importar do Tita a evolução de Alice Fictícia Moura' }),
+    );
+
+    await vi.waitFor(() => {
+      expect(corpo).toEqual({ assistido_id: 1 });
+    });
+    expect(screen.queryByRole('dialog', { name: 'Nova evolução mensal' })).not.toBeInTheDocument();
+  });
+
   it('busca por nome sem acento e oferece tirar os filtros quando nada bate', async () => {
     const { user } = abrir();
     const busca = await screen.findByRole('searchbox', { name: 'Buscar assistido ou código' });

@@ -9,10 +9,12 @@ import {
   Send,
   Undo2,
 } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { Situacao } from '@/components/Situacao';
 import type { LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
+import { useCriarEvolucao } from '@/features/evolucoes/queries';
+import { ehErroApp } from '@/lib/erroApp';
 import {
   SITUACAO,
   situacaoDe,
@@ -77,20 +79,42 @@ function Partes({ linha }: Readonly<{ linha: LinhaDoMes }>) {
   );
 }
 
+/** O assistido já é o da linha: cria a evolução e abre a tela dela, sem escolher de novo (E01). */
+function ImportarDoTita({ linha }: Readonly<{ linha: LinhaDoMes }>) {
+  const criar = useCriarEvolucao();
+  const navigate = useNavigate();
+  if (criar.isError) {
+    return (
+      <span role="alert" className="text-[0.78rem] font-bold text-bloq-text">
+        {ehErroApp(criar.error) ? criar.error.message : 'Não foi possível criar agora.'}
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      disabled={criar.isPending}
+      aria-busy={criar.isPending}
+      aria-label={`Importar do Tita a evolução de ${linha.nome}`}
+      onClick={() => {
+        criar.mutate(linha.assistidoId, {
+          onSuccess: (id) => void navigate(`/evolucoes/${id}`),
+        });
+      }}
+      className="relative z-10 inline-flex h-[34px] items-center gap-1.5 rounded-[10px] border-[1.5px] border-borda-forte bg-superficie px-3 text-caption font-extrabold text-marinho foco-anel hover:border-azul hover:text-azul active:scale-[0.97] disabled:opacity-60"
+    >
+      <FileUp aria-hidden="true" className="size-[15px]" />
+      Importar do Tita
+    </button>
+  );
+}
+
 function Andamento({ linha, visaoGeral, noMesAberto }: Readonly<Props>) {
   const situacao = situacaoDe(linha);
   if (situacao === 'em_conferencia') return <Partes linha={linha} />;
   if (situacao === 'sem') {
     if (visaoGeral || !noMesAberto) return null;
-    return (
-      <Link
-        to="/evolucoes?nova=1"
-        className="relative z-10 inline-flex h-[34px] items-center gap-1.5 rounded-[10px] border-[1.5px] border-borda-forte bg-superficie px-3 text-caption font-extrabold text-marinho foco-anel hover:border-azul hover:text-azul active:scale-[0.97]"
-      >
-        <FileUp aria-hidden="true" className="size-[15px]" />
-        Importar do Tita
-      </Link>
-    );
+    return <ImportarDoTita linha={linha} />;
   }
   return (
     <span className="text-[0.78rem] font-bold text-apagado">
