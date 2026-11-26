@@ -90,7 +90,7 @@ describe('Metas do assistido, coordenador', () => {
 });
 
 describe('Metas dos assistidos', () => {
-  it('lista os assistidos ativos com o resumo das metas e leva ao plano de cada um', async () => {
+  it('o coordenador vê só os da carteira dele, com o resumo das metas', async () => {
     servirMetas();
     renderWithProviders(<MetasPage />, { usuario: usuarioDemo() });
 
@@ -100,6 +100,7 @@ describe('Metas dos assistidos', () => {
       '/metas/1',
     );
     expect(within(lista).getByText('1 em desenvolvimento')).toBeInTheDocument();
-    expect(within(lista).getAllByText(/sem metas cadastradas/).length).toBeGreaterThan(0);
+    // Caio está na carteira de outro coordenador: o cadastro mostra, as metas não.
+    expect(within(lista).queryByRole('link', { name: 'Caio Fictício Lima' })).toBeNull();
   });
 });

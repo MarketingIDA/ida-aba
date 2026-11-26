@@ -140,8 +140,10 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
 insert into resultado (teste, ok) select 'coordenador lê só a própria linha de usuário',
   (select count(*) from acesso.usuarios) = 1;
-insert into resultado (teste, ok) select 'coordenador lê só os assistidos da carteira',
-  (select count(*) from cadastro.assistidos where nome like '%Teste') = 2;
+-- O coordenador cadastra e altera assistidos como a coordenação geral: lê todos (26/11/2026).
+-- A lista do mês, as evoluções e as metas seguem só da carteira dele.
+insert into resultado (teste, ok) select 'coordenador lê todos os assistidos, para o cadastro',
+  (select count(*) from cadastro.assistidos where nome like '%Teste') = 3;
 insert into resultado (teste, ok) select 'coordenador lê só as evoluções da carteira',
   (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1;
 insert into resultado (teste, ok) select 'coordenador lê as partes da evolução dele',

@@ -24,11 +24,11 @@ import {
   SITUACAO_DA_META,
   useSalvarMeta,
 } from '@/features/cadastros/metas';
-import { assistidosOptions } from '@/features/cadastros/queries';
 import { useGaveta } from '@/features/cadastros/routes/useGaveta';
 import { useUsuario } from '@/hooks/useUsuario';
 import { useRegistrarAbertura } from '@/lib/auditoria';
 import { ehErroApp } from '@/lib/erroApp';
+import { useAssistidosDaCarteira } from '@/features/cadastros/useAssistidosDaCarteira';
 
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise a coordenação geral.';
@@ -122,7 +122,7 @@ export function MetasDoAssistidoPage() {
   useRegistrarAbertura('abriu_metas', String(assistidoId));
   const valido = Number.isInteger(assistidoId) && assistidoId > 0;
   const podeAlterar = useUsuario()?.papel === 'coordenador';
-  const assistidos = useQuery({ ...assistidosOptions(), enabled: valido });
+  const assistidos = useAssistidosDaCarteira({ enabled: valido });
   const metas = useQuery({ ...metasDoAssistidoOptions(assistidoId), enabled: valido });
   const assistido = assistidos.data?.find((a) => a.id === assistidoId);
   const erro = assistidos.error ?? metas.error;

@@ -7,13 +7,13 @@ import { FalhaAoCarregar } from '@/components/FalhaAoCarregar';
 import { buttonVariants } from '@/components/ui/button';
 import type { Meta } from '@/features/cadastros/api/metas.api';
 import { metasDoAssistidoOptions } from '@/features/cadastros/metas';
-import { assistidosOptions } from '@/features/cadastros/queries';
 import type { DadosDoProgresso } from '@/features/progresso/api/progresso.api';
 import { VoltarParaEvolucoes } from '@/features/progresso/components/AcoesDoProgresso';
 import { ProgressoDoAssistido } from '@/features/progresso/components/ProgressoDoAssistido';
 import { progressoOptions } from '@/features/progresso/queries';
 import { useRegistrarAbertura } from '@/lib/auditoria';
 import { ehErroApp } from '@/lib/erroApp';
+import { useAssistidosDaCarteira } from '@/features/cadastros/useAssistidosDaCarteira';
 
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise a coordenação geral.';
@@ -82,7 +82,7 @@ function Conteudo({
 }
 
 function useDadosDaPagina(assistidoId: number, valido: boolean) {
-  const assistidos = useQuery({ ...assistidosOptions(), enabled: valido });
+  const assistidos = useAssistidosDaCarteira({ enabled: valido });
   const metas = useQuery({ ...metasDoAssistidoOptions(assistidoId), enabled: valido });
   const dados = useQuery({ ...progressoOptions(assistidoId), enabled: valido });
   return {
