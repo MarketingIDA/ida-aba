@@ -83,13 +83,8 @@ async function lerEvolucao(usuario: SupabaseClient, evolucaoId: string) {
   if (completa.data === null || completa.data.editavel !== true) {
     throw new Recusa(403, 'sem_permissao', 'Só o coordenador da carteira lê os níveis de apoio.');
   }
-  if (completa.data.situacao !== 'em_conferencia') {
-    throw new Recusa(
-      409,
-      'evolucao_fechada',
-      'A evolução não está em conferência. Reabra antes de ler os níveis.',
-    );
-  }
+  // A leitura não muda o texto da evolução: vale também na concluída e na enviada, para a meta que
+  // entrou no cadastro depois (o gráfico não pode depender de reabrir a evolução).
   const evolucao = await usuario
     .schema('evolucao')
     .from('evolucoes')

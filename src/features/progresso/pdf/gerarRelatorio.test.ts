@@ -46,6 +46,7 @@ describe('relatório de metas em PDF (E28)', () => {
         inicio: '2026-10-01',
         fim: '2026-10-31',
         lido: true,
+        leitura: 'lida',
       },
     ];
     const progresso = calcularProgresso(metas, pontos, periodos);
