@@ -1,5 +1,5 @@
 import { MAXIMO_DO_TRECHO, TRECHOS, type Trechos } from './evolucao.ts';
-import type { Orientacao } from './rascunho.ts';
+import { blocoDasOrientacoes, type Orientacao } from './rascunho.ts';
 
 /**
  * "Aprimorar com a IA" na evolução escrita à mão (E26): a IA recebe os 5 trechos que o coordenador
@@ -44,12 +44,7 @@ export const INSTRUCOES_DO_APRIMORAMENTO = [
 export function instrucoesDoAprimoramento(orientacoes: readonly Orientacao[]): string {
   const dosTrechos = orientacoes.filter((o) => (TRECHOS as readonly string[]).includes(o.campo));
   if (dosTrechos.length === 0) return INSTRUCOES_DO_APRIMORAMENTO;
-  return [
-    INSTRUCOES_DO_APRIMORAMENTO,
-    '',
-    'Orientações da coordenação geral. Siga cada uma no trecho indicado:',
-    ...dosTrechos.map((o) => `- ${o.campo}: ${o.texto}`),
-  ].join('\n');
+  return [INSTRUCOES_DO_APRIMORAMENTO, ...blocoDasOrientacoes(dosTrechos)].join('\n');
 }
 
 /** A saída estruturada: os 5 trechos, cada um um texto. */
