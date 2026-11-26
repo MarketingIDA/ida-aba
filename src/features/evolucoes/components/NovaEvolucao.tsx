@@ -3,14 +3,8 @@ import { ChevronRight, CircleCheck, Lock, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 
+import { Janela } from '@/components/Janela';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import type { LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
 import { SITUACAO, situacaoDe } from '@/features/evolucoes/logica';
 import { ComecarPeloTita } from '@/features/evolucoes/components/ComecarPeloTita';
@@ -142,7 +136,10 @@ function useAberta(): [boolean, (aberta: boolean) => void, number | null] {
   return [estado || pedida, mudar, pedido];
 }
 
-/** "Nova evolução mensal": o coordenador escolhe um assistido da carteira sem evolução (E01). */
+/**
+ * "Nova evolução mensal": o coordenador escolhe um assistido da carteira sem evolução (E01). Abre em
+ * janela no centro da tela (até 26/11/2026 era uma gaveta à direita).
+ */
 export function NovaEvolucao({ mesAberto }: Readonly<{ mesAberto: string }>) {
   const [aberta, setAberta, assistidoPedido] = useAberta();
   const { inicio, fim } = periodoAnalisado(mesAberto);
@@ -157,23 +154,19 @@ export function NovaEvolucao({ mesAberto }: Readonly<{ mesAberto: string }>) {
         <Plus aria-hidden="true" />
         Nova evolução mensal
       </Button>
-      <Sheet open={aberta} onOpenChange={setAberta}>
-        <SheetContent
-          side="right"
-          className="gap-0 bg-background p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[440px]"
-        >
-          <SheetHeader className="gap-1 border-b border-borda bg-superficie py-5 pr-12 pl-5">
-            <SheetTitle className="font-display text-xl font-bold text-marinho">
-              Nova evolução mensal
-            </SheetTitle>
-            <SheetDescription className="text-sm font-semibold text-texto-2">
-              Evolução de {formatarMesLongo(mesAberto)}, com as sessões de{' '}
-              {formatarData(inicio, true)} a {formatarData(fim)}. Comece pelo PDF do Tita.
-            </SheetDescription>
-          </SheetHeader>
-          {aberta && <Escolha mesAberto={mesAberto} assistidoPedido={assistidoPedido} />}
-        </SheetContent>
-      </Sheet>
+      <Janela
+        aberta={aberta}
+        aoMudar={setAberta}
+        titulo="Nova evolução mensal"
+        descricao={
+          <>
+            Evolução de {formatarMesLongo(mesAberto)}, com as sessões de{' '}
+            {formatarData(inicio, true)} a {formatarData(fim)}. Comece pelo PDF do Tita.
+          </>
+        }
+      >
+        {aberta && <Escolha mesAberto={mesAberto} assistidoPedido={assistidoPedido} />}
+      </Janela>
     </>
   );
 }

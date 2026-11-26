@@ -155,11 +155,13 @@ export function ImportacaoDoTita({
         </p>
       )}
       {podeImportar && tita.pendente === null && tita.importacao !== null && (
-        <RascunhoDaIA evolucao={evolucao} bloqueio={bloqueioDoRascunho} />
+        <RascunhoDaIA evolucao={evolucao} bloqueio={bloqueioDoRascunho}>
+          <EscolhaDoPdf rotulo="Importar de novo" lendo={tita.lendo} aoEscolher={tita.escolher} />
+        </RascunhoDaIA>
       )}
-      {podeImportar && tita.pendente === null && (
+      {podeImportar && tita.pendente === null && tita.importacao === null && (
         <EscolhaDoPdf
-          rotulo={tita.importacao === null ? 'Importar o PDF do Tita' : 'Importar de novo'}
+          rotulo="Importar o PDF do Tita"
           lendo={tita.lendo}
           aoEscolher={tita.escolher}
         />
