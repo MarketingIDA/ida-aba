@@ -2,14 +2,8 @@ import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronRight, Link2, Send, Share2, TriangleAlert } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
+import { Janela } from '@/components/Janela';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { RegistroDoRelatorio } from '@/features/progresso/components/RegistroDoRelatorio';
 import { montarArquivo } from '@/features/progresso/pdf/baixarRelatorio';
 import { copiarLink, enviarRelatorio } from '@/features/progresso/pdf/compartilharRelatorio';
@@ -170,22 +164,14 @@ export function CompartilharRelatorio(props: Readonly<PropsDoRelatorio>) {
       >
         <Share2 aria-hidden="true" />
       </Button>
-      <Sheet open={aberta} onOpenChange={setAberta}>
-        <SheetContent
-          side="right"
-          className="gap-0 bg-background p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[440px]"
-        >
-          <SheetHeader className="gap-1 border-b border-borda bg-superficie py-5 pr-12 pl-5">
-            <SheetTitle className="font-display text-xl font-bold text-marinho">
-              Compartilhar a evolução das metas
-            </SheetTitle>
-            <SheetDescription className="text-sm font-semibold text-texto-2">
-              {props.nome}
-            </SheetDescription>
-          </SheetHeader>
-          {aberta && <Saidas {...props} />}
-        </SheetContent>
-      </Sheet>
+      <Janela
+        aberta={aberta}
+        aoMudar={setAberta}
+        titulo="Compartilhar a evolução das metas"
+        descricao={props.nome}
+      >
+        {aberta && <Saidas {...props} />}
+      </Janela>
     </>
   );
 }

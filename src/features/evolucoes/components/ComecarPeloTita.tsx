@@ -1,14 +1,85 @@
-import { ChevronLeft, PenLine } from 'lucide-react';
+import { ChevronLeft, FileUp, PenLine } from 'lucide-react';
+import { type DragEvent, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import type { LinhaDoMes } from '@/features/evolucoes/api/evolucoes.api';
-import {
-  EscolhaDoPdf,
-  LeituraParaConferir,
-} from '@/features/evolucoes/components/ImportacaoDoTita';
+import { LeituraParaConferir } from '@/features/evolucoes/components/ImportacaoDoTita';
 import { useComecarPeloTita } from '@/features/evolucoes/routes/useComecarPeloTita';
 
 type Tita = ReturnType<typeof useComecarPeloTita>;
+
+/** Arrastar um arquivo para cima da área: `sobre` enquanto ele passa, e o arquivo ao soltar. */
+function useSoltar(aoEscolher: ((arquivo: File) => void) | null) {
+  const [sobre, setSobre] = useState(false);
+  const aoSoltar = {
+    onDragOver: (evento: DragEvent) => {
+      evento.preventDefault();
+      setSobre(true);
+    },
+    onDragLeave: () => {
+      setSobre(false);
+    },
+    onDrop: (evento: DragEvent) => {
+      evento.preventDefault();
+      setSobre(false);
+      const [arquivo] = evento.dataTransfer.files;
+      if (arquivo !== undefined) aoEscolher?.(arquivo);
+    },
+  };
+  return { sobre, aoSoltar };
+}
+
+/**
+ * A área do PDF, já pronta quando a janela abre: arrastar o arquivo ou clicar. Ao abrir, a escolha
+ * do arquivo do computador já aparece sozinha, quando o navegador deixa (ele só deixa logo depois
+ * de um clique); se não deixar, a área continua ali.
+ */
+function AreaDoPdf({
+  lendo,
+  aoEscolher,
+}: Readonly<{ lendo: boolean; aoEscolher: (arquivo: File) => void }>) {
+  const entrada = useRef<HTMLInputElement>(null);
+  const jaAbriu = useRef(false);
+  const { sobre, aoSoltar } = useSoltar(lendo ? null : aoEscolher);
+  useEffect(() => {
+    if (jaAbriu.current) return;
+    jaAbriu.current = true;
+    entrada.current?.click();
+  }, []);
+  return (
+    <div {...aoSoltar}>
+      <button
+        type="button"
+        disabled={lendo}
+        onClick={() => {
+          entrada.current?.click();
+        }}
+        className={`flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center foco-anel hover:border-azul hover:bg-info-soft disabled:opacity-70 ${
+          sobre ? 'border-azul bg-info-soft' : 'border-borda-forte bg-superficie'
+        }`}
+      >
+        <FileUp aria-hidden="true" className="size-7 text-azul" />
+        <b className="text-base text-marinho">
+          {lendo ? 'Lendo o PDF…' : 'Escolher o PDF do Tita'}
+        </b>
+        <span className="text-sm text-texto-2">ou arraste o arquivo para cá</span>
+      </button>
+      <input
+        ref={entrada}
+        type="file"
+        accept="application/pdf,.pdf"
+        aria-label="PDF do Tita"
+        tabIndex={-1}
+        className="sr-only"
+        onChange={(evento) => {
+          const [arquivo] = evento.target.files ?? [];
+          evento.target.value = '';
+          if (arquivo !== undefined) aoEscolher(arquivo);
+        }}
+      />
+    </div>
+  );
+}
 
 /** Sem relatório do Tita no mês: a escrita à mão (E26), à parte do PDF. */
 function EscritaAMao({ tita }: Readonly<{ tita: Tita }>) {
@@ -57,11 +128,7 @@ export function ComecarPeloTita({
         </p>
       </div>
       {tita.pendente === null ? (
-        <EscolhaDoPdf
-          rotulo="Escolher o PDF do Tita"
-          lendo={tita.lendo}
-          aoEscolher={tita.escolher}
-        />
+        <AreaDoPdf lendo={tita.lendo} aoEscolher={tita.escolher} />
       ) : (
         <LeituraParaConferir pendente={tita.pendente} tita={tita} />
       )}

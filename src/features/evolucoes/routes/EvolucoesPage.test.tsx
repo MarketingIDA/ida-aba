@@ -96,7 +96,7 @@ describe('Evoluções do mês, coordenador', () => {
     expect(
       within(folha).getByRole('heading', { name: 'Alice Fictícia Moura' }),
     ).toBeInTheDocument();
-    expect(within(folha).getByRole('button', { name: 'Escolher o PDF do Tita' })).toBeEnabled();
+    expect(within(folha).getByRole('button', { name: /Escolher o PDF do Tita/ })).toBeEnabled();
     expect(corpos).toEqual([]);
 
     await user.click(within(folha).getByRole('button', { name: 'Escrever à mão' }));
