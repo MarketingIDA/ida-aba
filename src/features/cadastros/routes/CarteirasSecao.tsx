@@ -1,16 +1,17 @@
 import { Briefcase } from 'lucide-react';
 import { useState } from 'react';
 
-import type { AlteracaoDaCarteira, NovaCarteira } from '@/features/cadastros/api/carteiras.api';
+import type { NovaCarteira } from '@/features/cadastros/api/carteiras.api';
 import {
-  type CarteiraNaTela,
+  agruparCarteiras,
+  type CarteiraDaLista,
   itemDaCarteira,
   nomeDaCarteira,
-  opcoesDeCoordenacao,
   opcoesDeUnidade,
+  passosDaSituacao,
   turnosOcupados,
 } from '@/features/cadastros/carteiras';
-import { type Falta, FaltaParaCadastrar } from '@/features/cadastros/components/FaltaParaCadastrar';
+import { FaltaParaCadastrar } from '@/features/cadastros/components/FaltaParaCadastrar';
 import {
   FormularioDaCarteira,
   FormularioDeNovaCarteira,
@@ -18,7 +19,7 @@ import {
 import { GavetaDoCadastro } from '@/features/cadastros/components/GavetaDoCadastro';
 import { ListaDoCadastro } from '@/features/cadastros/components/ListaDoCadastro';
 import { SecaoDoCadastro } from '@/features/cadastros/components/SecaoDoCadastro';
-import { useSalvarCarteira } from '@/features/cadastros/queries';
+import { useAtribuirCarteiras, useSalvarCarteira } from '@/features/cadastros/queries';
 import { type DadosDasCarteiras, useCarteiras } from '@/features/cadastros/routes/useCarteiras';
 import { useGaveta } from '@/features/cadastros/routes/useGaveta';
 import { ROTULO_DO_TURNO } from '@/utils/turno';
@@ -27,37 +28,24 @@ const VAZIO = {
   icone: Briefcase,
   titulo: 'Nenhuma carteira cadastrada',
   descricao:
-    'Cada carteira junta uma unidade, um turno e quem coordena. Depois delas vêm os assistidos.',
+    'Cada carteira junta uma unidade e um turno. Quem coordena entra depois, no cadastro da pessoa.',
 };
 
-/** Antes da carteira vêm uma unidade ativa e alguém ativo com o papel de coordenação de unidade. */
-function faltasDaCarteira(semUnidade: boolean, semCoordenacao: boolean): Falta[] {
-  const faltas: Falta[] = [];
-  if (semUnidade) {
-    faltas.push({
-      texto: 'Nenhuma unidade ativa.',
-      rota: '/cadastros/unidades',
-      link: 'Ir para Unidades',
-    });
-  }
-  if (semCoordenacao) {
-    faltas.push({
-      texto: 'Ninguém ativo com o papel de coordenação de unidade.',
-      rota: '/cadastros/pessoas',
-      link: 'Ir para Pessoas',
-    });
-  }
-  return faltas;
-}
+const DESCRICAO =
+  'Uma carteira por unidade e turno. Quem coordena se escolhe no cadastro da pessoa, e o mesmo turno pode ter mais de um coordenador.';
+
+const SEM_UNIDADE = [
+  { texto: 'Nenhuma unidade ativa.', rota: '/cadastros/unidades', link: 'Ir para Unidades' },
+];
 
 interface PropsDaGaveta {
-  gaveta: ReturnType<typeof useGaveta<CarteiraNaTela>>;
+  gaveta: ReturnType<typeof useGaveta<CarteiraDaLista>>;
   dados: DadosDasCarteiras | undefined;
   aoCadastrar: (valores: NovaCarteira) => Promise<unknown>;
-  aoAlterar: (valores: AlteracaoDaCarteira) => Promise<unknown>;
+  aoAlterar: (valores: { ativa: boolean }) => Promise<unknown>;
 }
 
-/** A alteração, a falta de unidade ou de coordenação, ou o cadastro de uma carteira nova. */
+/** A alteração, a falta de unidade, ou o cadastro de uma carteira nova. */
 function ConteudoDaGaveta({ gaveta, dados, aoCadastrar, aoAlterar }: Readonly<PropsDaGaveta>) {
   if (dados === undefined) {
     return (
@@ -69,29 +57,16 @@ function ConteudoDaGaveta({ gaveta, dados, aoCadastrar, aoAlterar }: Readonly<Pr
   const editando = gaveta.item;
   if (editando !== null) {
     return (
-      <FormularioDaCarteira
-        carteira={editando}
-        coordenacoes={opcoesDeCoordenacao(dados.pessoas, editando.coordenadorId)}
-        aoSalvar={aoAlterar}
-        aoCancelar={gaveta.fechar}
-      />
+      <FormularioDaCarteira carteira={editando} aoSalvar={aoAlterar} aoCancelar={gaveta.fechar} />
     );
   }
   const unidades = opcoesDeUnidade(dados.unidades);
-  const coordenacoes = opcoesDeCoordenacao(dados.pessoas);
-  if (unidades.length === 0 || coordenacoes.length === 0) {
-    return (
-      <FaltaParaCadastrar
-        oQue="uma carteira"
-        faltas={faltasDaCarteira(unidades.length === 0, coordenacoes.length === 0)}
-        aoFechar={gaveta.fechar}
-      />
-    );
+  if (unidades.length === 0) {
+    return <FaltaParaCadastrar oQue="uma carteira" faltas={SEM_UNIDADE} aoFechar={gaveta.fechar} />;
   }
   return (
     <FormularioDeNovaCarteira
       unidades={unidades}
-      coordenacoes={coordenacoes}
       ocupadosNa={(unidadeId) => turnosOcupados(dados.carteiras, unidadeId)}
       aoSalvar={aoCadastrar}
       aoCancelar={gaveta.fechar}
@@ -99,7 +74,7 @@ function ConteudoDaGaveta({ gaveta, dados, aoCadastrar, aoAlterar }: Readonly<Pr
   );
 }
 
-/** A gaveta: título pela carteira que está aberta (ou "Nova carteira") e o conteúdo. */
+/** A janela: título pela carteira que está aberta (ou "Nova carteira") e o conteúdo. */
 function GavetaDaCarteira(props: Readonly<PropsDaGaveta>) {
   const { gaveta } = props;
   const editando = gaveta.item;
@@ -108,7 +83,7 @@ function GavetaDaCarteira(props: Readonly<PropsDaGaveta>) {
       aberta={gaveta.aberta}
       aoFechar={gaveta.fechar}
       titulo={editando === null ? 'Nova carteira' : `Editar carteira ${nomeDaCarteira(editando)}`}
-      descricao="Só a coordenação geral cadastra e altera carteiras."
+      descricao="A carteira é a unidade e o turno. Quem coordena entra pelo cadastro da pessoa."
       chave={editando?.id ?? 'nova'}
     >
       <ConteudoDaGaveta {...props} />
@@ -116,14 +91,14 @@ function GavetaDaCarteira(props: Readonly<PropsDaGaveta>) {
   );
 }
 
-/** Quem coordena cada unidade e turno: a lista, o cadastro, a passagem e a desativação. */
+/** As carteiras de cada unidade e turno: a lista, o cadastro e a desativação. */
 export function CarteirasSecao() {
   const { consulta, dados } = useCarteiras();
   const salvar = useSalvarCarteira();
-  const gaveta = useGaveta<CarteiraNaTela>();
+  const atribuir = useAtribuirCarteiras();
+  const gaveta = useGaveta<CarteiraDaLista>();
   const [aviso, setAviso] = useState('');
-  const carteiras = dados?.carteiras ?? [];
-  const editando = gaveta.item;
+  const carteiras = agruparCarteiras(dados?.carteiras ?? []);
 
   async function aoCadastrar(valores: NovaCarteira) {
     const salva = await salvar.mutateAsync({ valores });
@@ -132,17 +107,17 @@ export function CarteirasSecao() {
     gaveta.fechar();
   }
 
-  async function aoAlterar(valores: AlteracaoDaCarteira) {
-    if (editando === null) return;
-    await salvar.mutateAsync({ id: editando.id, valores });
-    setAviso(`Carteira ${nomeDaCarteira(editando)} salva.`);
+  async function aoAlterar({ ativa }: { ativa: boolean }) {
+    if (gaveta.item === null) return;
+    await atribuir.mutateAsync(passosDaSituacao(gaveta.item, ativa));
+    setAviso(`Carteira ${nomeDaCarteira(gaveta.item)} salva.`);
     gaveta.fechar();
   }
 
   return (
     <SecaoDoCadastro
       titulo="Carteiras"
-      descricao="Uma carteira ativa por unidade e turno, com quem a coordena. Desativar libera a vaga; nada se apaga."
+      descricao={DESCRICAO}
       botao="Nova carteira"
       aoCriar={gaveta.abrirNovo}
       aviso={aviso}

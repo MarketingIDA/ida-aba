@@ -6,7 +6,12 @@ import { describe, expect, it } from 'vitest';
 import { env } from '@/config/env';
 import { CadastrosPage } from '@/features/cadastros';
 import { violacoesDeAcessibilidade } from '@/testing/axe';
-import { type LinhaDePessoa, pessoasDemo } from '@/testing/factories/cadastros';
+import {
+  carteirasDemo,
+  type LinhaDePessoa,
+  mesmaVagaAtiva,
+  pessoasDemo,
+} from '@/testing/factories/cadastros';
 import { usuarioDemo } from '@/testing/factories/usuario';
 import { renderWithProviders } from '@/testing/renderWithProviders';
 import { server } from '@/testing/server';
@@ -22,6 +27,9 @@ const abrir = () =>
 
 const tabelaDePessoas = () =>
   tabelaEmMemoria<LinhaDePessoa>('usuarios', pessoasDemo(), 'email', { auth_user_id: null });
+
+const tabelaDeCarteiras = () =>
+  tabelaEmMemoria('carteiras', carteirasDemo(), mesmaVagaAtiva, { ativa: true });
 
 const LISTA = 'Pessoas cadastradas';
 
@@ -139,6 +147,36 @@ describe('Cadastros: pessoas', () => {
     ]);
   });
 
+  it('o coordenador escolhe as carteiras: divide um turno e solta outro', async () => {
+    tabelaDePessoas();
+    const escritas = tabelaDeCarteiras();
+    const { user } = abrir();
+
+    await user.click(await screen.findByRole('button', { name: 'Editar Bruno Fictício Novo' }));
+    const gaveta = await screen.findByRole('dialog', { name: 'Editar Bruno Fictício Novo' });
+    const manha = within(gaveta).getByRole('checkbox', { name: 'UNA · Unidade Fictícia · Manhã' });
+    const tarde = within(gaveta).getByRole('checkbox', { name: 'UNA · Unidade Fictícia · Tarde' });
+    expect(manha).not.toBeChecked();
+    expect(manha).toHaveAccessibleDescription('Também com Carla Fictícia Coordenadora');
+    expect(tarde).toBeChecked();
+    await user.click(manha);
+    await user.click(tarde);
+    await user.click(within(gaveta).getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(
+      await screen.findByText('Alterações de Bruno Fictício Novo salvas.'),
+    ).toBeInTheDocument();
+    // Sozinho na tarde, a carteira fica sem coordenador; na manhã, entra ao lado da Carla.
+    expect(escritas).toEqual([
+      { metodo: 'PATCH', corpo: { coordenador_id: null, ativa: true }, perfil: 'cadastro' },
+      {
+        metodo: 'POST',
+        corpo: { unidade_id: 1, turno: 'manha', coordenador_id: 4 },
+        perfil: 'cadastro',
+      },
+    ]);
+  });
+
   it('na própria linha, o papel e "ativa" não aparecem para mudar', async () => {
     const escritas = tabelaDePessoas();
     const { user } = abrir();
@@ -160,6 +198,7 @@ describe('Cadastros: pessoas', () => {
 
   it('a regra do banco aparece com a mensagem própria, e a gaveta fica aberta', async () => {
     tabelaDePessoas();
+    tabelaDeCarteiras();
     server.use(
       http.patch(`${env.SUPABASE_URL}/rest/v1/usuarios`, () =>
         HttpResponse.json(
@@ -180,7 +219,7 @@ describe('Cadastros: pessoas', () => {
     await user.click(within(gaveta).getByRole('button', { name: 'Salvar alterações' }));
 
     expect(await within(gaveta).findByRole('alert')).toHaveTextContent(
-      'Esta pessoa tem carteira ativa. Passe a carteira para outro coordenador antes de mudar o papel.',
+      'Esta pessoa ainda tem carteira ativa. Tire as carteiras dela antes de mudar o papel.',
     );
   });
 

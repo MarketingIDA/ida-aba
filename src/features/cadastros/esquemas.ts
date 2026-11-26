@@ -76,6 +76,8 @@ export const esquemaPessoa = z
     papel: z.enum(PAPEIS, 'Escolha o papel da pessoa.'),
     crp: z.string().trim(),
     ativo: z.boolean(),
+    // As carteiras (unidade e turno) de quem coordena unidade; os outros papéis não têm.
+    carteiras: z.array(z.string()),
   })
   .superRefine(({ papel, crp }, contexto) => {
     if (papel === 'coordenador' && crp !== '' && (crp.length < 4 || crp.length > 20)) {
@@ -86,25 +88,23 @@ export const esquemaPessoa = z
       });
     }
   })
-  .transform(({ crp, ...pessoa }) => ({
+  .transform(({ crp, carteiras, ...pessoa }) => ({
     ...pessoa,
     crp: pessoa.papel === 'coordenador' && crp !== '' ? crp : null,
+    carteiras: pessoa.papel === 'coordenador' ? carteiras : [],
   }));
 
 /** O `select` nativo devolve texto; a opção vazia ("Escolha...") não vira 0. */
 const escolhaDoSeletor = (mensagem: string) => z.string().min(1, mensagem).transform(Number);
 
-const coordenadorId = escolhaDoSeletor('Escolha quem coordena a carteira.');
-
-/** Carteira nova: unidade, turno e quem coordena. Nasce ativa. */
+/** Carteira nova: unidade e turno. Nasce ativa e sem coordenador. */
 export const esquemaNovaCarteira = z.object({
   unidadeId: escolhaDoSeletor('Escolha a unidade da carteira.'),
   turno: z.enum(TURNOS, 'Escolha o turno da carteira.'),
-  coordenadorId,
 });
 
-/** Carteira existente: passa para outra coordenação ou é desativada. */
-export const esquemaAlteracaoDaCarteira = z.object({ coordenadorId, ativa: z.boolean() });
+/** Carteira existente: segue ativa ou é desativada. */
+export const esquemaAlteracaoDaCarteira = z.object({ ativa: z.boolean() });
 
 /** Hoje em Recife, `AAAA-MM-DD` (o formato do campo de data). */
 const hojeEmRecife = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Recife' });
@@ -139,6 +139,7 @@ export const esquemaAssistido = z.object({
 export type CamposDaUnidade = z.input<typeof esquemaUnidade>;
 export type CamposDoPlano = z.input<typeof esquemaPlano>;
 export type CamposDaPessoa = z.input<typeof esquemaPessoa>;
+export type PessoaDoFormulario = z.output<typeof esquemaPessoa>;
 export type CamposDaNovaCarteira = z.input<typeof esquemaNovaCarteira>;
 export type CamposDaAlteracaoDaCarteira = z.input<typeof esquemaAlteracaoDaCarteira>;
 export type CamposDoAssistido = z.input<typeof esquemaAssistido>;

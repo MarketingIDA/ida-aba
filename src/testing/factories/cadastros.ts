@@ -96,7 +96,7 @@ export interface LinhaDeCarteira {
   id: number;
   unidade_id: number;
   turno: 'manha' | 'tarde' | 'integral';
-  coordenador_id: number;
+  coordenador_id: number | null;
   ativa: boolean;
 }
 
@@ -114,12 +114,16 @@ export function carteirasDemo(): LinhaDeCarteira[] {
   ];
 }
 
-/** O índice único do banco: uma carteira ativa por unidade e turno. */
+/**
+ * Os índices únicos do banco: entre as ativas da mesma unidade e turno, uma por coordenador e uma
+ * só sem coordenador.
+ */
 export const mesmaVagaAtiva = (existente: LinhaDeCarteira, nova: LinhaDeCarteira) =>
   existente.ativa &&
   nova.ativa &&
   existente.unidade_id === nova.unidade_id &&
-  existente.turno === nova.turno;
+  existente.turno === nova.turno &&
+  existente.coordenador_id === nova.coordenador_id;
 
 /** Linha de `cadastro.assistidos` como a Data API devolve (em snake_case). */
 export interface LinhaDeAssistido {

@@ -163,6 +163,16 @@ async function simularCadastros(page: Page, papel: Papel): Promise<void> {
     unico: 'nome',
     linhas: [{ id: 1, nome: 'Plano Fictício', ativo: true }],
   });
+  // Uma carteira com coordenador e uma sem: o cadastro da pessoa lista as duas para escolher.
+  await simularTabela(page, papel, {
+    nome: 'carteiras',
+    unico: 'id',
+    padrao: { ativa: true },
+    linhas: [
+      { id: 1, unidade_id: 1, turno: 'tarde', coordenador_id: 2, ativa: true },
+      { id: 2, unidade_id: 1, turno: 'manha', coordenador_id: null, ativa: true },
+    ],
+  });
   // As pessoas: as três contas dos testes e uma pessoa que ainda não entrou.
   await simularTabela(page, papel, {
     nome: 'usuarios',

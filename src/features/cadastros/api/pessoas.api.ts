@@ -48,7 +48,7 @@ const MENSAGENS = {
     email_com_conta:
       'Esta pessoa já tem conta e entra com este e-mail. Ele não muda pelo cadastro.',
     coordenador_com_carteira:
-      'Esta pessoa tem carteira ativa. Passe a carteira para outro coordenador antes de mudar o papel.',
+      'Esta pessoa ainda tem carteira ativa. Tire as carteiras dela antes de mudar o papel.',
   },
 };
 

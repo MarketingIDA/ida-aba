@@ -23,7 +23,7 @@ const tabelaDeCarteiras = () =>
 const LISTA = 'Carteiras cadastradas';
 
 describe('Cadastros: carteiras', () => {
-  it('lista as carteiras, as ativas primeiro, com unidade, turno, coordenação e avisos', async () => {
+  it('lista uma carteira por unidade e turno, as ativas primeiro, com quem coordena', async () => {
     const { container } = abrir();
 
     await screen.findByRole('list', { name: LISTA });
@@ -33,12 +33,11 @@ describe('Cadastros: carteiras', () => {
       'UNAUnidade Fictícia · ManhãCarla Fictícia CoordenadoraEditar',
       'UNAUnidade Fictícia · TardeBruno Fictício NovoEditar',
       'UNBOutra Unidade Fictícia · IntegralUnidade desativadaCarla Fictícia CoordenadoraEditar',
-      'UNAUnidade Fictícia · ManhãDesativadaBruno Fictício NovoEditar',
     ]);
     expect(await violacoesDeAcessibilidade(container)).toEqual([]);
   });
 
-  it('cadastra uma carteira: pede as escolhas e não oferece turno que já tem carteira', async () => {
+  it('cadastra uma carteira só com unidade e turno, sem coordenador', async () => {
     const escritas = tabelaDeCarteiras();
     const { user, container } = abrir();
     await screen.findByRole('list', { name: LISTA });
@@ -62,12 +61,10 @@ describe('Cadastros: carteiras', () => {
     await user.selectOptions(unidade, 'UNA · Unidade Fictícia');
     const manha = within(gaveta).getByRole('radio', { name: 'Manhã' });
     expect(manha).toBeDisabled();
-    expect(manha).toHaveAccessibleDescription(
-      'Já tem carteira ativa, com Carla Fictícia Coordenadora.',
-    );
+    expect(manha).toHaveAccessibleDescription('Já tem carteira ativa.');
+    expect(within(gaveta).queryByLabelText('Coordenação')).not.toBeInTheDocument();
     expect(within(gaveta).getByRole('radio', { name: 'Tarde' })).toBeDisabled();
     await user.click(within(gaveta).getByRole('radio', { name: 'Integral' }));
-    await user.selectOptions(within(gaveta).getByLabelText('Coordenação'), 'Bruno Fictício Novo');
     expect(await violacoesDeAcessibilidade(container)).toEqual([]);
     await user.click(within(gaveta).getByRole('button', { name: 'Cadastrar carteira' }));
 
@@ -78,34 +75,26 @@ describe('Cadastros: carteiras', () => {
     expect(escritas).toEqual([
       {
         metodo: 'POST',
-        corpo: { unidade_id: 1, turno: 'integral', coordenador_id: 4 },
+        corpo: { unidade_id: 1, turno: 'integral', coordenador_id: null },
         perfil: 'cadastro',
       },
     ]);
   });
 
-  it('passa a carteira para outra coordenação, sem mexer na unidade e no turno', async () => {
+  it('a edição mostra quem coordena e só deixa desativar a carteira', async () => {
     const escritas = tabelaDeCarteiras();
     const { user } = abrir();
 
-    await user.click(
-      await screen.findByRole('button', {
-        name: 'Editar carteira UNA · Manhã (Carla Fictícia Coordenadora)',
-      }),
-    );
+    await user.click(await screen.findByRole('button', { name: 'Editar carteira UNA · Manhã' }));
     const gaveta = await screen.findByRole('dialog', { name: 'Editar carteira UNA · Manhã' });
     expect(gaveta).toHaveTextContent('Unidade e turnoUNA · Unidade Fictícia, manhã.');
-    const coordenacao = within(gaveta).getByLabelText('Coordenação');
-    expect(coordenacao).toHaveValue('2');
-    expect(coordenacao).toHaveAccessibleDescription(
-      'Passar a carteira muda quem vê os assistidos e as evoluções dela.',
-    );
-    await user.selectOptions(coordenacao, 'Bruno Fictício Novo');
+    expect(gaveta).toHaveTextContent('CoordenaçãoCarla Fictícia Coordenadora.');
+    await user.click(within(gaveta).getByRole('checkbox', { name: /Carteira ativa/ }));
     await user.click(within(gaveta).getByRole('button', { name: 'Salvar alterações' }));
 
     expect(await screen.findByText('Carteira UNA · Manhã salva.')).toBeInTheDocument();
     expect(escritas).toEqual([
-      { metodo: 'PATCH', corpo: { coordenador_id: 4, ativa: true }, perfil: 'cadastro' },
+      { metodo: 'PATCH', corpo: { coordenador_id: 2, ativa: false }, perfil: 'cadastro' },
     ]);
   });
 });

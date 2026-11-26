@@ -61,6 +61,7 @@ describe('esquema da pessoa', () => {
       papel: 'coordenador',
       crp: '',
       ativo: true,
+      carteiras: ['1:manha'],
       ...campos,
     });
 
@@ -73,10 +74,12 @@ describe('esquema da pessoa', () => {
       papel: 'coordenador',
       crp: null,
       ativo: true,
+      carteiras: ['1:manha'],
     });
   });
 
   it('o CRP só vale para a coordenação de unidade', () => {
+    expect(pessoa({ papel: 'contas_medicas' }).data?.carteiras).toEqual([]);
     expect(pessoa({ crp: ' 06/12345 ' }).data?.crp).toBe('06/12345');
     expect(pessoa({ papel: 'contas_medicas', crp: '06/12345' }).data?.crp).toBeNull();
     // Para os outros papéis, nem o CRP fora da medida trava o cadastro: ele não vai ao banco.
@@ -102,11 +105,10 @@ describe('esquema da pessoa', () => {
 
 describe('esquemas da carteira', () => {
   it('a opção vazia ("Escolha...") pede a escolha, em vez de virar o id 0', () => {
-    const recusa = esquemaNovaCarteira.safeParse({ unidadeId: '', coordenadorId: '' });
+    const recusa = esquemaNovaCarteira.safeParse({ unidadeId: '' });
     expect(recusa.error?.issues.map(({ path, message }) => ({ path, message }))).toEqual([
       { path: ['unidadeId'], message: 'Escolha a unidade da carteira.' },
       { path: ['turno'], message: 'Escolha o turno da carteira.' },
-      { path: ['coordenadorId'], message: 'Escolha quem coordena a carteira.' },
     ]);
   });
 });

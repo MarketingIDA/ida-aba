@@ -14,27 +14,27 @@ const tabelaDeCarteiras = () =>
 describe('API das carteiras', () => {
   it('manda só as colunas certas: a alteração não mexe na unidade nem no turno', async () => {
     const escritas = tabelaDeCarteiras();
-    await cadastrarCarteira({ unidadeId: 3, turno: 'manha', coordenadorId: 2 });
+    await cadastrarCarteira({ unidadeId: 3, turno: 'manha' });
     await alterarCarteira(1, { coordenadorId: 2, ativa: false });
 
     // A coordenação vai sempre no PATCH: o trigger do banco confere o papel de novo.
     expect(escritas).toEqual([
       {
         metodo: 'POST',
-        corpo: { unidade_id: 3, turno: 'manha', coordenador_id: 2 },
+        corpo: { unidade_id: 3, turno: 'manha', coordenador_id: null },
         perfil: 'cadastro',
       },
       { metodo: 'PATCH', corpo: { coordenador_id: 2, ativa: false }, perfil: 'cadastro' },
     ]);
   });
 
-  it('a segunda carteira ativa na mesma unidade e turno é recusada com o motivo', async () => {
+  it('a mesma pessoa duas vezes na mesma unidade e turno é recusada com o motivo', async () => {
     tabelaDeCarteiras();
     await expect(
-      cadastrarCarteira({ unidadeId: 1, turno: 'manha', coordenadorId: 4 }),
+      cadastrarCarteira({ unidadeId: 1, turno: 'manha', coordenadorId: 2 }),
     ).rejects.toMatchObject({
       codigo: 'duplicado',
-      message: 'Esta unidade já tem carteira ativa neste turno. Passe a que existe ou desative-a.',
+      message: 'Esta unidade já tem carteira ativa neste turno.',
     });
   });
 
@@ -50,7 +50,7 @@ describe('API das carteiras', () => {
     await expect(alterarCarteira(4, { coordenadorId: 2, ativa: false })).rejects.toMatchObject({
       codigo: 'regra_violada',
       message:
-        'Esta carteira tem assistidos ativos. Passe cada um para outra carteira, na aba Assistidos, antes de desativar.',
+        'Esta carteira tem assistidos ativos. Passe cada um para outra carteira, na aba Assistidos, antes de tirar o coordenador ou desativar.',
     });
   });
 });
