@@ -41,7 +41,7 @@ const esquemaPessoa = z
 
 const MENSAGENS = {
   duplicado: 'Já existe uma pessoa com este e-mail.',
-  sem_permissao: 'Só a coordenação geral cadastra e altera pessoas.',
+  sem_permissao: 'Você não pode fazer esta mudança no cadastro de pessoas.',
   regras: {
     ultima_coordenacao_geral:
       'O sistema precisa de ao menos uma coordenação geral ativa. Cadastre outra antes desta mudança.',

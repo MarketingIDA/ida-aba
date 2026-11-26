@@ -44,7 +44,7 @@ describe('API das pessoas', () => {
     await expect(falha).rejects.toThrow(comeco);
   });
 
-  it('quem não é da coordenação geral recebe a recusa do RLS em português', async () => {
+  it('quem não pode mudar recebe a recusa do RLS em português', async () => {
     server.use(
       http.post(USUARIOS, () =>
         HttpResponse.json({ code: '42501', message: 'row-level security' }, { status: 403 }),
@@ -52,7 +52,7 @@ describe('API das pessoas', () => {
     );
     await expect(salvarPessoa(VALORES)).rejects.toMatchObject({
       codigo: 'sem_permissao',
-      message: 'Só a coordenação geral cadastra e altera pessoas.',
+      message: 'Você não pode fazer esta mudança no cadastro de pessoas.',
     });
   });
 

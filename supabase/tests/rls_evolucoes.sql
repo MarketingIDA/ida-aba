@@ -138,8 +138,9 @@ select set_config('teste.assistido_dois',
 -- Coordenadora A: vê só a carteira dela.
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
-insert into resultado (teste, ok) select 'coordenador lê só a própria linha de usuário',
-  (select count(*) from acesso.usuarios) = 1;
+-- O coordenador cadastra pessoas como a coordenação geral: lê todas (26/11/2026).
+insert into resultado (teste, ok) select 'coordenador lê todas as pessoas',
+  (select count(*) from acesso.usuarios) > 1;
 -- O coordenador cadastra e altera assistidos como a coordenação geral: lê todos (26/11/2026).
 -- A lista do mês, as evoluções e as metas seguem só da carteira dele.
 insert into resultado (teste, ok) select 'coordenador lê todos os assistidos, para o cadastro',
@@ -171,10 +172,10 @@ $$;
 do $$
 begin
   begin
-    insert into cadastro.unidades (sigla, nome) values ('HACK', 'Invasora');
-    insert into resultado (teste, ok) values ('coordenador não cria unidade', false);
+    insert into cadastro.unidades (sigla, nome, cnpj) values ('TSC', 'Unidade do Coordenador', '11222333000181');
+    insert into resultado (teste, ok) values ('coordenador cria unidade, como a coordenação geral', true);
   exception when insufficient_privilege then
-    insert into resultado (teste, ok) values ('coordenador não cria unidade', true);
+    insert into resultado (teste, ok) values ('coordenador cria unidade, como a coordenação geral', false);
   end;
   begin
     update acesso.usuarios set papel = 'coordenacao_geral' where email = 'coord.a@exemplo.test';
@@ -198,10 +199,10 @@ begin
   end;
   begin
     insert into acesso.usuarios (nome, email, papel)
-      values ('Intrusa', 'intrusa@exemplo.test', 'coordenacao_geral');
-    insert into resultado (teste, ok) values ('coordenador não cadastra pessoa', false);
+      values ('Pessoa do Coordenador', 'pessoa.do.coordenador@exemplo.test', 'contas_medicas');
+    insert into resultado (teste, ok) values ('coordenador cadastra pessoa, como a coordenação geral', true);
   exception when insufficient_privilege then
-    insert into resultado (teste, ok) values ('coordenador não cadastra pessoa', true);
+    insert into resultado (teste, ok) values ('coordenador cadastra pessoa, como a coordenação geral', false);
   end;
 end;
 $$;
