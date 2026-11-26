@@ -57,6 +57,21 @@ describe('pedido do rascunho à IA', () => {
     expect(conteudo).not.toContain('Frequência');
   });
 
+  it('na escrita à mão, sem análise, leva só os documentos (E26)', () => {
+    const conteudo = conteudoDoPedido({
+      ...PEDIDO,
+      analises: [],
+      documentos: [{ tipo: 'escola', data: '2026-10-20', texto: 'A assistida participa da roda.' }],
+    });
+    expect(conteudo.split('\n')).toEqual([
+      'Evolução de novembro de 2026. Período analisado: 01/10/2026 a 31/10/2026.',
+      'Tratamento: a assistida.',
+      '',
+      'Outros documentos:',
+      '[D1, Relatório escolar, 20/10/2026] A assistida participa da roda.',
+    ]);
+  });
+
   it('leva o mês, o tratamento, a frequência e as análises, com a falta marcada', () => {
     expect(conteudoDoPedido(PEDIDO)).toBe(
       [
