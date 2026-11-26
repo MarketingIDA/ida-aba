@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { ListPlus } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -14,7 +14,13 @@ import { FRASE_PADRAO, MAXIMO_DA_META, MAXIMO_DE_METAS, metasDoTexto } from '@do
 export function MetasDaParte({
   metas,
   doMes,
-}: Readonly<{ metas: readonly string[]; doMes: boolean }>) {
+  depoisDaMeta,
+}: Readonly<{
+  metas: readonly string[];
+  doMes: boolean;
+  /** O que vem ao lado de cada meta: a sugestão de levá-la ao cadastro de metas (E23). */
+  depoisDaMeta?: ((meta: string) => ReactNode) | undefined;
+}>) {
   return (
     <div className="flex flex-col gap-2.5 text-sm leading-relaxed text-texto">
       {doMes && <p className="max-w-[75ch]">{FRASE_PADRAO}</p>}
@@ -24,7 +30,10 @@ export function MetasDaParte({
         <ul className="flex max-w-[75ch] list-disc flex-col gap-1 pl-5 marker:text-azul">
           {metas.map((meta, i) => (
             // Metas podem se repetir; a posição é a identidade dentro da versão.
-            <li key={`${String(i)}-${meta}`}>{meta}</li>
+            <li key={`${String(i)}-${meta}`}>
+              {meta}
+              {depoisDaMeta?.(meta)}
+            </li>
           ))}
         </ul>
       )}

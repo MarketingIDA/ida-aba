@@ -837,3 +837,49 @@ describe('Calendário dos dias analisados (E19, E20)', () => {
     });
   });
 });
+
+describe('Sugestão de meta para o cadastro', () => {
+  it('pulsa ao lado da meta que não está no cadastro, cadastra e some', async () => {
+    const metas: Record<string, unknown>[] = [];
+    Object.assign(banco, { assistido_id: 1 });
+    banco.versoes = [
+      {
+        numero: 4,
+        conteudo: { metas: ['Pedir ajuda com gesto'] },
+        autor: 'ia',
+        criado_em: '2026-11-04T15:00:00Z',
+        criado_por: null,
+      },
+    ];
+    server.use(
+      http.get(`${REST}/metas`, () => HttpResponse.json(metas)),
+      http.post(`${REST}/metas`, async ({ request }) => {
+        const nova = {
+          ...((await request.json()) as Record<string, unknown>),
+          id: 1,
+          situacao_em: '2026-11-04T15:00:00Z',
+        };
+        metas.push(nova);
+        return HttpResponse.json([nova], { status: 201 });
+      }),
+    );
+    const { user } = abrir();
+
+    const nome = 'Incluir no cadastro de metas: Pedir ajuda com gesto';
+    await user.click(await screen.findByRole('button', { name: nome }));
+    expect(screen.getByLabelText('Meta')).toHaveValue('Pedir ajuda com gesto');
+    await user.type(screen.getByLabelText('Programa'), 'Mando');
+    await user.type(screen.getByLabelText('Critério de alcance'), 'Sem dica em duas sessões');
+    await user.click(screen.getByRole('button', { name: 'Cadastrar meta' }));
+
+    await vi.waitFor(() => {
+      expect(screen.queryByRole('button', { name: nome })).not.toBeInTheDocument();
+    });
+    expect(metas[0]).toMatchObject({
+      assistido_id: 1,
+      programa: 'Mando',
+      texto: 'Pedir ajuda com gesto',
+      situacao: 'desenvolvimento',
+    });
+  });
+});
