@@ -1,6 +1,6 @@
 import { Situacao } from '@/components/Situacao';
 import type { CarteiraDoMes } from '@/features/arquivo-do-mes/api/arquivos.api';
-import { BaixarWord } from '@/features/arquivo-do-mes/components/BaixarWord';
+import { BaixarPdf } from '@/features/arquivo-do-mes/components/BaixarPdf';
 import { EvolucoesDoArquivo } from '@/features/arquivo-do-mes/components/EvolucoesDoArquivo';
 import { evolucoes, nomeDaCarteira, textoDoAndamento } from '@/features/arquivo-do-mes/logica';
 import { dataEHora } from '@/utils/textos';
@@ -73,10 +73,10 @@ export function LinhaDoArquivo(props: Readonly<Props>) {
       </div>
       {carteira.arquivo !== null && (
         <div className="flex flex-col gap-1 sm:pl-14">
-          <BaixarWord
+          <BaixarPdf
             carteiraId={carteira.carteiraId}
             mes={props.mes}
-            rotulo="Baixar Word"
+            rotulo="Baixar PDF"
             tamanho="sm"
           />
           <EvolucoesDoArquivo

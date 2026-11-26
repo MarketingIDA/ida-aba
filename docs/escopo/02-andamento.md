@@ -27,7 +27,7 @@ Os testes à mão seguem o [roteiro de testes](../testes/roteiro-de-testes-a-mao
 | E11 | Metas alcançadas, manutenção e aviso de menos de 4 | No ar | #31 | |
 | E12 | Metas para o mês atual: mínimo de 4, meta já alcançada e programa que o texto não cita | No ar | #31, #33, #46 | |
 | E13 | Fluxo, reabrir e devolução pela coordenação geral | No ar | #10, #17 | |
-| E14 | Word, assinatura, prévia e evolução sozinha para conferência | No ar | #11, #13, #44 | |
+| E14 | PDF no papel timbrado (antes Word), assinatura, prévia e evolução sozinha para conferência | No ar | #11, #13, #44 | |
 | E15 | Prazo do dia 10 e o que falta | No ar | #12 | |
 | E16 | Código da evolução | No ar | #1 | |
 | E17 | Turno integral num arquivo só | No ar | #6, #12 | A carteira de turno integral é uma carteira só; não há tela própria. |

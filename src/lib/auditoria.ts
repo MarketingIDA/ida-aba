@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 
 /**
- * Ações que não gravam nada no banco, mas ficam na auditoria (abrir uma ficha, baixar um Word). O
+ * Ações que não gravam nada no banco, mas ficam na auditoria (abrir uma ficha, baixar um PDF). O
  * banco aceita só esta lista e grava o autor pelo login. Falhar aqui não atrapalha quem usa: o
  * erro só vai para o log.
  */
@@ -13,7 +13,9 @@ export type AcaoAuditada =
   | 'abriu_progresso'
   | 'abriu_metas'
   | 'baixou_evolucao_word'
-  | 'baixou_arquivo_word';
+  | 'baixou_arquivo_word'
+  | 'baixou_evolucao_pdf'
+  | 'baixou_arquivo_pdf';
 
 export function registrarAcao(
   acao: AcaoAuditada,

@@ -7,10 +7,10 @@ import { type Turno, TURNOS } from '@/utils/turno';
 import { type Trechos, TRECHOS_VAZIOS } from '@dominio/evolucao.ts';
 
 /**
- * O que o Word do arquivo do mês leva (E14). O arquivo enviado vem com quem assinou e a assinatura
+ * O que o PDF do arquivo do mês leva (E14). O arquivo enviado vem com quem assinou e a assinatura
  * da época; sem envio, vem a prévia, com as evoluções já concluídas. Quem lê o quê é do banco.
  */
-export interface EvolucaoDoWord {
+export interface EvolucaoDoArquivo {
   codigo: string;
   assistido: string;
   plano: string | null;
@@ -30,7 +30,7 @@ export interface ConteudoDoArquivo {
   crp: string | null;
   /** O caminho da imagem no bucket `assinaturas`. */
   assinatura: string | null;
-  evolucoes: EvolucaoDoWord[];
+  evolucoes: EvolucaoDoArquivo[];
   /**
    * A evolução de um assistido, baixada só para conferência (E14): sai com o aviso e sem a
    * assinatura, porque não vai a contas médicas.
@@ -60,7 +60,7 @@ const esquemaEvolucao = z
     metas_alcancadas: esquemaMetas,
     metas_do_mes: esquemaMetas,
   })
-  .transform((e): EvolucaoDoWord => ({
+  .transform((e): EvolucaoDoArquivo => ({
     codigo: e.codigo,
     assistido: e.assistido,
     plano: e.plano,
@@ -94,7 +94,7 @@ const esquemaConteudo = z
     evolucoes: c.evolucoes.toSorted((a, b) => a.assistido.localeCompare(b.assistido, 'pt-BR')),
   }));
 
-const INDISPONIVEL = 'Não foi possível montar o Word agora. Tente de novo em instantes.';
+const INDISPONIVEL = 'Não foi possível montar o PDF agora. Tente de novo em instantes.';
 
 /** O conteúdo do arquivo de uma carteira no mês; o banco devolve `null` a quem não pode ler. */
 export async function buscarConteudoDoArquivo(
@@ -113,7 +113,7 @@ export async function buscarConteudoDoArquivo(
   return esquemaConteudo.parse(resposta.data);
 }
 
-/** A imagem da assinatura que vai no fim do Word. */
+/** A imagem da assinatura que vai no fim do PDF. */
 export async function baixarAssinatura(caminho: string): Promise<Blob> {
   const download = await supabase.storage.from('assinaturas').download(caminho);
   if (download.error !== null) {

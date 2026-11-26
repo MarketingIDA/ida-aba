@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import { Situacao } from '@/components/Situacao';
 import type { CarteiraDoMes } from '@/features/arquivo-do-mes/api/arquivos.api';
-import { BaixarWord } from '@/features/arquivo-do-mes/components/BaixarWord';
+import { BaixarPdf } from '@/features/arquivo-do-mes/components/BaixarPdf';
 import { EnvioDoArquivo } from '@/features/arquivo-do-mes/components/EnvioDoArquivo';
 import { EvolucoesDoArquivo } from '@/features/arquivo-do-mes/components/EvolucoesDoArquivo';
 import {
@@ -112,7 +112,7 @@ function Corpo({ carteira, mes, aberto }: Readonly<Props>) {
           {evolucoes(carteira.arquivo.evolucoes)} e a sua assinatura. As evoluções ficaram só para
           leitura.
         </p>
-        <BaixarWord carteiraId={carteira.carteiraId} mes={mes} rotulo="Baixar Word" />
+        <BaixarPdf carteiraId={carteira.carteiraId} mes={mes} rotulo="Baixar PDF" />
         <EvolucoesDoArquivo
           arquivoId={carteira.arquivo.id}
           total={carteira.arquivo.evolucoes}
@@ -135,7 +135,7 @@ function Corpo({ carteira, mes, aberto }: Readonly<Props>) {
       <div className="flex flex-wrap items-start gap-3">
         <EnvioDoArquivo carteira={carteira} mes={mes} />
         {carteira.concluidas > 0 && (
-          <BaixarWord carteiraId={carteira.carteiraId} mes={mes} rotulo="Baixar a prévia" />
+          <BaixarPdf carteiraId={carteira.carteiraId} mes={mes} rotulo="Baixar a prévia" />
         )}
       </div>
     </>

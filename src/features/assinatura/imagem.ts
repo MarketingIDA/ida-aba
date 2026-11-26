@@ -6,7 +6,7 @@ import {
 } from '@/features/assinatura/api/assinatura.api';
 import { ErroApp } from '@/lib/erroApp';
 
-/** Lado maior da imagem gravada: sobra para a assinatura no Word e corta a foto do celular. */
+/** Lado maior da imagem gravada: sobra para a assinatura no PDF e corta a foto do celular. */
 const LADO_MAIOR = 1200;
 
 export interface ImagemPronta {

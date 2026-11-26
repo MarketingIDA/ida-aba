@@ -1,8 +1,7 @@
-import { strFromU8, unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 
 import type { Evolucao } from '@/features/evolucoes/api/evolucao.api';
-import { nomeDoWordDaEvolucao, wordDaEvolucao } from '@/features/evolucoes/word/baixarEvolucao';
+import { nomeDoPdfDaEvolucao, pdfDaEvolucao } from '@/features/evolucoes/pdf/baixarEvolucao';
 import { TRECHOS_VAZIOS } from '@dominio/evolucao.ts';
 
 /** Evolução fictícia; nenhum nome aqui é de pessoa real. */
@@ -24,16 +23,20 @@ const EVOLUCAO = {
   metasDoMes: null,
 } as unknown as Evolucao;
 
-describe('Evolução sozinha em Word (E14)', () => {
+describe('Evolução sozinha em PDF (E14)', () => {
   it('sai com o aviso de conferência, o bloco do assistido e sem a assinatura', async () => {
-    const arquivo = await wordDaEvolucao(EVOLUCAO);
-    const pastas = unzipSync(new Uint8Array(await arquivo.arrayBuffer()));
-    const documento = strFromU8(pastas['word/document.xml'] ?? new Uint8Array());
+    const arquivo = await pdfDaEvolucao(EVOLUCAO);
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const dados = new Uint8Array(await arquivo.arrayBuffer());
+    const doc = await pdfjs.getDocument({ data: dados }).promise;
+    const conteudo = await (await doc.getPage(1)).getTextContent();
+    const documento = conteudo.items.map((t) => ('str' in t ? t.str : '')).join(' ');
 
-    expect(nomeDoWordDaEvolucao(EVOLUCAO)).toBe('Evolucao-UNA-2611-001-EV-conferencia.docx');
-    expect(documento).toContain('Evolução de um assistido, só para conferência.');
+    expect(nomeDoPdfDaEvolucao(EVOLUCAO)).toBe('Evolucao-UNA-2611-001-EV-conferencia.pdf');
+    expect(doc.numPages).toBe(1);
+    expect(documento).toContain('só para conferência.');
     expect(documento).toContain('ALICE FICTÍCIA MOURA');
     expect(documento).toContain('Abertura fictícia.');
-    expect(documento).not.toContain('______________________________');
+    expect(documento).not.toContain('CRP');
   });
 });

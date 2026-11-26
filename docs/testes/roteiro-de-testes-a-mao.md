@@ -68,7 +68,7 @@ Entre com a conta da coordenadora pelo link do convite e crie a senha (no mínim
 - [ ] 2.12d **Gerar uma parte de novo.** Numa parte escrita pela IA, toque em "Gerar esta parte de novo com a IA", escreva o que mudar (por exemplo, "Metas mais curtas") e gere. Só essa parte muda e volta para a conferir; as outras ficam como estavam. Se a instrução citar o nome do assistido, o texto novo não traz o nome.
 - [ ] 2.12e **Versões da parte.** Numa parte que a IA escreveu e você editou, abra "Versões desta parte": aparecem todas as versões, da mais nova à mais antiga, com quem fez, quando e a instrução de cada "gerar de novo". "Comparar com o texto da IA" mostra lado a lado o texto da IA e o atual.
 - [ ] 2.12f **Escrita à mão e Aprimorar com a IA.** Numa evolução sem o PDF do Tita, aparece "Escrita à mão, sem o PDF do Tita". Escreva a evolução mensal (com um termo da lista e o nome do assistido) e toque em "Aprimorar com a IA". A linguagem melhora sem fato novo, o termo é trocado, o nome sai, e a parte volta para a conferir. Em "Versões desta parte", "Comparar com o texto da IA" mostra o seu texto ao lado do aprimorado. As metas não mudam. Em cada parte, "Fontes: escrito à mão" mostra o seu texto, quem escreveu e quando, e, depois do aprimoramento, a data em que a IA o aprimorou.
-- [ ] 2.12g **Baixar para conferência.** Na evolução, "Baixar para conferência (Word)" baixa só aquela evolução, no formato do arquivo do mês, com o aviso de que é só para conferência e sem a assinatura. Faça o mesmo pela coordenação geral.
+- [ ] 2.12g **Baixar para conferência.** Na evolução, "Baixar para conferência (PDF)" baixa só aquela evolução, no formato do arquivo do mês, com o aviso de que é só para conferência e sem a assinatura. Faça o mesmo pela coordenação geral.
 - [ ] 2.13b **Meta já alcançada.** Na parte 4, escreva uma meta que está na parte 3 ou que já está alcançada no cadastro. A conclusão fica bloqueada com o nome da meta. Com menos de 4 metas na parte 3, aparece só um aviso.
 - [ ] 2.14 **Conferir e concluir.** "Marcar como conferida" nas 4 partes, e depois "Concluir evolução". Teste "Reabrir" e conclua de novo.
 - [ ] 2.15 **Evolução escrita à mão.** No outro assistido, crie a evolução sem o PDF, escreva as 4 partes, confira e conclua.
@@ -92,7 +92,7 @@ Entre com a conta da coordenadora pelo link do convite e crie a senha (no mínim
   - use "Copiar o link";
   - o registro da janela mostra as três ações, com o nome e a hora;
   - no computador, "Enviar o PDF" pode baixar o arquivo para anexar, e isso fica registrado como "Baixou o PDF para enviar".
-- [ ] 4.4 **Arquivo do mês.** Em Arquivo do mês, confira o que falta: evoluções sem concluir e a assinatura. Use "Baixar a prévia": o Word sai marcado como prévia. Com tudo concluído, "Enviar o arquivo". A confirmação lista o que muda no cadastro de metas: alcançadas, em manutenção, novas (sem programa e com o critério a definir) e as linhas da parte 3 que não acharam meta. ⚠️ Não tem volta (ver os cuidados do item 0).
+- [ ] 4.4 **Arquivo do mês.** Em Arquivo do mês, confira o que falta: evoluções sem concluir e a assinatura. Use "Baixar a prévia": o PDF sai marcado como prévia. Com tudo concluído, "Enviar o arquivo". A confirmação lista o que muda no cadastro de metas: alcançadas, em manutenção, novas (sem programa e com o critério a definir) e as linhas da parte 3 que não acharam meta. ⚠️ Não tem volta (ver os cuidados do item 0).
 - [ ] 4.5 **Depois do envio.** As evoluções ficam só para leitura, e a carteira não abre outra evolução no mês. Em Metas, as situações mudaram como a confirmação mostrou; complete o programa e o critério das metas novas.
 
 ## 5. Contas médicas
@@ -102,7 +102,7 @@ Entre com a conta do item 1.3.
 - [ ] 5.1 **O que ela vê.** Só "Arquivos recebidos", com os cards de recebidos e a chegar.
 - [ ] 5.2 **O arquivo.** O arquivo da carteira de teste aparece. A lista mostra os assistidos, o código e o plano.
 - [ ] 5.2b **Por assistido (E24).** Em "Buscar por assistido, código ou plano", digite parte do nome sem acento: aparece a evolução, com o código, o plano e a carteira, sem abrir arquivo por arquivo. O código e o nome do plano também acham. Algo que não existe mostra "Nenhuma evolução nos arquivos…". O nome não é link para contas médicas; na coordenação geral, é.
-- [ ] 5.3 **Word.** "Baixar Word": Cambria 12, espaçamento 1,5, um bloco por assistido em ordem alfabética, e a assinatura com o nome e o CRP no fim.
+- [ ] 5.3 **PDF.** "Baixar PDF": papel timbrado do Instituto em todas as páginas, o quadro do cabeçalho uma vez, uma faixa por assistido em ordem alfabética (o nome inteiro, sem corte), texto justificado, a página no rodapé e a assinatura com o nome e o CRP no fim.
 - [ ] 5.4 **O que não vê.** Não aparecem rascunhos, devoluções, gráfico das metas nem o registro do PDF. Se colar o endereço `/progresso/<número>`, a tela não abre para esse perfil.
 
 ## 6. Acesso
