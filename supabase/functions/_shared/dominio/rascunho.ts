@@ -194,12 +194,17 @@ export function conteudoDoPedido({
           `Frequência: ${String(sessoes)} sessões realizadas em ${String(analises.length)} evoluções diárias (${String(frequencia)}%).`,
         ]
       : []),
-    '',
-    'Análises do atendimento:',
-    ...analises.map(
-      (a, i) =>
-        `[S${String(i + 1)}, ${formatarData(a.data, true)}${a.falta ? ', falta' : ''}] ${a.texto}`,
-    ),
+    // Na escrita à mão não há PDF do Tita: o rascunho sai só dos documentos (E26).
+    ...(analises.length === 0
+      ? []
+      : [
+          '',
+          'Análises do atendimento:',
+          ...analises.map(
+            (a, i) =>
+              `[S${String(i + 1)}, ${formatarData(a.data, true)}${a.falta ? ', falta' : ''}] ${a.texto}`,
+          ),
+        ]),
     ...(documentos.length === 0
       ? []
       : ['', 'Outros documentos:', ...documentos.map((d, i) => linhaDoDocumento(d, mesRef, i))]),
