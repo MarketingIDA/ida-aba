@@ -1,7 +1,7 @@
 import { TRECHOS, type Trechos } from './evolucao.ts';
 import { situacaoDaData, TIPOS_DE_DOCUMENTO, type TipoDeDocumento } from './documentos.ts';
 import type { FraseDoCampo } from './fontes.ts';
-import { frequenciaDoPeriodo, LIMITE_DA_FREQUENCIA } from './frequencia.ts';
+import { LIMITE_DA_FREQUENCIA } from './frequencia.ts';
 import { formatarData, formatarMesLongo, periodoAnalisado } from './mes.ts';
 
 /**
@@ -72,6 +72,8 @@ export const INSTRUCOES_DO_RASCUNHO = [
   '- Use somente o que está nas análises e nos outros documentos. Não invente fatos, programas, números nem datas. Se não há base para um trecho, devolva esse trecho vazio.',
   '- As análises são a base do texto. Os outros documentos complementam. O documento marcado como contexto é de fora do período ou sem data: use para entender o assistido, não como fato do período.',
   '- Não cite a data de cada sessão.',
+  '- Não cite o nome do mês nem o ano. Para falar do período, escreva "no mês atual" (por exemplo, a abertura começa com "No mês atual, …").',
+  '- Não cite a quantidade de sessões. Cite a frequência só quando ela vier informada.',
   '',
   'Fontes: cada análise tem um número de sessão (S1, S2, …) e cada outro documento um número (D1, D2, …). Escreva cada trecho como uma lista de frases e, em cada frase e em cada meta, informe em "sessoes" os números das sessões e em "documentos" os números dos documentos que a sustentam (só o número, sem a letra). Não indique fonte que não sustenta a frase.',
   '',
@@ -94,7 +96,6 @@ export const INSTRUCOES_DO_RASCUNHO = [
  * abertura seguia citando as sessões e a frequência mesmo com a orientação de tirá-las).
  */
 export function blocoDasOrientacoes(orientacoes: readonly Orientacao[]): string[] {
-  if (orientacoes.length === 0) return [];
   const campos = [...new Set(orientacoes.map((o) => o.campo))];
   return [
     '',
@@ -181,10 +182,10 @@ export function conteudoDoPedido({
 }: PedidoDeRascunho): string {
   const { inicio, fim } = periodoAnalisado(mesRef);
   const sessoes = analises.filter((a) => !a.falta).length;
-  const frequencia = frequenciaDoPeriodo(analises);
+  const frequencia = Math.round((sessoes / analises.length) * 100);
   // A frequência só vai quando o texto deve citá-la (E04): com a linha pronta, a IA a copiava
-  // para a abertura mesmo acima do limite.
-  const citarFrequencia = frequencia !== null && frequencia < LIMITE_DA_FREQUENCIA;
+  // para a abertura mesmo acima do limite. Sem análise, a conta dá NaN e a linha não vai.
+  const citarFrequencia = frequencia < LIMITE_DA_FREQUENCIA;
   return [
     `Evolução de ${formatarMesLongo(mesRef)}. Período analisado: ${formatarData(inicio)} a ${formatarData(fim)}.`,
     `Tratamento: ${tratamento}.`,
