@@ -8,8 +8,8 @@ import type { Assistido } from '@/features/cadastros/api/assistidos.api';
 import type { Meta } from '@/features/cadastros/api/metas.api';
 import { LinhaDasMetas, useLocalDasCarteiras } from '@/features/cadastros/components/LinhaDasMetas';
 import { todasAsMetasOptions } from '@/features/cadastros/metas';
-import { assistidosOptions } from '@/features/cadastros/queries';
 import { ehErroApp } from '@/lib/erroApp';
+import { useAssistidosDaCarteira } from '@/features/cadastros/useAssistidosDaCarteira';
 
 const SEM_FORMATO =
   'Os dados chegaram num formato inesperado. Tente de novo; se continuar, avise a coordenação geral.';
@@ -105,7 +105,7 @@ function Lista({
  * coordenador vê a carteira dele; a coordenação geral, todos.
  */
 export function MetasPage() {
-  const assistidos = useQuery(assistidosOptions());
+  const assistidos = useAssistidosDaCarteira();
   const metas = useQuery(todasAsMetasOptions());
   const [busca, setBusca] = useState('');
   const ativos = emOrdem(assistidos.data ?? [], busca);

@@ -27,6 +27,9 @@ const EvolucoesPage = lazy(() =>
 const EvolucaoPage = lazy(() =>
   import('@/features/evolucoes').then((m) => ({ default: m.EvolucaoPage })),
 );
+const AssistidosSecao = lazy(() =>
+  import('@/features/cadastros').then((m) => ({ default: m.AssistidosSecao })),
+);
 const CadastrosPage = lazy(() =>
   import('@/features/cadastros').then((m) => ({ default: m.CadastrosPage })),
 );
@@ -117,6 +120,14 @@ const TELAS = [
     tela: (
       <ExigePapel papeis={['coordenador']}>
         <AssinaturaPage />
+      </ExigePapel>
+    ),
+  },
+  {
+    rota: '/assistidos',
+    tela: (
+      <ExigePapel papeis={['coordenador']}>
+        <AssistidosSecao />
       </ExigePapel>
     ),
   },

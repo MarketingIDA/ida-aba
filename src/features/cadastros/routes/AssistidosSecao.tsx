@@ -23,6 +23,7 @@ import { useSalvarAssistido } from '@/features/cadastros/queries';
 import { SincronizacaoDaTita } from '@/features/cadastros/routes/SincronizacaoDaTita';
 import { type DadosDosAssistidos, useAssistidos } from '@/features/cadastros/routes/useAssistidos';
 import { useGaveta } from '@/features/cadastros/routes/useGaveta';
+import { useUsuario } from '@/hooks/useUsuario';
 
 const VAZIO = {
   icone: UserRound,
@@ -75,7 +76,7 @@ function GavetaDoAssistido(props: Readonly<PropsDaGaveta>) {
       aberta={props.gaveta.aberta}
       aoFechar={props.gaveta.fechar}
       titulo={editando === null ? 'Novo assistido' : `Editar ${editando.nome}`}
-      descricao="Só a coordenação geral cadastra e altera assistidos."
+      descricao="A coordenação geral e os coordenadores cadastram e alteram assistidos."
       chave={editando?.id ?? 'novo'}
     >
       <ConteudoDaGaveta {...props} />
@@ -129,6 +130,7 @@ function ListaDosAssistidos({ dados, aoEditar }: Readonly<PropsDaLista>) {
 
 /** Quem é atendido, em qual carteira e com qual plano: a lista, a busca, o cadastro e a alteração. */
 export function AssistidosSecao() {
+  const coordenacaoGeral = useUsuario()?.papel === 'coordenacao_geral';
   const { consulta, dados } = useAssistidos();
   const salvar = useSalvarAssistido();
   const gaveta = useGaveta<AssistidoNaTela>();
@@ -156,7 +158,7 @@ export function AssistidosSecao() {
       aviso={aviso}
       consulta={consulta}
       vazio={VAZIO}
-      topo={<SincronizacaoDaTita />}
+      topo={coordenacaoGeral ? <SincronizacaoDaTita /> : undefined}
       lista={<ListaDosAssistidos dados={dados} aoEditar={gaveta.abrirEdicao} />}
       gaveta={<GavetaDoAssistido gaveta={gaveta} dados={dados} aoSalvar={aoSalvar} />}
     />

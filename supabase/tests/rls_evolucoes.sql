@@ -140,8 +140,10 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
 insert into resultado (teste, ok) select 'coordenador lê só a própria linha de usuário',
   (select count(*) from acesso.usuarios) = 1;
-insert into resultado (teste, ok) select 'coordenador lê só os assistidos da carteira',
-  (select count(*) from cadastro.assistidos where nome like '%Teste') = 2;
+-- O coordenador cadastra e altera assistidos como a coordenação geral: lê todos (26/11/2026).
+-- A lista do mês, as evoluções e as metas seguem só da carteira dele.
+insert into resultado (teste, ok) select 'coordenador lê todos os assistidos, para o cadastro',
+  (select count(*) from cadastro.assistidos where nome like '%Teste') = 3;
 insert into resultado (teste, ok) select 'coordenador lê só as evoluções da carteira',
   (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1;
 insert into resultado (teste, ok) select 'coordenador lê as partes da evolução dele',
@@ -538,7 +540,7 @@ reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}';
 insert into resultado (teste, ok) select 'outro coordenador não vê a carteira alheia',
-  (select count(*) from cadastro.assistidos where nome like '%Teste') = 1
+  (select count(*) from evolucao.evolucoes_do_mes('2026-11-01') where unidade_sigla = 'TST') = 1
   and (select count(*) from evolucao.evolucoes where codigo like 'TST-%') = 1
   and (select count(distinct evolucao_id) from evolucao.partes) = 1
   and (select count(*) from evolucao.documentos) = 0;
@@ -1093,8 +1095,9 @@ insert into resultado (teste, ok) select 'Tita: só o servidor sincroniza',
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}';
-insert into resultado (teste, ok) select 'Tita: o coordenador não vê rascunho, pendência nem sincronização',
-  not exists (select 1 from cadastro.assistidos where carteira_id is null)
+-- Desde 26/11/2026 o coordenador cadastra assistidos e vê os rascunhos, para dar a carteira.
+insert into resultado (teste, ok) select 'Tita: o coordenador vê os rascunhos, mas não as pendências nem a sincronização',
+  (select count(*) from cadastro.assistidos where carteira_id is null) = 2
   and (select count(*) from cadastro.pendencias_da_tita) = 0
   and (select count(*) from cadastro.sincronizacoes_da_tita) = 0
   and cadastro.quem_sincroniza_a_tita() is null;

@@ -12,7 +12,7 @@ A base desta versão são três documentos do cliente, que ficam fora do reposit
 |---|---|
 | **ABA** | Análise do Comportamento Aplicada. A intervenção ensina habilidades por programas estruturados e reduz comportamentos que atrapalham. |
 | **Assistido** | A criança ou o adolescente atendido. Tem nome completo, gênero, plano de saúde e uma unidade. |
-| **Coordenador(a) de unidade** | Psicólogo(a) responsável pela ABA de uma unidade num turno. Tem uma **carteira** de assistidos, é o autor técnico da evolução mensal e a assina com o CRP. |
+| **Coordenador(a) de unidade** | Psicólogo(a) responsável pela ABA de uma unidade num turno. Tem uma **carteira** de assistidos, é o autor técnico da evolução mensal e a assina com o CRP. Cadastra e altera assistidos de qualquer carteira, como a coordenação geral (26/11/2026); as evoluções e as metas seguem só da carteira dele. |
 | **Tita** | Sistema em que a equipe registra a evolução diária de cada sessão. O cadastro de assistidos vem da API da Tita (E28); as evoluções diárias, do PDF exportado. |
 | **Relatório de Evoluções Diárias** | PDF que o Tita exporta por assistido e por período. Traz o bloco **Dados do Favorecido** e, para cada evolução diária, os campos do SOAP. |
 | **Análise do Atendimento** | O texto livre de cada evolução diária. É a única parte da evolução diária que o sistema lê. |
